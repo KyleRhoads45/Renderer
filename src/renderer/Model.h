@@ -22,3 +22,4 @@ struct Mesh {
 };
 
 Entity InstantiateModel(const char* meshPath);
+Mesh LoadMesh(const char* meshPath);

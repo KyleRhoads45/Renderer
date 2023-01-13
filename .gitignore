@@ -1,0 +1,14 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/lib
+/Assets/Model
+/.vs/Renderer
+/include
+/x64
+/Renderer.vcxproj.user
+/Renderer.vcxproj.filters
+/Renderer.vcxproj
+/Renderer.sln
+/JSON/Schemas/Catalog

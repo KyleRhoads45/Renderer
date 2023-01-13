@@ -19,11 +19,7 @@ void Renderer::RenderScene(const SceneCamera& camera) {
         auto transform = entity.GetComponent<Transform>();
         auto meshRenderer = entity.GetComponent<MeshRenderer>();
         
-        //glm::mat4 model = glm::translate(glm::mat4(1.0f), transform->position);
-        //model = model * glm::mat4_cast(transform->rotation);
-        //model = glm::scale(model, transform->scale);
-        
-        meshRenderer->shader.SetUniformMat4("model", transform->model);
+        meshRenderer->shader.SetUniformMat4("model", transform->Model());
         meshRenderer->shader.SetUniformMat4("view", camera.view);
         meshRenderer->shader.SetUniformMat4("projection", camera.projection);
 
