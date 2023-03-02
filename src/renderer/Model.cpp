@@ -7,16 +7,16 @@
 #include "core/Components.h"
 #include "Model.h"
 
-Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent);
+Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent, Material* mat);
 Mesh ProcessMesh(const aiMesh* mesh);
 
-Entity InstantiateModel(const char* meshPath) {
+Entity InstantiateModel(const char* meshPath, Material* mat) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(meshPath, aiProcess_Triangulate | aiProcess_CalcTangentSpace);
 
 	assert(scene || !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || scene->mRootNode);
 
-	return ProcessNode(scene, scene->mRootNode, nullptr);
+	return ProcessNode(scene, scene->mRootNode, nullptr, mat);
 }
 
 Mesh LoadMesh(const char* meshPath) {
@@ -28,7 +28,7 @@ Mesh LoadMesh(const char* meshPath) {
 	return ProcessMesh(scene->mMeshes[0]);
 }
 
-Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent) {
+Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent, Material* mat) {
 	auto entity = Registry::Create();
 	auto trans = Registry::AddComponent<Transform>(entity);
 
@@ -42,6 +42,7 @@ Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent) 
 		glm::quat(rotation.w, rotation.x, rotation.y, rotation.z),
 		glm::vec3(scale.x, scale.y, scale.z)
 	);
+	trans->entity = entity;
 
 	if (parent != nullptr) {
 		trans->SetParent(parent);
@@ -51,12 +52,13 @@ Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent) 
 		auto meshRenderer = Registry::AddComponent<MeshRenderer>(entity);
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshRenderer->mesh = ProcessMesh(mesh);
+		meshRenderer->material = mat;
 	}
 
 	uint32_t childCount = node->mNumChildren;
 	std::shared_ptr<Transform* []> children = std::make_shared<Transform* []>(childCount);
 	for (unsigned int i = 0; i < node->mNumChildren; i++) {
-		auto child = ProcessNode(scene, node->mChildren[i], trans);
+		auto child = ProcessNode(scene, node->mChildren[i], trans, mat);
 		children[i] = child.GetComponent<Transform>();
 	}
 
@@ -68,6 +70,8 @@ Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent) 
 Mesh ProcessMesh(const aiMesh* meshData) {
 	Mesh mesh;
 	mesh.numIndices = meshData->mNumFaces * 3;
+	mesh.numVerts = meshData->mNumVertices;
+
 	mesh.verts = std::make_shared<Vertex[]>(meshData->mNumVertices);
 	mesh.indices = std::make_shared<unsigned int[]>(mesh.numIndices);
 	
@@ -92,33 +96,14 @@ Mesh ProcessMesh(const aiMesh* meshData) {
 	}
 
 	int count = 0;
-	for (unsigned int i = 0; i < meshData->mNumFaces; i++) {
+	for (uint32_t i = 0; i < meshData->mNumFaces; i++) {
 		const aiFace face = meshData->mFaces[i];
-		for (unsigned int j = 0; j < face.mNumIndices; j++) {
+		for (uint32_t j = 0; j < face.mNumIndices; j++) {
 			mesh.indices[count] = face.mIndices[j];
 			count++;
 		}
 	}
 
-	glGenVertexArrays(1, &mesh.vao);
-	glBindVertexArray(mesh.vao);
-
-	glGenBuffers(1, &mesh.vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * meshData->mNumVertices, &mesh.verts[0], GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, textureCoordinate));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-	glEnableVertexAttribArray(3);
-
-	glGenBuffers(1, &mesh.ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * mesh.numIndices, &mesh.indices[0], GL_STATIC_DRAW);
-
+	mesh.GenOpenGLBuffers();
 	return mesh;
 }

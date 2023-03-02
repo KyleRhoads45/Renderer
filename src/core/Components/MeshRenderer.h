@@ -1,13 +1,13 @@
 #pragma once
 #include "renderer/Model.h"
-#include "renderer/Shader.h"
+#include "renderer/Material.h"
 
 class MeshRenderer {
 
 public:
 
     Mesh mesh;
-    Shader shader;
+    Material* material;
 
 };
 

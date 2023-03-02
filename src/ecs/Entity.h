@@ -8,10 +8,10 @@ public:
 	template<typename Component>
 	Component* GetComponent();
 
-	const uint32_t id;
+	uint32_t id;
 };
 
-//Forward declare GetComponent from Registry
+// Forward declare GetComponent from Registry
 class Registry;
 template<typename Component>
 Component* GetComponent(const Entity& entity);

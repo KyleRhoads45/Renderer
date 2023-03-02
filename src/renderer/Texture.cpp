@@ -12,7 +12,6 @@ Texture::Texture(const char* filePath) {
     assert(imageData);
 
     glGenTextures(1, &id);
-    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, id);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -28,4 +27,9 @@ Texture::Texture(const char* filePath) {
     }
 
     stbi_image_free(imageData);
+    stbi_set_flip_vertically_on_load(false);
+}
+
+void Texture::Bind() {
+	glBindTexture(GL_TEXTURE_2D, id);
 }

@@ -53,6 +53,10 @@ glm::vec3 Transform::InverseTransformPosition(const glm::vec3& pos) {
 	return glm::vec3(globalPos.x, globalPos.y, globalPos.z);
 }
 
+uint32_t Transform::GetChildCount() {
+	return childCount;
+}
+
 Transform& Transform::GetChild(const uint32_t index) {
 	assert(index < childCount);
 	return *children[index];

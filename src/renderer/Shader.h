@@ -8,7 +8,8 @@ public:
     Shader();
     Shader(const std::string& vertFile, const std::string& fragFile);
     void Bind() const;
-    void SetUniformMat4(const std::string& name, const glm::mat4& mat4) const;
+    void SetMat4(const std::string& name, const glm::mat4& mat4) const;
+
     unsigned int shaderId; 
 private:
     void CreateShader(const std::string& vertFile, const std::string& fragFile);

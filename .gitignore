@@ -12,3 +12,5 @@
 /Renderer.vcxproj
 /Renderer.sln
 /JSON/Schemas/Catalog
+/Assets/Skybox
+/Assets/Materials
