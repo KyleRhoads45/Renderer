@@ -1,0 +1,4 @@
+shader:shader:src/shaders/Lit
+texture:albedo:Assets/Model/1001_albedo.jpg
+float:shininess:256
+float:specularStrength:0.5

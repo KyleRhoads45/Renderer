@@ -84,12 +84,9 @@ Mesh ProcessMesh(const aiMesh* meshData) {
 		const aiVector3D normal = meshData->mNormals[i];
 		vertex.normal = glm::vec3(normal.x, normal.y, normal.z);
 
-		const aiVector3D tangent = meshData->mTangents[i];
-		vertex.tangent = glm::vec3(tangent.x, tangent.y, tangent.z);
-
 		if (meshData->HasTextureCoords(0)) {
 			const aiVector3D textureCoord = meshData->mTextureCoords[0][i];
-			vertex.textureCoordinate = glm::vec2(textureCoord.x, textureCoord.y);
+			vertex.textureCoord = glm::vec2(textureCoord.x, textureCoord.y);
 		}
 
 		mesh.verts[i] = vertex;

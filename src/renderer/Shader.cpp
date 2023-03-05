@@ -17,6 +17,14 @@ void Shader::Bind() const {
     glUseProgram(shaderId);
 }
 
+void Shader::SetInt(const std::string& name, int num) const {
+    glUniform1i(glGetUniformLocation(shaderId, name.c_str()), num);
+}
+
+void Shader::SetFloat(const std::string& name, float num) const {
+    glUniform1f(glGetUniformLocation(shaderId, name.c_str()), num);
+}
+
 void Shader::SetMat4(const std::string& name, const glm::mat4& mat4) const {
     glUniformMatrix4fv(glGetUniformLocation(shaderId, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat4));
 }
@@ -28,33 +36,33 @@ void Shader::CreateShader(const std::string& vertFile, const std::string& fragFi
     const char* vertCode = vertCodeString.c_str();
     const char* fragCode = fragCodeString.c_str();
 
-    //Vertex shader
+    // Vertex shader
     const unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vertCode, NULL);
     glCompileShader(vertex);
     CheckCompileErrors(vertex, "Vertex");
 
-    //Fragment Shader
+    // Fragment Shader
     const unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragCode, NULL);
     glCompileShader(fragment);
     CheckCompileErrors(fragment, "Fragment");
 
-    //Shader Program
+    // Shader Program
     shaderId = glCreateProgram();
     glAttachShader(shaderId, vertex);
     glAttachShader(shaderId, fragment);
     glLinkProgram(shaderId);
     CheckCompileErrors(shaderId, "Shader Linking");
 
-    //Delete the shaders as they're linked into our program and are no longer necessary
+    // Delete the shaders as they're linked into our program and are no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 
     Bind();
 }
 
-//Loads a shader file into a string
+// Loads a shader file into a string
 std::string Shader::LoadShaderFile(const std::string& filePath) const {
     std::fstream file(filePath);
     std::string codeString;
@@ -72,8 +80,8 @@ std::string Shader::LoadShaderFile(const std::string& filePath) const {
     return codeString;
 }
 
-//Checks for compilation errors in the shaders
-void Shader::CheckCompileErrors(const unsigned int shader, const std::string& type) const {
+// Checks for compilation errors in the shaders
+void Shader::CheckCompileErrors(uint32_t shader, const std::string& type) const {
     int success;
     char infoLog[1024];
 

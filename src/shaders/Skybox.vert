@@ -2,8 +2,12 @@
 
 layout (location = 0) in vec3 iPos;
 
-uniform mat4 view;
-uniform mat4 projection;
+layout (std140, binding = 0) uniform camera {
+	vec3 camPos;
+	mat4 view;
+	mat4 projection;
+	mat4 viewProjection;
+};
 
 out vec3 texCoords;
 

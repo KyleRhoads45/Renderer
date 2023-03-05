@@ -10,9 +10,11 @@
 #include "renderer/Texture.h"
 #include "renderer/Model.h"
 #include "renderer/CubeMap.h"
-#include "renderer/Skybox.h"
 #include "renderer/Material.h"
+#include "core/Primatives.h"
 #include "ecs/Registry.h"
+
+void SetupEnviroment();
 
 int main() {
 	if (!glfwInit()) {
@@ -40,20 +42,15 @@ int main() {
 	}
 
 	Input::Init(window);
+	Renderer::Init();
+
+	SetupEnviroment();
+
+	SceneCamera camera;
 
 	Material mat = Material("Assets/Materials/Backpack.mat");
 	auto modelEntity = InstantiateModel("Assets/Model/Survival_BackPack_2.fbx", &mat);
 	auto trans = modelEntity.GetComponent<Transform>();
-
-	Material skyMat = Material("Assets/Materials/Skybox.mat");
-	auto skyboxEntity = InstantiateSkybox();
-	auto skyMeshRenderer = skyboxEntity.GetComponent<MeshRenderer>();
-	skyMeshRenderer->material = &skyMat;
-
-	SceneCamera camera;
-
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
@@ -65,4 +62,14 @@ int main() {
 	}
 
 	glfwTerminate();
+}
+
+void SetupEnviroment() {
+	Enviroment enviorment;
+
+	enviorment.skyboxMaterial = std::make_shared<Material>("Assets/Materials/Skybox.mat");
+	enviorment.ambientColor = glm::vec3(0.734, 0.918, 1.0);
+	enviorment.ambientStrength = 0.8;
+
+	Renderer::SetEnviroment(enviorment);
 }

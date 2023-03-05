@@ -16,9 +16,12 @@ Material::Material(const char* matFile) {
 	int textureUniformId = 0;
 
 	while (std::getline(sstream, line)) {
-		size_t pivot = line.find(":");
-		std::string type = line.substr(0, pivot);
-		std::string value = line.substr(pivot + 1, line.size() - pivot);
+		size_t firstColon = line.find(":");
+		size_t secondColon = line.find(":", firstColon + 1);
+
+		std::string type = line.substr(0, firstColon);
+		std::string name = line.substr(firstColon + 1, secondColon - (firstColon + 1));
+		std::string value = line.substr(secondColon + 1, line.size() - secondColon);
 
 		if (type == "shader") {
 			std::string vert = value + ".vert";
@@ -36,14 +39,25 @@ Material::Material(const char* matFile) {
 			}
 
 			cubeMaps.push_back(CubeMap(cubeMapTextures));
-			glUniform1i(glGetUniformLocation(shader.shaderId, value.c_str()), 0);
+			shader.SetInt(name.c_str(), textureUniformId);
+			textureUniformId++;
+
 			continue;
 		}
 
-		textures.push_back(Texture(value.c_str()));
+		if (type == "texture") {
+			textures.push_back(Texture(value.c_str()));
+			shader.SetInt(name.c_str(), textureUniformId);
+			textureUniformId++;
+			continue;
+		}
 
-		glUniform1iv(glGetUniformLocation(shader.shaderId, type.c_str()), 1, &textureUniformId);
-		textureUniformId++;
+		if (type == "float") {
+			float f = std::atof(value.c_str());
+			shader.SetFloat(name.c_str(), f);
+			continue;
+		}
+
 	}
 
 }
@@ -51,12 +65,17 @@ Material::Material(const char* matFile) {
 void Material::Bind() {
 	shader.Bind();
 
+	int textureUnit = 0;
+
 	for (int i = 0; i < textures.size(); i++) {
-		glActiveTexture(GL_TEXTURE0 + i);
+		glActiveTexture(GL_TEXTURE0 + textureUnit);
 		textures[i].Bind();
+		textureUnit++;
 	}
+
 	for (int i = 0; i < cubeMaps.size(); i++) {
-		glActiveTexture(GL_TEXTURE0 + i);
+		glActiveTexture(GL_TEXTURE0 + textureUnit);
 		cubeMaps[i].Bind();
+		textureUnit++;
 	}
 }

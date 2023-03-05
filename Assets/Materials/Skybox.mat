@@ -1,0 +1,8 @@
+shader:shader:src/shaders/Skybox
+cubemap:skybox:_
+Assets/Skybox/right.jpg
+Assets/Skybox/left.jpg
+Assets/Skybox/top.jpg
+Assets/Skybox/bottom.jpg
+Assets/Skybox/front.jpg
+Assets/Skybox/back.jpg
