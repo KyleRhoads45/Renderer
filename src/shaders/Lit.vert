@@ -20,6 +20,6 @@ out vec2 textureCoord;
 void main() {
 	textureCoord = iTextureCoord;
 	fragPos = vec3(model * vec4(iPos, 1.0));
-	normal = mat3(transpose(inverse(model))) * iNormal;
+	normal = normalize(mat3(transpose(inverse(model))) * iNormal);
 	gl_Position = viewProjection * model * vec4(iPos, 1.0);
 }

@@ -12,6 +12,7 @@ uint32_t Renderer::m_EnviromentUniformBuffer;
 Enviroment Renderer::m_Enviorment;
 
 void Renderer::Init() {
+	glEnable(GL_FRAMEBUFFER_SRGB);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 
