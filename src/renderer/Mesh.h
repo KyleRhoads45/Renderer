@@ -14,5 +14,6 @@ struct Mesh {
 	std::shared_ptr<uint32_t[]> indices;
 
 	void GenOpenGLBuffers();
+	void UpdateVertexBuffer();
 };
 

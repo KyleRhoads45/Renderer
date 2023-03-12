@@ -5,7 +5,7 @@
 
 class Shader {
 public:
-    Shader();
+    Shader() = default;
     Shader(const std::string& vertFile, const std::string& fragFile);
     void Bind() const;
     void SetInt(const std::string& name, int num) const;

@@ -5,10 +5,6 @@
 #include <glad/glad.h>
 #include "Shader.h"
 
-Shader::Shader() {
-    CreateShader("src/shaders/Lit.vert", "src/shaders/Lit.frag");
-}
-
 Shader::Shader(const std::string& vertFile, const std::string& fragFile) {
     CreateShader(vertFile, fragFile);
 }

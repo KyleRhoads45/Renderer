@@ -33,6 +33,10 @@ public:
     glm::quat LocalRotation();
     glm::vec3 LocalScale();
 
+    glm::vec3 Forward();
+    glm::vec3 Right();
+    glm::vec3 Up();
+
     glm::mat4 Model();
 
     Entity entity;

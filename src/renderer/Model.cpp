@@ -30,7 +30,7 @@ Mesh LoadMesh(const char* meshPath) {
 
 Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent, Material* mat) {
 	auto entity = Registry::Create();
-	auto trans = Registry::AddComponent<Transform>(entity);
+	auto trans = Registry::Add<Transform>(entity);
 
 	aiVector3t<float> scale;
 	aiVector3t<float> position;
@@ -49,7 +49,7 @@ Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent, 
 	}
 
 	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-		auto meshRenderer = Registry::AddComponent<MeshRenderer>(entity);
+		auto meshRenderer = Registry::Add<MeshRenderer>(entity);
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshRenderer->mesh = ProcessMesh(mesh);
 		meshRenderer->material = mat;
@@ -59,7 +59,7 @@ Entity ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent, 
 	std::shared_ptr<Transform* []> children = std::make_shared<Transform* []>(childCount);
 	for (unsigned int i = 0; i < node->mNumChildren; i++) {
 		auto child = ProcessNode(scene, node->mChildren[i], trans, mat);
-		children[i] = child.GetComponent<Transform>();
+		children[i] = child.Get<Transform>();
 	}
 
 	trans->SetChildren(children, childCount);
@@ -83,6 +83,9 @@ Mesh ProcessMesh(const aiMesh* meshData) {
 
 		const aiVector3D normal = meshData->mNormals[i];
 		vertex.normal = glm::vec3(normal.x, normal.y, normal.z);
+
+		const aiVector3D tangent = meshData->mTangents[i];
+		vertex.tangent = glm::vec3(tangent.x, tangent.y, tangent.z);
 
 		if (meshData->HasTextureCoords(0)) {
 			const aiVector3D textureCoord = meshData->mTextureCoords[0][i];

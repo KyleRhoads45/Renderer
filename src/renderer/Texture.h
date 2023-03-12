@@ -2,7 +2,7 @@
 #include <cstdint>
 
 struct Texture {
-    Texture() = delete;
+    Texture() = default;
     Texture(const char* filePath);
     void Bind();
 

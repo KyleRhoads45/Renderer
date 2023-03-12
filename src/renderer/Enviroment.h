@@ -1,9 +1,13 @@
 #pragma once
-#include <memory>
+#include <glm/glm.hpp>
+#include "CubeMap.h"
+#include "UniformBuffer.h"
 
-struct Enviroment {
-	std::shared_ptr<Material> skyboxMaterial;
-
-	float ambientStrength;
-	glm::vec3 ambientColor;
+class Enviroment {
+public:
+	static void Init();
+	static void SetLightViewProjection(glm::mat4& lightViewProjection);
+	static CubeMap m_Skybox;
+private:
+    static UniformBuffer m_UniformBuffer;
 };

@@ -2,20 +2,19 @@
 #include "Model.h"
 #include "Shader.h"
 #include "Enviroment.h"
-#include "core/SceneCamera.h"
+#include "DepthTexture.h"
+#include "Bounds.h"
+#include "core/Components.h"
+#include "UniformBuffer.h"
 
 class Renderer {
 public:
     static void Init();
-    static void DrawMesh(const Mesh& mesh, const SceneCamera& camera, const Shader& shader);
-    static void RenderScene(const SceneCamera& camera);
-
-    static void SetEnviroment(const Enviroment enviorment);
+    static void RenderScene(Camera& camera);
+    static void DrawSkybox();
+    static void DebugDrawBounds(glm::vec3* points);
+    static void DebugDrawPoint(const glm::vec3 point);
 private:
-    static Mesh m_SkyboxMesh;
-    static Enviroment m_Enviorment;
-
-    static uint32_t m_CamUniformBuffer;
-    static uint32_t m_EnviromentUniformBuffer;
+    static UniformBuffer cameraUniformBuffer;
 };
 

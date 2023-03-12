@@ -4,5 +4,6 @@
 class Primatives {
 public:
 	static Mesh Cube(bool invert);
+	static Mesh Plane();
 };
 

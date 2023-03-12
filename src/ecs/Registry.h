@@ -16,10 +16,10 @@ public:
 	static Entity Create();
 
 	template<typename Component>
-	static Component* AddComponent(Entity entity);
+	static Component* Add(Entity entity);
 
 	template<typename Component>
-	static Component* GetComponent(Entity entity);
+	static Component* Get(Entity entity);
 
 	template<typename Component>
 	static uint32_t GetComponentId();
@@ -35,8 +35,11 @@ private:
 };
 
 template<typename Component>
-Component* Registry::AddComponent(Entity entity) {
-	unsigned int compId = GetComponentId<Component>();
+Component* Registry::Add(Entity entity) {
+	// Unregistered entity
+	assert(entity.id != MAX_ENTITIES);
+
+	uint32_t compId = GetComponentId<Component>();
 
 	if (pools.size() == compId) {
 		pools.push_back(ComponentPool(sizeof(Component)));
@@ -47,8 +50,10 @@ Component* Registry::AddComponent(Entity entity) {
 }
 
 template<typename Component>
-Component* Registry::GetComponent(Entity entity) {
-	unsigned int compId = GetComponentId<Component>();
+Component* Registry::Get(Entity entity) {
+	// Unregistered entity
+	assert(entity.id != MAX_ENTITIES);
+	uint32_t compId = GetComponentId<Component>();
 	return pools[compId].GetComponent<Component>(entity);
 }
 

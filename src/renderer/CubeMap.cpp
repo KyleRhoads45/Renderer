@@ -4,9 +4,8 @@
 #include "CubeMap.h"
 
 CubeMap::CubeMap(const std::array<std::string, 6>& images) {
-
-    glGenTextures(1, &id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+    glGenTextures(1, &m_Id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_Id);
 
     for (int i = 0; i < images.size(); i++) {
 		int32_t width, height, numChannels;
@@ -27,5 +26,5 @@ CubeMap::CubeMap(const std::array<std::string, 6>& images) {
 }
 
 void CubeMap::Bind() {
-    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_Id);
 }

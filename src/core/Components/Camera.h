@@ -1,21 +1,15 @@
-﻿#pragma once
+#pragma once
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-class SceneCamera {
-
+class Camera {
 public:
-
-    SceneCamera();
-    void Update();
+    Camera();
 
     glm::mat4 m_View;
     glm::mat4 m_Projection;
-    glm::vec3 m_Position;
-    glm::quat m_Rotation;
 
     float m_Yaw;
     float m_Pitch;
-
 };

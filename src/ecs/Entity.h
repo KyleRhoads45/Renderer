@@ -1,22 +1,29 @@
 #pragma once
 #include <stdint.h>
+#include <cassert>
+#include "EcsParams.h"
 
 class Entity {
 public:
-	Entity();
+	friend class Registry;
+	friend class ComponentPool;
+
+	Entity() = default;
 
 	template<typename Component>
-	Component* GetComponent();
-
-	uint32_t id;
+	Component* Get();
+private:
+	uint32_t id = MAX_ENTITIES;
 };
 
 // Forward declare GetComponent from Registry
 class Registry;
 template<typename Component>
-Component* GetComponent(const Entity& entity);
+Component* Get(Entity entity);
 
 template<typename Component>
-Component* Entity::GetComponent() {
-	return Registry::GetComponent<Component>(*this);
+Component* Entity::Get() {
+	// Don't call GetComponent on unregistered entity
+	assert(id != MAX_ENTITIES);
+	return Registry::Get<Component>(*this);
 }

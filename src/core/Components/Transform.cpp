@@ -1,3 +1,4 @@
+#include <glm/gtx/quaternion.hpp>
 #include "Transform.h"
 
 void Transform::SetPosition(glm::vec3 pos) {
@@ -127,6 +128,18 @@ glm::quat Transform::LocalRotation() {
 
 glm::vec3 Transform::LocalScale() {
 	return scale;
+}
+
+glm::vec3 Transform::Forward() {
+	return glm::rotate(Rotation(), glm::vec3(0, 0, -1));
+}
+
+glm::vec3 Transform::Right() {
+	return glm::rotate(Rotation(), glm::vec3(1, 0, 0));
+}
+
+glm::vec3 Transform::Up() {
+	return glm::rotate(Rotation(), glm::vec3(0, 1, 0));
 }
 
 glm::mat4 Transform::Model() {

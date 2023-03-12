@@ -79,3 +79,51 @@ Mesh Primatives::Cube(bool invert = false) {
 	cube.GenOpenGLBuffers();
 	return cube;
 }
+
+Mesh Primatives::Plane() {
+	const size_t vertCount = 4;
+	glm::vec3 verts[vertCount] {
+		glm::vec3(.5, -1, 0),
+		glm::vec3(1, -1, 0),
+		glm::vec3(1, -.5, 0),
+		glm::vec3(.5, -.5, 0),
+	};
+
+	glm::vec2 texCoords[vertCount] {
+		glm::vec2(0.0, 0.0),
+		glm::vec2(1.0, 0.0),
+		glm::vec2(1.0, 1.0),
+		glm::vec2(0.0, 1.0)
+	};
+
+	const size_t indexCount = 6;
+	uint32_t indices[indexCount] {
+		0, 1, 2,
+		0, 2, 3,
+	};
+
+	Mesh plane;
+
+	plane.numVerts = vertCount;
+	plane.verts = std::make_shared<Vertex[]>(vertCount);
+
+	for (int i = 0; i < vertCount; i++) {
+		Vertex vert;
+		vert.position = verts[i];
+		vert.normal = glm::vec3(0, 0, -1);
+		vert.tangent = glm::vec3(0, 0, 1);
+		vert.textureCoord = texCoords[i];
+
+		plane.verts[i] = vert;
+	}
+
+	plane.numIndices = indexCount;
+	plane.indices = std::make_shared<uint32_t[]>(indexCount);
+
+	for (int i = 0; i < indexCount; i++) {
+		plane.indices[i] = indices[i];
+	}
+	
+	plane.GenOpenGLBuffers();
+	return plane;
+}

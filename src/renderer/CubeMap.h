@@ -4,16 +4,11 @@
 #include <string>
 
 class CubeMap {
-
 public:
-
 	CubeMap() = default;
 	CubeMap(const std::array<std::string, 6>& images);
 	void Bind();
-
 private:
-
-	uint32_t id;
-
+	uint32_t m_Id;
 };
 
