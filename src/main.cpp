@@ -2,7 +2,7 @@
 #include <array>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
-#include <glm/gtx/string_cast.hpp>
+#include <glm/glm.hpp>
 #include "core/Components.h"
 #include "core/Input.h"
 #include "renderer/Renderer.h"
@@ -15,6 +15,7 @@
 #include "core/CameraSystem.h"
 #include "materials/CityMaterial.h"
 #include <glm/gtx/quaternion.hpp>
+#include "renderer/ShadowMapper.h"
 
 void SetupEnviroment();
 
@@ -43,10 +44,9 @@ int main() {
 		return -1;
 	}
 
+	SetupEnviroment();
 	Input::Init(window);
 	Renderer::Init();
-
-	SetupEnviroment();
 
 	auto camEntity = Registry::Create();
 	auto camTrans = Registry::Add<Transform>(camEntity);
@@ -70,12 +70,15 @@ int main() {
 void SetupEnviroment() {
 	Enviroment::Init();
 	std::array<std::string, 6> textures {
-		"Assets/Skybox/right.jpg",
-		"Assets/Skybox/left.jpg",
-		"Assets/Skybox/top.jpg",
-		"Assets/Skybox/bottom.jpg",
-		"Assets/Skybox/front.jpg",
-		"Assets/Skybox/back.jpg"
+		"Assets/Skybox/right.jpg", "Assets/Skybox/left.jpg",
+		"Assets/Skybox/top.jpg", "Assets/Skybox/bottom.jpg",
+		"Assets/Skybox/front.jpg", "Assets/Skybox/back.jpg"
 	};
 	Enviroment::m_Skybox = CubeMap(textures);
+
+	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
+	Enviroment::SetLightDir(lightDir);
+	Enviroment::SetAmbientStrength(0.5f);
+
+	ShadowMapper::Init(4096, 30.0f);
 }

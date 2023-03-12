@@ -47,13 +47,14 @@ glm::vec3 CameraSystem::CamPos() {
     return Registry::Get<Transform>(activeCamEntity)->Position();
 }
 std::array<glm::vec3, FrustrumPointCount>
-CameraSystem::GetViewFrustrumPoints() {
+CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     auto trans = Registry::Get<Transform>(activeCamEntity);
     auto cam = Registry::Get<Camera>(activeCamEntity);
 
-    float zDist = 10.0f;
-    constexpr float pheta = glm::radians(60.0f / 2.0f);
-    constexpr float aspect = 1920.0f / 1080.0f;
+    float farDist = (zDist == 0.0f) ? cam->m_Far : zDist;
+    float nearDist = cam->m_Near;
+    float aspect = cam->m_Aspect;
+    float pheta = glm::radians(cam->m_Fov / 2.0f);
 
     const glm::vec3 pos = trans->Position();
     const glm::vec3 forward = trans->Forward();
@@ -62,12 +63,12 @@ CameraSystem::GetViewFrustrumPoints() {
 
     // Calculate far plane positions
 
-    float halfFarPlaneHeight = (glm::tan(pheta) * zDist);
+    float halfFarPlaneHeight = (glm::tan(pheta) * farDist);
     float halfFarPlaneWidth = halfFarPlaneHeight * aspect;
 
     const glm::vec3 farUp = up * halfFarPlaneHeight;
     const glm::vec3 farRight = right * halfFarPlaneWidth;
-    const glm::vec3 farCenter = pos + (forward * zDist);
+    const glm::vec3 farCenter = pos + (forward * farDist);
 
     glm::vec3 fTopRight = farCenter + farRight + farUp;
     glm::vec3 fBottomRight = farCenter + farRight - farUp;
@@ -76,12 +77,12 @@ CameraSystem::GetViewFrustrumPoints() {
 
     // Calculate near plane positions
 
-    float halfNearPlaneHeight = (glm::tan(pheta) * 0.01f);
+    float halfNearPlaneHeight = (glm::tan(pheta) * nearDist);
     float halfNearPlaneWidth = halfNearPlaneHeight * aspect;
 
     const glm::vec3 nearUp = up * halfNearPlaneHeight;
     const glm::vec3 nearRight = right * halfNearPlaneWidth;
-    const glm::vec3 nearCenter = pos + (forward * 0.01f);
+    const glm::vec3 nearCenter = pos + (forward * nearDist);
 
     glm::vec3 nTopRight = nearCenter + nearRight + nearUp;
     glm::vec3 nBottomRight = nearCenter + nearRight - nearUp;

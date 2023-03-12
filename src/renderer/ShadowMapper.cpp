@@ -5,16 +5,19 @@
 #include "Renderer.h"
 #include "core/Primatives.h"
 #include "core/CameraSystem.h"
+#include "Enviroment.h"
 #include "ShadowMapper.h"
 
 DepthTexture ShadowMapper::m_ShadowMap;
 glm::mat4 ShadowMapper::m_LightViewProjection;
 uint32_t ShadowMapper::m_TextureSize;
+uint32_t ShadowMapper::m_ShadowDist;
 uint32_t ShadowMapper::m_DepthFrameBuffer;
 Shader ShadowMapper::m_DepthShader;
 
-void ShadowMapper::Init(uint32_t textureSize) {
+void ShadowMapper::Init(uint32_t textureSize, uint32_t shadowDist) {
 	m_ShadowMap = DepthTexture(textureSize, textureSize);
+	m_ShadowDist = shadowDist;
 	m_LightViewProjection = glm::mat4(1.0f);
 	m_TextureSize = textureSize;
 	m_DepthShader = Shader("src/shaders/Depth.vert", "src/shaders/Depth.frag");
@@ -57,12 +60,14 @@ void ShadowMapper::PerformShadowPass() {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, viewportWidth, viewportHeight);
+
+	Enviroment::SetLightViewProjection(m_LightViewProjection);
 }
 
 void ShadowMapper::CalculateLightViewProjection() {
-	auto frustrumPoints = CameraSystem::GetViewFrustrumPoints();
+	auto frustrumPoints = CameraSystem::GetViewFrustrumPoints(m_ShadowDist);
 
-	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
+	glm::vec3 lightDir = Enviroment::GetLightDir();
 	glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
 
 	// Convert camera frustrum points to light space

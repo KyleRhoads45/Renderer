@@ -21,15 +21,12 @@ void Renderer::Init() {
 	cameraUniformBuffer.Register("projection", sizeof(glm::mat4));
 	cameraUniformBuffer.Register("viewProjection", sizeof(glm::mat4));
 	cameraUniformBuffer.FinishedRegistering();
-
-	ShadowMapper::Init(4096);
 }
 
 void Renderer::RenderScene(Camera& camera) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ShadowMapper::PerformShadowPass();
-	Enviroment::SetLightViewProjection(ShadowMapper::m_LightViewProjection);
 
 	glm::vec3 camPos = CameraSystem::CamPos();
 	glm::mat4 viewProjection = camera.m_Projection * camera.m_View;

@@ -7,9 +7,13 @@ class Camera {
 public:
     Camera();
 
-    glm::mat4 m_View;
-    glm::mat4 m_Projection;
-
     float m_Yaw;
     float m_Pitch;
+    float m_Fov;
+    float m_Aspect;
+    float m_Near;
+    float m_Far;
+
+    glm::mat4 m_View;
+    glm::mat4 m_Projection;
 };

@@ -26,6 +26,8 @@ layout (std140, binding = 0) uniform camera {
 };
 
 layout (std140, binding = 1) uniform enviorment {
+    float ambientStrength;
+    vec3 lightDir;
     mat4 lightViewProjection;
 };
 
@@ -33,8 +35,8 @@ out vec4 fragColor;
 
 #define PI 3.1415926538
 
-float CalculateShadow();
-vec3 CalculateSpecular(vec3 baseColor, vec3 lightDir, vec3 normal, float metallic, float roughness);
+float CalculateShadow(vec3 normal, vec3 lightNormal);
+vec3 CalculateSpecular(vec3 baseColor, vec3 lightNormal, vec3 normal, float metallic, float roughness);
 vec3 ACESFilm(in vec3 x);
 vec3 FrensnelSchlick(float cosTheta, vec3 F0);
 float DistributionGGX(vec3 N, vec3 H, float roughness);
@@ -42,13 +44,7 @@ float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 
 void main() {
-    vec3 normal = modelNormal;
-    if (useNormalMap) {
-		normal = normalize(texture(normalMap, textureCoord).rgb * 2.0 - 1.0);
-		normal = normalize(tbn * normal);
-    }
-
-    vec3 lightDir = vec3(-0.33, 0.33, 0.33);
+    vec3 lightNormal = -lightDir;
     vec3 totalRadiance = vec3(0.0);
     vec3 diffuse;
 
@@ -59,6 +55,12 @@ void main() {
 		baseColor.g = pow(baseColor.g, 2.2);
 		baseColor.b = pow(baseColor.b, 2.2);
     } 
+
+    vec3 normal = modelNormal;
+    if (useNormalMap) {
+		normal = normalize(texture(normalMap, textureCoord).rgb * 2.0 - 1.0);
+		normal = normalize(tbn * normal);
+    }
 
     for (int i = 0; i < 1; i++) {
         // Directional light radiance is just light color 
@@ -74,26 +76,21 @@ void main() {
             roughness = texture(roughnessMap, textureCoord).r;
         }
 
-        vec3 specular = CalculateSpecular(baseColor, lightDir, normal, metallic, roughness);
+        vec3 specular = CalculateSpecular(baseColor, lightNormal, normal, metallic, roughness);
         diffuse = vec3(1.0) - specular;
        
         diffuse = diffuse * (1.0 - metallic);
 
-        float NdotL = max(dot(normal, lightDir), 0.0);
+        float NdotL = max(dot(normal, lightNormal), 0.0);
         totalRadiance += (diffuse * baseColor / PI + specular) * radiance * NdotL;
     }
 
-    //vec3 ambientColor = texture(skybox, normal).rgb * baseColor * diffuse * 0.6;
-    vec3 ambientColor = baseColor * 0.2;
-    vec3 finalColor = totalRadiance * CalculateShadow() + ambientColor;
-
-    float contrast = 1.1;
-    //finalColor = ((finalColor - 0.5) * max(contrast, 0.0)) + 0.5;
-
+    vec3 ambientColor = texture(skybox, normal).rgb * baseColor * diffuse * ambientStrength;
+    vec3 finalColor = totalRadiance * CalculateShadow(normal, lightNormal) + ambientColor;
     fragColor = vec4(finalColor, 1.0);
 }
 
-float CalculateShadow() {
+float CalculateShadow(vec3 normal, vec3 lightNormal) {
     // Transform from clip space to device coords [-1, 1]
     vec3 projCoord = lightFragPos.xyz / lightFragPos.w;
 
@@ -115,7 +112,7 @@ float CalculateShadow() {
 			float shadowDepth = texture(shadowMap, coord).r;
 			float fragDepth = projCoord.z;
 
-			float bias = 0.0015;
+			float bias = 0.0012;
 			shadow += (fragDepth > shadowDepth + bias) ? 0.0 : 1.0;
 		}
     }
@@ -123,18 +120,18 @@ float CalculateShadow() {
     return shadow / 9.0;
 }
 
-vec3 CalculateSpecular(vec3 baseColor, vec3 lightDir, vec3 normal, float metallic, float roughness) {
+vec3 CalculateSpecular(vec3 baseColor, vec3 lightNormal, vec3 normal, float metallic, float roughness) {
     vec3 viewDir = normalize(camPos - fragPos);
-    vec3 halfWay = normalize(viewDir + lightDir);
+    vec3 halfWay = normalize(viewDir + lightNormal);
 
 	vec3 F0 = vec3(0.04);
 	F0 = mix(F0, baseColor, metallic);
 
 	float D = DistributionGGX(normal, halfWay, roughness);
-	float G = GeometrySmith(normal, viewDir, lightDir, roughness);
+	float G = GeometrySmith(normal, viewDir, lightNormal, roughness);
     vec3 F = FrensnelSchlick(max(dot(halfWay, viewDir), 0.0), F0);
 
-    return (D * F * G) / (4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightDir), 0.0) + 0.0001);
+    return (D * F * G) / (4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightNormal), 0.0) + 0.0001);
 }
 
 vec3 FrensnelSchlick(float cosTheta, vec3 F0) {

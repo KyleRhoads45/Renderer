@@ -4,7 +4,7 @@
 
 class ShadowMapper {
 public:
-	static void Init(uint32_t textureSize);
+	static void Init(uint32_t textureSize, uint32_t shadowDist);
 	static void PerformShadowPass();
 
     static DepthTexture m_ShadowMap;
@@ -13,6 +13,7 @@ private:
 	static void CalculateLightViewProjection();
 
     static uint32_t m_TextureSize;
+    static uint32_t m_ShadowDist;
     static uint32_t m_DepthFrameBuffer;
     static Shader m_DepthShader;
 };
