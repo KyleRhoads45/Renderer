@@ -3,14 +3,23 @@
 #include <glad/glad.h>
 #include "Texture.h"
 
-Texture::Texture(const char* filePath) {
+std::unordered_map<std::string, std::weak_ptr<Texture>> Texture::m_ActiveTextures;
+
+std::shared_ptr<Texture> Texture::Load(const std::string& filePath) {
+    if (m_ActiveTextures.contains(filePath)) {
+        return m_ActiveTextures[filePath].lock();
+    }
+
     stbi_set_flip_vertically_on_load(true);
 
-    int numChannels;
-    unsigned char* imageData = stbi_load(filePath, &width, &height, &numChannels, 0);
+    int32_t width;
+    int32_t height;
+    int32_t numChannels;
+    stbi_uc* imageData = stbi_load(filePath.c_str(), &width, &height, &numChannels, 0);
 
     assert(imageData);
 
+    uint32_t id;
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 
@@ -34,8 +43,20 @@ Texture::Texture(const char* filePath) {
 
     stbi_image_free(imageData);
     stbi_set_flip_vertically_on_load(false);
+
+    auto texture = std::make_shared<Texture>(width, height, id, filePath);
+    m_ActiveTextures[filePath] = texture;
+    return texture;
+}
+
+Texture::Texture(uint32_t width, uint32_t height, uint32_t id, const std::string& path) 
+    : m_Width(width), m_Height(height), m_Id(id), m_Path(path) { }
+
+Texture::~Texture() {
+    m_ActiveTextures.erase(m_Path);
+    glDeleteTextures(1, &m_Id);
 }
 
 void Texture::Bind() {
-	glBindTexture(GL_TEXTURE_2D, id);
+	glBindTexture(GL_TEXTURE_2D, m_Id);
 }
