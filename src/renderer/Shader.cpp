@@ -13,16 +13,26 @@ void Shader::Bind() const {
     glUseProgram(shaderId);
 }
 
-void Shader::SetInt(const std::string& name, int num) const {
-    glUniform1i(glGetUniformLocation(shaderId, name.c_str()), num);
+void Shader::SetInt(const std::string& name, int num) {
+    glUniform1i(GetUniformLocation(name), num);
 }
 
-void Shader::SetFloat(const std::string& name, float num) const {
-    glUniform1f(glGetUniformLocation(shaderId, name.c_str()), num);
+void Shader::SetFloat(const std::string& name, float num) {
+    glUniform1f(GetUniformLocation(name), num);
 }
 
-void Shader::SetMat4(const std::string& name, const glm::mat4& mat4) const {
-    glUniformMatrix4fv(glGetUniformLocation(shaderId, name.c_str()), 1, GL_FALSE, glm::value_ptr(mat4));
+void Shader::SetMat4(const std::string& name, const glm::mat4& mat4) {
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(mat4));
+}
+
+inline int Shader::GetUniformLocation(const std::string& name) {
+    if (!m_UniformLocations.contains(name)) {
+        int location = glGetUniformLocation(shaderId, name.c_str());
+        m_UniformLocations[name] = location;
+        return location;
+    }
+
+    return m_UniformLocations[name];
 }
 
 void Shader::CreateShader(const std::string& vertFile, const std::string& fragFile) {
@@ -36,20 +46,29 @@ void Shader::CreateShader(const std::string& vertFile, const std::string& fragFi
     const unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vertCode, NULL);
     glCompileShader(vertex);
+
+    #if _DEBUG
     CheckCompileErrors(vertex, "Vertex");
+    #endif
 
     // Fragment Shader
     const unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragCode, NULL);
     glCompileShader(fragment);
+
+    #if _DEBUG
     CheckCompileErrors(fragment, "Fragment");
+    #endif
 
     // Shader Program
     shaderId = glCreateProgram();
     glAttachShader(shaderId, vertex);
     glAttachShader(shaderId, fragment);
     glLinkProgram(shaderId);
+
+    #if _DEBUG
     CheckCompileErrors(shaderId, "Shader Linking");
+    #endif
 
     // Delete the shaders as they're linked into our program and are no longer necessary
     glDeleteShader(vertex);
