@@ -1,8 +1,16 @@
 #pragma once
 #include <memory>
+#include <assimp/scene.h>
 #include "Vertex.h"
 
-struct Mesh {
+class Mesh {
+public:
+	static Mesh FromAssimpMesh(const aiMesh* meshData);
+	static Mesh FromFile(const char* meshPath);
+
+	void GenOpenGLBuffers();
+	void UpdateVertexBuffer();
+
 	uint32_t vao;
 	uint32_t vbo;
 	uint32_t ebo;
@@ -12,8 +20,5 @@ struct Mesh {
 
 	std::shared_ptr<Vertex[]> verts;
 	std::shared_ptr<uint32_t[]> indices;
-
-	void GenOpenGLBuffers();
-	void UpdateVertexBuffer();
 };
 

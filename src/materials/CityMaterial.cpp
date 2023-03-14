@@ -3,8 +3,8 @@
 #include "renderer/Enviroment.h"
 #include "CityMaterial.h"
 
-CityMaterial::CityMaterial(Shader shader) : Material(shader) {
-	baseMap = Texture("Assets/PolygonCity/Textures/PolygonCity_Texture.png");
+CityMaterial::CityMaterial(Shader shader, std::string texture) : Material(shader) {
+	baseMap = Texture::Load(texture.c_str());
 }
 
 void CityMaterial::Bind(Transform* transform) {
@@ -16,7 +16,7 @@ void CityMaterial::Bind(Transform* transform) {
 	m_Shader.SetInt("useRoughnessMap", false);
 
 	glActiveTexture(GL_TEXTURE0);
-	baseMap.Bind();
+	baseMap->Bind();
 	m_Shader.SetInt("baseMap", 0);
 
 	glActiveTexture(GL_TEXTURE4);
@@ -24,6 +24,6 @@ void CityMaterial::Bind(Transform* transform) {
 	m_Shader.SetInt("shadowMap", 4);
 
 	glActiveTexture(GL_TEXTURE5);
-	Enviroment::m_Skybox.Bind();
+	Enviroment::Instance()->m_Skybox->Bind();
 	m_Shader.SetInt("skybox", 5);
 }

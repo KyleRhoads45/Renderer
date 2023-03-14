@@ -61,13 +61,13 @@ void ShadowMapper::PerformShadowPass() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, viewportWidth, viewportHeight);
 
-	Enviroment::SetLightViewProjection(m_LightViewProjection);
+	Enviroment::Instance()->SetLightViewProjection(m_LightViewProjection);
 }
 
 void ShadowMapper::CalculateLightViewProjection() {
 	auto frustrumPoints = CameraSystem::GetViewFrustrumPoints(m_ShadowDist);
 
-	glm::vec3 lightDir = Enviroment::GetLightDir();
+	glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
 	glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
 
 	// Convert camera frustrum points to light space

@@ -8,33 +8,16 @@
 #include "core/CameraSystem.h"
 #include <iostream>
 
-UniformBuffer Renderer::cameraUniformBuffer;
-
 void Renderer::Init() {
 	glEnable(GL_FRAMEBUFFER_SRGB);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
-
-	cameraUniformBuffer = UniformBuffer(0);
-	cameraUniformBuffer.Register("camPos", sizeof(glm::vec3));
-	cameraUniformBuffer.Register("view", sizeof(glm::mat4));
-	cameraUniformBuffer.Register("projection", sizeof(glm::mat4));
-	cameraUniformBuffer.Register("viewProjection", sizeof(glm::mat4));
-	cameraUniformBuffer.FinishedRegistering();
 }
 
-void Renderer::RenderScene(Camera& camera) {
+void Renderer::RenderScene() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	ShadowMapper::PerformShadowPass();
-
-	glm::vec3 camPos = CameraSystem::CamPos();
-	glm::mat4 viewProjection = camera.m_Projection * camera.m_View;
-
-	cameraUniformBuffer.SubBufferData("camPos", &camPos);
-	cameraUniformBuffer.SubBufferData("view", &camera.m_View);
-	cameraUniformBuffer.SubBufferData("projection", &camera.m_Projection);
-	cameraUniformBuffer.SubBufferData("viewProjection", &viewProjection);
 
     for (auto entity : View<Transform, MeshRenderer>()) {
         auto transform = entity.Get<Transform>();
@@ -60,7 +43,7 @@ void Renderer::DrawSkybox() {
 
 	skyboxShader.Bind();
 	glActiveTexture(GL_TEXTURE0);
-	Enviroment::m_Skybox.Bind();
+	Enviroment::Instance()->m_Skybox->Bind();
 
 	glBindVertexArray(skyboxMesh.vao);
 	glDrawElements(GL_TRIANGLES, skyboxMesh.numIndices, GL_UNSIGNED_INT, 0);

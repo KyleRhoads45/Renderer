@@ -1,13 +1,11 @@
 #pragma once
-#include <memory>
+#include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "ecs/Entity.h"
 
 class Transform {
-
 public:
-
     void SetPosition(glm::vec3 pos);
     void SetRotation(glm::quat rot);
     void SetScale(glm::vec3 scl);
@@ -21,8 +19,7 @@ public:
 
     uint32_t GetChildCount();
     Transform& GetChild(const uint32_t index);
-    void SetChildren(std::shared_ptr<Transform* []>& children, uint32_t count);
-
+    void AddChild(Transform* child);
     void SetParent(Transform* newParent);
 
     glm::vec3 Position();
@@ -40,9 +37,7 @@ public:
     glm::mat4 Model();
 
     Entity entity;
-
 private:
-
     void RecalculateModel();
     void UpdateModelRecursive(glm::mat4 parentModel);
 
@@ -55,9 +50,7 @@ private:
     // Global Matrix 
     glm::mat4 model;
 
-    uint32_t childCount = 0;
     Transform* parent = nullptr;
-    std::shared_ptr<Transform* []> children;
-
+    std::vector<Transform*> children;
 };
 

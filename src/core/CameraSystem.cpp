@@ -5,6 +5,16 @@
 #include "CameraSystem.h"
 
 Entity CameraSystem::activeCamEntity;
+std::unique_ptr<UniformBuffer> CameraSystem::m_UniformBuffer;
+
+void CameraSystem::Init() {
+	m_UniformBuffer = std::make_unique<UniformBuffer>(0);
+	m_UniformBuffer->Register("camPos", sizeof(glm::vec3));
+	m_UniformBuffer->Register("view", sizeof(glm::mat4));
+	m_UniformBuffer->Register("projection", sizeof(glm::mat4));
+	m_UniformBuffer->Register("viewProjection", sizeof(glm::mat4));
+	m_UniformBuffer->FinishedRegistering();
+}
 
 void CameraSystem::Update() {
     if (!Input::OnMouseHold(GLFW_MOUSE_BUTTON_2)) return;
@@ -41,11 +51,17 @@ void CameraSystem::Update() {
     cam->m_View = glm::translate(glm::mat4(1.0f), trans->Position());
     cam->m_View = cam->m_View * glm::mat4_cast(trans->Rotation());
     cam->m_View = glm::inverse(cam->m_View);
+
+    UpdateUniformBuffer(trans, cam);
 }
 
-glm::vec3 CameraSystem::CamPos() {
-    return Registry::Get<Transform>(activeCamEntity)->Position();
+void CameraSystem::SetActiveCameraEntity(Entity entity) {
+    activeCamEntity = entity;
+    auto trans = Registry::Get<Transform>(activeCamEntity);
+    auto cam = Registry::Get<Camera>(activeCamEntity);
+    UpdateUniformBuffer(trans, cam);
 }
+
 std::array<glm::vec3, FrustrumPointCount>
 CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     auto trans = Registry::Get<Transform>(activeCamEntity);
@@ -95,4 +111,14 @@ CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     };
 
     return points;
+}
+
+void CameraSystem::UpdateUniformBuffer(Transform* trans, Camera* cam) {
+    glm::vec3 camPos = trans->Position();
+    glm::mat4 viewProjection = cam->ViewProjection();
+
+	m_UniformBuffer->SubBufferData("camPos", &camPos);
+	m_UniformBuffer->SubBufferData("view", &cam->m_View);
+	m_UniformBuffer->SubBufferData("projection", &cam->m_Projection);
+	m_UniformBuffer->SubBufferData("viewProjection", &viewProjection);
 }

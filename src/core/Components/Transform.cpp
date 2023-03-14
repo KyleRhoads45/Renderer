@@ -28,7 +28,7 @@ void Transform::RecalculateModel() {
 	model = model * glm::mat4_cast(rotation);
 	model = glm::scale(model, scale);
 
-	for (int i = 0; i < childCount; i++) {
+	for (int i = 0; i < children.size(); i++) {
 		children[i]->UpdateModelRecursive(model);
 	}
 }
@@ -39,7 +39,7 @@ void Transform::UpdateModelRecursive(glm::mat4 parentModel) {
 	localModel = glm::scale(localModel, scale);
 	model = parentModel * localModel;
 
-	for (int i = 0; i < childCount; i++) {
+	for (int i = 0; i < children.size(); i++) {
 		children[i]->UpdateModelRecursive(model);
 	}
 }
@@ -55,20 +55,16 @@ glm::vec3 Transform::InverseTransformPosition(const glm::vec3& pos) {
 }
 
 uint32_t Transform::GetChildCount() {
-	return childCount;
+	return children.size();
 }
 
 Transform& Transform::GetChild(const uint32_t index) {
-	assert(index < childCount);
+	assert(index < children.size());
 	return *children[index];
 }
 
-void Transform::SetChildren(std::shared_ptr<Transform* []>& childs, uint32_t count) {
-	children = childs;
-	childCount = count;
-	for (int i = 0; i < childCount; i++) {
-		children[i]->UpdateModelRecursive(model);
-	}
+void Transform::AddChild(Transform* child) {
+	children.push_back(child);
 }
 
 void Transform::SetParent(Transform* newParent) {

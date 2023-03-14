@@ -64,7 +64,7 @@ void main() {
 
     for (int i = 0; i < 1; i++) {
         // Directional light radiance is just light color 
-        vec3 radiance = vec3(1.0, 1.0, 1.0) * 2.0;
+        vec3 radiance = vec3(1.0, 1.0, 1.0) * 0.14;
 
         float metallic = 0.0;
         if (useMetallicMap) {

@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 
-//Matches GLFW Macros
+// Matches GLFW Macros
 #define INPUT_RELEASED    0
 #define INPUT_PRESSED     1
 #define INPUT_HELD        2

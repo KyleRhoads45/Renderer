@@ -6,6 +6,7 @@
 class Camera {
 public:
     Camera();
+    glm::mat4 ViewProjection();
 
     float m_Yaw;
     float m_Pitch;

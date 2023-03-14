@@ -10,11 +10,9 @@
 class Renderer {
 public:
     static void Init();
-    static void RenderScene(Camera& camera);
+    static void RenderScene();
     static void DrawSkybox();
     static void DebugDrawBounds(glm::vec3* points);
     static void DebugDrawPoint(const glm::vec3 point);
-private:
-    static UniformBuffer cameraUniformBuffer;
 };
 

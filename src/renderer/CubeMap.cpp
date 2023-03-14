@@ -2,10 +2,19 @@
 #include <stb/stb_image.h>
 #include <glad/glad.h>
 #include "CubeMap.h"
+#include <iostream>
 
-CubeMap::CubeMap(const std::array<std::string, 6>& images) {
-    glGenTextures(1, &m_Id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_Id);
+std::unordered_map<std::string, std::weak_ptr<CubeMap>> CubeMap::m_ActiveCubemaps;
+
+std::shared_ptr<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images) {
+    std::string key = images[0];
+    if (m_ActiveCubemaps.contains(key)) {
+        return m_ActiveCubemaps[key].lock();
+    }
+
+    uint32_t id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 
     for (int i = 0; i < images.size(); i++) {
 		int32_t width, height, numChannels;
@@ -23,6 +32,18 @@ CubeMap::CubeMap(const std::array<std::string, 6>& images) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    auto cubemap = std::make_shared<CubeMap>(key, id);
+    m_ActiveCubemaps[key] = cubemap;
+    return cubemap;
+}
+
+CubeMap::CubeMap(const std::string& key, uint32_t id) 
+    : m_Key(key), m_Id(id) { }
+
+CubeMap::~CubeMap() {
+    m_ActiveCubemaps.erase(m_Key);
+    glDeleteTextures(1, &m_Id);
 }
 
 void CubeMap::Bind() {

@@ -10,6 +10,10 @@ UniformBuffer::UniformBuffer(uint32_t bindingPoint) : m_BufferSizeInBytes(0) {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
+UniformBuffer::~UniformBuffer() {
+	glDeleteBuffers(1, &m_Id);
+}
+
 void UniformBuffer::Register(const std::string& variable, size_t sizeInBytes) {
 	constexpr size_t floatSize = sizeof(float);
 	if (sizeInBytes <= floatSize) {

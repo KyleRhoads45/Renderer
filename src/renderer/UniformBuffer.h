@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-static struct VariableData {
+struct VariableData {
 	uint32_t m_StartOffset;
 	uint32_t m_DataSize;
 
@@ -16,8 +16,8 @@ static struct VariableData {
 
 class UniformBuffer {
 public:
-	UniformBuffer() = default;
 	UniformBuffer(uint32_t bindingPoint);
+	~UniformBuffer();
 	void Register(const std::string& variable, size_t sizeInBytes);
 	void FinishedRegistering();
 	void SubBufferData(const std::string& variable, void* data);
