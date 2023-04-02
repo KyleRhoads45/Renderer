@@ -4,9 +4,6 @@
 #include "Components.h"
 #include "CameraSystem.h"
 
-Entity CameraSystem::activeCamEntity;
-std::unique_ptr<UniformBuffer> CameraSystem::m_UniformBuffer;
-
 void CameraSystem::Init() {
 	m_UniformBuffer = std::make_unique<UniformBuffer>(0);
 	m_UniformBuffer->Register("camPos", sizeof(glm::vec3));

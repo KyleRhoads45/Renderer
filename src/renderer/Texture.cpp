@@ -3,8 +3,6 @@
 #include <glad/glad.h>
 #include "Texture.h"
 
-std::unordered_map<std::string, std::weak_ptr<Texture>> Texture::m_ActiveTextures;
-
 std::shared_ptr<Texture> Texture::Load(const std::string& filePath) {
     if (m_ActiveTextures.contains(filePath)) {
         return m_ActiveTextures[filePath].lock();

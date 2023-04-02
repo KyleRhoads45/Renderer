@@ -8,13 +8,6 @@
 #include "Enviroment.h"
 #include "ShadowMapper.h"
 
-DepthTexture ShadowMapper::m_ShadowMap;
-glm::mat4 ShadowMapper::m_LightViewProjection;
-uint32_t ShadowMapper::m_TextureSize;
-uint32_t ShadowMapper::m_ShadowDist;
-uint32_t ShadowMapper::m_DepthFrameBuffer;
-Shader ShadowMapper::m_DepthShader;
-
 void ShadowMapper::Init(uint32_t textureSize, uint32_t shadowDist) {
 	m_ShadowMap = DepthTexture(textureSize, textureSize);
 	m_ShadowDist = shadowDist;

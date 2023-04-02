@@ -23,9 +23,9 @@ private:
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void MouseCallback(GLFWwindow* window, int button, int action, int mods);
     
-    static std::unordered_map<int, int> keyMap;
-    static std::unordered_map<int, int> mouseMap;
-    static glm::vec2 mouseDelta;
-    static double lastMouseXPos; 
-    static double lastMouseYPos;
+    inline static std::unordered_map<int, int> keyMap;
+    inline static std::unordered_map<int, int> mouseMap;
+    inline static glm::vec2 mouseDelta;
+    inline static double lastMouseXPos = 0.0; 
+    inline static double lastMouseYPos = 0.0;
 };

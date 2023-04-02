@@ -1,11 +1,5 @@
 ﻿#include "Input.h"
 
-std::unordered_map<int, int> Input::keyMap;
-std::unordered_map<int, int> Input::mouseMap;
-glm::vec2 Input::mouseDelta;
-double Input::lastMouseXPos = 0; 
-double Input::lastMouseYPos = 0;
-
 void Input::Init(GLFWwindow* window) {
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);

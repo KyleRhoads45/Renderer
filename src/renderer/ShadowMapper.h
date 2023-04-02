@@ -7,14 +7,14 @@ public:
 	static void Init(uint32_t textureSize, uint32_t shadowDist);
 	static void PerformShadowPass();
 
-    static DepthTexture m_ShadowMap;
-	static glm::mat4 m_LightViewProjection;
+    inline static DepthTexture m_ShadowMap;
+	inline static glm::mat4 m_LightViewProjection;
 private:
 	static void CalculateLightViewProjection();
 
-    static uint32_t m_TextureSize;
-    static uint32_t m_ShadowDist;
-    static uint32_t m_DepthFrameBuffer;
-    static Shader m_DepthShader;
+    inline static uint32_t m_TextureSize;
+    inline static uint32_t m_ShadowDist;
+    inline static uint32_t m_DepthFrameBuffer;
+    inline static Shader m_DepthShader;
 };
 

@@ -15,6 +15,6 @@ public:
     static std::array<glm::vec3, FrustrumPointCount> GetViewFrustrumPoints(float zDist);
 private:
 	static void UpdateUniformBuffer(Transform* trans, Camera* cam);
-	static std::unique_ptr<UniformBuffer> m_UniformBuffer;
-	static Entity activeCamEntity;
+	inline static std::unique_ptr<UniformBuffer> m_UniformBuffer;
+	inline static Entity activeCamEntity;
 };

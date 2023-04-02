@@ -4,10 +4,12 @@
 #include "CubeMap.h"
 #include <iostream>
 
-std::unordered_map<std::string, std::weak_ptr<CubeMap>> CubeMap::m_ActiveCubemaps;
-
 std::shared_ptr<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images) {
-    std::string key = images[0];
+    std::string key;
+    for (int i = 0; i < images.size(); i++) {
+        key.append(images[i]);
+    }
+
     if (m_ActiveCubemaps.contains(key)) {
         return m_ActiveCubemaps[key].lock();
     }

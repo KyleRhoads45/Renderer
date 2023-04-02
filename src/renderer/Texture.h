@@ -12,7 +12,7 @@ public:
     ~Texture();
     void Bind();
 private:
-	static std::unordered_map<std::string, std::weak_ptr<Texture>> m_ActiveTextures;
+	inline static std::unordered_map<std::string, std::weak_ptr<Texture>> m_ActiveTextures;
 
     uint32_t m_Width;
     uint32_t m_Height;
