@@ -1,5 +1,6 @@
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
+#include "core/Base.h"
 #include "ecs/Registry.h"
 #include "core/Components.h"
 #include "Model.h"
@@ -17,9 +18,9 @@ Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Transform* p
 	auto entity = Registry::Create();
 	auto trans = Registry::Add<Transform>(entity);
 
-	aiVector3t<float> scale;
-	aiVector3t<float> position;
-	aiQuaterniont<float> rotation;
+	aiVector3t<f32> scale;
+	aiVector3t<f32> position;
+	aiQuaterniont<f32> rotation;
 	node->mTransformation.Decompose(scale, rotation, position);
 	
 	trans->Set(
@@ -33,16 +34,16 @@ Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Transform* p
 		trans->SetParent(parent);
 	}
 
-	for (uint32_t i = 0; i < node->mNumMeshes; i++) {
+	for (u32 i = 0; i < node->mNumMeshes; i++) {
 		auto meshRenderer = Registry::Add<MeshRenderer>(entity);
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshRenderer->mesh = Mesh::FromAssimpMesh(mesh);
 		meshRenderer->material = mat;
 	}
 
-	for (uint32_t i = 0; i < node->mNumChildren; i++) {
+	for (u32 i = 0; i < node->mNumChildren; i++) {
 		auto child = ProcessNode(scene, node->mChildren[i], trans, mat);
-		trans->AddChild(child.Get<Transform>());
+		trans->AddChild(Registry::Get<Transform>(child));
 	}
 
 	return entity;

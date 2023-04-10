@@ -4,7 +4,7 @@
 #include "CityMaterial.h"
 
 CityMaterial::CityMaterial(Shader shader, std::string texture) : Material(shader) {
-	baseMap = Texture::Load(texture.c_str());
+	m_BaseMap = Texture::Load(texture.c_str());
 }
 
 void CityMaterial::Bind(Transform* transform) {
@@ -16,7 +16,7 @@ void CityMaterial::Bind(Transform* transform) {
 	m_Shader.SetInt("useRoughnessMap", false);
 
 	glActiveTexture(GL_TEXTURE0);
-	baseMap->Bind();
+	m_BaseMap->Bind();
 	m_Shader.SetInt("baseMap", 0);
 
 	glActiveTexture(GL_TEXTURE4);

@@ -1,25 +1,27 @@
 #include "View.h"
 
-ViewIterator::ViewIterator(uint32_t startIndex, EntityComponentMask mask)
-	: index(startIndex), mask(mask) { }
+ViewIterator::ViewIterator(u32 startIndex, EntityCompMask mask) {
+	m_Index = startIndex;
+	m_Mask = mask;
+}
 
 Entity ViewIterator::operator*() const {
-	return Registry::entities[index];
+	return Registry::entities[m_Index];
 }
 
 ViewIterator& ViewIterator::operator++() {
-	index++;
-	while (index < Registry::entityCount && Registry::entityCompMasks[index] != mask) {
-		index++;
+	m_Index++;
+	while (m_Index < Registry::entityCount && Registry::entityCompMasks[m_Index] != m_Mask) {
+		m_Index++;
 	}
 	return *this;
 }
 
 bool ViewIterator::operator==(const ViewIterator& other) const {
-	return (index == other.index && mask == other.mask);
+	return (m_Index == other.m_Index && m_Mask == other.m_Mask);
 }
 
 bool ViewIterator::operator!=(const ViewIterator& other) const {
-	return (index != other.index || mask != other.mask);
+	return (m_Index != other.m_Index || m_Mask != other.m_Mask);
 }
 

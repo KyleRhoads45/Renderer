@@ -10,14 +10,14 @@ std::shared_ptr<Texture> Texture::Load(const std::string& filePath) {
 
     stbi_set_flip_vertically_on_load(true);
 
-    int32_t width;
-    int32_t height;
-    int32_t numChannels;
+    i32 width;
+    i32 height;
+    i32 numChannels;
     stbi_uc* imageData = stbi_load(filePath.c_str(), &width, &height, &numChannels, 0);
 
     assert(imageData);
 
-    uint32_t id;
+    u32 id;
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 
@@ -42,12 +42,12 @@ std::shared_ptr<Texture> Texture::Load(const std::string& filePath) {
     stbi_image_free(imageData);
     stbi_set_flip_vertically_on_load(false);
 
-    auto texture = std::make_shared<Texture>(width, height, id, filePath);
+    auto texture = MakeRef<Texture>(width, height, id, filePath);
     m_ActiveTextures[filePath] = texture;
     return texture;
 }
 
-Texture::Texture(uint32_t width, uint32_t height, uint32_t id, const std::string& path) 
+Texture::Texture(u32 width, u32 height, u32 id, const std::string& path) 
     : m_Width(width), m_Height(height), m_Id(id), m_Path(path) { }
 
 Texture::~Texture() {

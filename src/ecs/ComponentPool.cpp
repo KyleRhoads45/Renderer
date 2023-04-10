@@ -1,12 +1,11 @@
 #include "ComponentPool.h"
 #include "EcsParams.h"
 
-ComponentPool::ComponentPool(const size_t componentSize)
-	: componentSize(componentSize)
-{
-	buffer = std::make_unique<std::byte[]>(componentSize * MAX_ENTITIES);
+ComponentPool::ComponentPool(const u32 compSize) {
+	m_CompSize = compSize;
+	m_Buffer = MakeBox<u8[]>(compSize * MAX_ENTITIES);
 }
 
 void* ComponentPool::GetComponentAddress(const Entity entity) const {
-	return (buffer.get() + (componentSize * entity.id));
+	return (m_Buffer.get() + (m_CompSize * entity.id));
 }

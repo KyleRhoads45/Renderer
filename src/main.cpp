@@ -5,6 +5,7 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
+#include "core/Base.h"
 #include "core/Components.h"
 #include "core/Input.h"
 #include "renderer/Renderer.h"
@@ -85,18 +86,18 @@ void SetupEnviroment() {
 }
 
 void InstantiateDemo() {
-	static std::vector<std::shared_ptr<Material>> mats;
+	static std::vector<Ref<Material>> mats;
 	Shader litShader("src/shaders/lit.vert", "src/shaders/lit.frag");
 
 	auto entity = Model::Instantiate("Assets/PolygonCity/City.fbx", NULL);
 	auto trans = Registry::Get<Transform>(entity);
 	trans->SetScale(glm::vec3(0.01f));
 
-	int childIndex = 0;
+	i32 childIndex = 0;
 	auto directory = std::filesystem::directory_iterator("Assets/PolygonCity/Textures");
 	for (auto& file : directory) {
-		auto mat = std::make_shared<CityMaterial>(litShader, file.path().string());
+		auto mat = MakeRef<CityMaterial>(litShader, file.path().string());
 		mats.push_back(mat);
-		trans->GetChild(childIndex++).entity.Get<MeshRenderer>()->material = mat.get();
+		Registry::Get<MeshRenderer>(trans->GetChild(childIndex++).entity)->material = mat.get();
 	}
 }

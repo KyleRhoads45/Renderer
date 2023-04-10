@@ -49,7 +49,7 @@ void Input::SwitchPressToHeld() {
 }
 
 void Input::UpdateMouseDeltas(GLFWwindow* window) {
-    double curMouseXPos, curMouseYPos;
+    f64 curMouseXPos, curMouseYPos;
     glfwGetCursorPos(window, &curMouseXPos, &curMouseYPos);
     
     mouseDelta.x = curMouseXPos - lastMouseXPos;
@@ -59,7 +59,7 @@ void Input::UpdateMouseDeltas(GLFWwindow* window) {
     lastMouseYPos = curMouseYPos;
 }
 
-void Input::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void Input::KeyCallback(GLFWwindow* window, i32 key, i32 scancode, i32 action, i32 mods) {
     if (action == INPUT_PRESSED) {
         keyMap[key] = INPUT_PRESSED;
     }
@@ -68,7 +68,7 @@ void Input::KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     }
 }
 
-void Input::MouseCallback(GLFWwindow* window, int button, int action, int mods) {
+void Input::MouseCallback(GLFWwindow* window, i32 button, i32 action, i32 mods) {
     if (action == INPUT_PRESSED) {
         mouseMap[button] = INPUT_PRESSED;
     }

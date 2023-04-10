@@ -1,7 +1,8 @@
+#include "Base.h"
 #include "Primatives.h"
 
 Mesh Primatives::Cube(bool invert = false) {
-	const size_t vertCount = 8;
+	const u32 vertCount = 8;
 	glm::vec3 verts[vertCount] {
 
 		// Front face
@@ -20,8 +21,8 @@ Mesh Primatives::Cube(bool invert = false) {
 
 	};
 
-	const size_t indexCount = 36;
-	uint32_t indices[indexCount] {
+	const u32 indexCount = 36;
+	u32 indices[indexCount] {
 
 		// Front face
 		0, 1, 2,
@@ -49,9 +50,9 @@ Mesh Primatives::Cube(bool invert = false) {
 	};
 
 	if (invert) {
-		for (int i = 0; i < indexCount; i += 3) {
-			int first = indices[i];
-			int third = indices[i + 2];
+		for (i32 i = 0; i < indexCount; i += 3) {
+			i32 first = indices[i];
+			i32 third = indices[i + 2];
 
 			indices[i] = third;
 			indices[i + 2] = first;
@@ -61,18 +62,18 @@ Mesh Primatives::Cube(bool invert = false) {
 	Mesh cube;
 
 	cube.numVerts = vertCount;
-	cube.verts = std::make_shared<Vertex[]>(vertCount);
+	cube.verts = MakeRef<Vertex[]>(vertCount);
 
-	for (int i = 0; i < vertCount; i++) {
+	for (i32 i = 0; i < vertCount; i++) {
 		Vertex vert;
 		vert.position = verts[i];
 		cube.verts[i] = vert;
 	}
 
 	cube.numIndices = indexCount;
-	cube.indices = std::make_shared<uint32_t[]>(indexCount);
+	cube.indices = MakeRef<u32[]>(indexCount);
 
-	for (int i = 0; i < indexCount; i++) {
+	for (i32 i = 0; i < indexCount; i++) {
 		cube.indices[i] = indices[i];
 	}
 	
@@ -96,8 +97,8 @@ Mesh Primatives::Plane() {
 		glm::vec2(0.0, 1.0)
 	};
 
-	const size_t indexCount = 6;
-	uint32_t indices[indexCount] {
+	const u32 indexCount = 6;
+	u32 indices[indexCount] {
 		0, 1, 2,
 		0, 2, 3,
 	};
@@ -105,9 +106,9 @@ Mesh Primatives::Plane() {
 	Mesh plane;
 
 	plane.numVerts = vertCount;
-	plane.verts = std::make_shared<Vertex[]>(vertCount);
+	plane.verts = MakeRef<Vertex[]>(vertCount);
 
-	for (int i = 0; i < vertCount; i++) {
+	for (i32 i = 0; i < vertCount; i++) {
 		Vertex vert;
 		vert.position = verts[i];
 		vert.normal = glm::vec3(0, 0, -1);
@@ -118,9 +119,9 @@ Mesh Primatives::Plane() {
 	}
 
 	plane.numIndices = indexCount;
-	plane.indices = std::make_shared<uint32_t[]>(indexCount);
+	plane.indices = MakeRef<u32[]>(indexCount);
 
-	for (int i = 0; i < indexCount; i++) {
+	for (i32 i = 0; i < indexCount; i++) {
 		plane.indices[i] = indices[i];
 	}
 	

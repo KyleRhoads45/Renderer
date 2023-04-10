@@ -1,29 +1,30 @@
 #include "Bounds.h"
 
-Bounds::Bounds(glm::vec3* points, size_t size) 
-	: min(points[0]), max(points[0]) {
+Bounds::Bounds(glm::vec3* points, u32 size) {
+	m_Min = points[0];
+	m_Max = points[0];
 
-	for (int i = 0; i < size; i++) {
+	for (u32 i = 0; i < size; i++) {
 		glm::vec3 pos = points[i];
 
-		if (pos.x < min.x) {
-			min.x = pos.x;
+		if (pos.x < m_Min.x) {
+			m_Min.x = pos.x;
 		}
-		if (pos.y < min.y) {
-			min.y = pos.y;
+		if (pos.y < m_Min.y) {
+			m_Min.y = pos.y;
 		}
-		if (pos.z < min.z) {
-			min.z = pos.z;
+		if (pos.z < m_Min.z) {
+			m_Min.z = pos.z;
 		}
 
-		if (pos.x > max.x) {
-			max.x = pos.x;
+		if (pos.x > m_Max.x) {
+			m_Max.x = pos.x;
 		}
-		if (pos.y > max.y) {
-			max.y = pos.y;
+		if (pos.y > m_Max.y) {
+			m_Max.y = pos.y;
 		}
-		if (pos.z > max.z) {
-			max.z = pos.z;
+		if (pos.z > m_Max.z) {
+			m_Max.z = pos.z;
 		}
 	}
 }

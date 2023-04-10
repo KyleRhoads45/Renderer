@@ -17,10 +17,10 @@ Mesh Mesh::FromAssimpMesh(const aiMesh* meshData) {
 	mesh.numIndices = meshData->mNumFaces * 3;
 	mesh.numVerts = meshData->mNumVertices;
 
-	mesh.verts = std::make_shared<Vertex[]>(meshData->mNumVertices);
-	mesh.indices = std::make_shared<unsigned int[]>(mesh.numIndices);
+	mesh.verts = MakeRef<Vertex[]>(meshData->mNumVertices);
+	mesh.indices = MakeRef<u32[]>(mesh.numIndices);
 	
-	for (uint32_t i = 0; i < meshData->mNumVertices; i++) {
+	for (i32 i = 0; i < meshData->mNumVertices; i++) {
 		Vertex vertex;
 
 		const aiVector3D pos = meshData->mVertices[i];
@@ -40,10 +40,10 @@ Mesh Mesh::FromAssimpMesh(const aiMesh* meshData) {
 		mesh.verts[i] = vertex;
 	}
 
-	int count = 0;
-	for (uint32_t i = 0; i < meshData->mNumFaces; i++) {
+	i32 count = 0;
+	for (i32 i = 0; i < meshData->mNumFaces; i++) {
 		const aiFace face = meshData->mFaces[i];
-		for (uint32_t j = 0; j < face.mNumIndices; j++) {
+		for (i32 j = 0; j < face.mNumIndices; j++) {
 			mesh.indices[count] = face.mIndices[j];
 			count++;
 		}
@@ -72,7 +72,7 @@ void Mesh::GenOpenGLBuffers() {
 
 	glGenBuffers(1, &ebo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * numIndices, &indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * numIndices, &indices[0], GL_STATIC_DRAW);
 }
 
 void Mesh::UpdateVertexBuffer() {

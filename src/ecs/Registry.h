@@ -1,11 +1,12 @@
 #pragma once
 #include <vector>
-#include <memory>
 #include <bitset>
+#include <cassert>
+#include "core/Base.h"
 #include "ComponentPool.h"
 #include "EcsParams.h"
 
-typedef std::bitset<MAX_COMPONENTS> EntityComponentMask;
+using EntityCompMask = std::bitset<MAX_COMPONENTS>;
 
 class Registry {
 public:
@@ -22,24 +23,23 @@ public:
 	static Component* Get(Entity entity);
 
 	template<typename Component>
-	static uint32_t GetComponentId();
+	static u32 GetComponentId();
 
 private:
-	static uint32_t entityCount;
-	static std::shared_ptr<Entity[]> entities;
+	static inline u32 entityCount = 0;
+	static inline Ref<Entity[]> entities = MakeRef<Entity[]>(MAX_ENTITIES);
 
-	static uint32_t componentCounter;
-	static std::vector<ComponentPool> pools;
+	static inline u32 componentCounter = 0;
+	static inline std::vector<ComponentPool> pools;
 
-	static std::shared_ptr<EntityComponentMask[]> entityCompMasks;
+	static inline Ref<EntityCompMask[]> entityCompMasks = MakeBox<EntityCompMask[]>(MAX_ENTITIES);
 };
 
 template<typename Component>
 Component* Registry::Add(Entity entity) {
-	// Unregistered entity
-	assert(entity.id != MAX_ENTITIES);
+	assert(entity.id != MAX_ENTITIES); // Unregistered entity
 
-	uint32_t compId = GetComponentId<Component>();
+	u32 compId = GetComponentId<Component>();
 
 	if (pools.size() == compId) {
 		pools.push_back(ComponentPool(sizeof(Component)));
@@ -51,15 +51,14 @@ Component* Registry::Add(Entity entity) {
 
 template<typename Component>
 Component* Registry::Get(Entity entity) {
-	// Unregistered entity
-	assert(entity.id != MAX_ENTITIES);
-	uint32_t compId = GetComponentId<Component>();
+	assert(entity.id != MAX_ENTITIES); // Unregistered entity
+	u32 compId = GetComponentId<Component>();
 	return pools[compId].GetComponent<Component>(entity);
 }
 
 template<typename Component>
 uint32_t Registry::GetComponentId() {
-	static uint32_t compId = componentCounter++;
+	static u32 compId = componentCounter++;
 	return compId;
 }
 

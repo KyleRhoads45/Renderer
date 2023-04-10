@@ -1,10 +1,11 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "core/Base.h"
 
 class Bounds {
 public:
-	Bounds(glm::vec3* points, size_t size);
+	Bounds(glm::vec3* points, u32 size);
 
-	glm::vec3 min;
-	glm::vec3 max;
+	glm::vec3 m_Min;
+	glm::vec3 m_Max;
 };

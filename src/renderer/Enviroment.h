@@ -1,6 +1,6 @@
 #pragma once
-#include <memory>
 #include <glm/glm.hpp>
+#include "core/Base.h"
 #include "CubeMap.h"
 #include "UniformBuffer.h"
 
@@ -10,11 +10,11 @@ public:
 	Enviroment();
 	void SetLightViewProjection(glm::mat4& lightViewProjection);
 	void SetLightDir(glm::vec3 lightDir);
-	void SetAmbientStrength(float ambientStrength);
+	void SetAmbientStrength(f32 ambientStrength);
 	glm::vec3 GetLightDir();
-	std::shared_ptr<CubeMap> m_Skybox;
+	Ref<CubeMap> m_Skybox;
 private:
-    std::unique_ptr<UniformBuffer> m_UniformBuffer;
+    Box<UniformBuffer> m_UniformBuffer;
 	glm::vec3 m_LightDir;
-	float m_AmbientStrength;
+	f32 m_AmbientStrength;
 };

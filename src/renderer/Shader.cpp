@@ -13,11 +13,11 @@ void Shader::Bind() const {
     glUseProgram(shaderId);
 }
 
-void Shader::SetInt(const std::string& name, int num) {
+void Shader::SetInt(const std::string& name, i32 num) {
     glUniform1i(GetUniformLocation(name), num);
 }
 
-void Shader::SetFloat(const std::string& name, float num) {
+void Shader::SetFloat(const std::string& name, f32 num) {
     glUniform1f(GetUniformLocation(name), num);
 }
 
@@ -27,7 +27,7 @@ void Shader::SetMat4(const std::string& name, const glm::mat4& mat4) {
 
 inline int Shader::GetUniformLocation(const std::string& name) {
     if (!m_UniformLocations.contains(name)) {
-        int location = glGetUniformLocation(shaderId, name.c_str());
+        i32 location = glGetUniformLocation(shaderId, name.c_str());
         m_UniformLocations[name] = location;
         return location;
     }
@@ -43,7 +43,7 @@ void Shader::CreateShader(const std::string& vertFile, const std::string& fragFi
     const char* fragCode = fragCodeString.c_str();
 
     // Vertex shader
-    const unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
+    const i32 vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vertCode, NULL);
     glCompileShader(vertex);
 
@@ -52,7 +52,7 @@ void Shader::CreateShader(const std::string& vertFile, const std::string& fragFi
     #endif
 
     // Fragment Shader
-    const unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
+    const i32 fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragCode, NULL);
     glCompileShader(fragment);
 
@@ -96,8 +96,8 @@ std::string Shader::LoadShaderFile(const std::string& filePath) const {
 }
 
 // Checks for compilation errors in the shaders
-void Shader::CheckCompileErrors(uint32_t shader, const std::string& type) const {
-    int success;
+void Shader::CheckCompileErrors(u32 shader, const std::string& type) const {
+    i32 success;
     char infoLog[1024];
 
     if (type == "Shader Linking") {

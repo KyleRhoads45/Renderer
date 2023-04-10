@@ -4,9 +4,9 @@
 #include "CubeMap.h"
 #include <iostream>
 
-std::shared_ptr<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images) {
+Ref<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images) {
     std::string key;
-    for (int i = 0; i < images.size(); i++) {
+    for (i32 i = 0; i < images.size(); i++) {
         key.append(images[i]);
     }
 
@@ -14,12 +14,12 @@ std::shared_ptr<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images)
         return m_ActiveCubemaps[key].lock();
     }
 
-    uint32_t id;
+    u32 id;
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 
-    for (int i = 0; i < images.size(); i++) {
-		int32_t width, height, numChannels;
+    for (i32 i = 0; i < images.size(); i++) {
+		i32 width, height, numChannels;
 		stbi_uc* imageData = stbi_load(images[i].c_str(), &width, &height, &numChannels, 0);
 
         assert(imageData);
@@ -35,13 +35,15 @@ std::shared_ptr<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    auto cubemap = std::make_shared<CubeMap>(key, id);
+    auto cubemap = MakeRef<CubeMap>(key, id);
     m_ActiveCubemaps[key] = cubemap;
     return cubemap;
 }
 
-CubeMap::CubeMap(const std::string& key, uint32_t id) 
-    : m_Key(key), m_Id(id) { }
+CubeMap::CubeMap(const std::string& key, u32 id) {
+    m_Key = key; 
+    m_Id = id;
+}
 
 CubeMap::~CubeMap() {
     m_ActiveCubemaps.erase(m_Key);

@@ -5,7 +5,7 @@
 #include "CameraSystem.h"
 
 void CameraSystem::Init() {
-	m_UniformBuffer = std::make_unique<UniformBuffer>(0);
+	m_UniformBuffer = MakeBox<UniformBuffer>(0);
 	m_UniformBuffer->Register("camPos", sizeof(glm::vec3));
 	m_UniformBuffer->Register("view", sizeof(glm::mat4));
 	m_UniformBuffer->Register("projection", sizeof(glm::mat4));
@@ -59,15 +59,15 @@ void CameraSystem::SetActiveCameraEntity(Entity entity) {
     UpdateUniformBuffer(trans, cam);
 }
 
-std::array<glm::vec3, FrustrumPointCount>
+std::array<glm::vec3, FrustrumPointCount>&
 CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     auto trans = Registry::Get<Transform>(activeCamEntity);
     auto cam = Registry::Get<Camera>(activeCamEntity);
 
-    float farDist = (zDist == 0.0f) ? cam->m_Far : zDist;
-    float nearDist = cam->m_Near;
-    float aspect = cam->m_Aspect;
-    float pheta = glm::radians(cam->m_Fov / 2.0f);
+    f32 farDist = (zDist == 0.0f) ? cam->m_Far : zDist;
+    f32 nearDist = cam->m_Near;
+    f32 aspect = cam->m_Aspect;
+    f32 pheta = glm::radians(cam->m_Fov / 2.0f);
 
     const glm::vec3 pos = trans->Position();
     const glm::vec3 forward = trans->Forward();
@@ -76,8 +76,8 @@ CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
 
     // Calculate far plane positions
 
-    float halfFarPlaneHeight = (glm::tan(pheta) * farDist);
-    float halfFarPlaneWidth = halfFarPlaneHeight * aspect;
+    f32 halfFarPlaneHeight = (glm::tan(pheta) * farDist);
+    f32 halfFarPlaneWidth = halfFarPlaneHeight * aspect;
 
     const glm::vec3 farUp = up * halfFarPlaneHeight;
     const glm::vec3 farRight = right * halfFarPlaneWidth;
@@ -90,8 +90,8 @@ CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
 
     // Calculate near plane positions
 
-    float halfNearPlaneHeight = (glm::tan(pheta) * nearDist);
-    float halfNearPlaneWidth = halfNearPlaneHeight * aspect;
+    f32 halfNearPlaneHeight = (glm::tan(pheta) * nearDist);
+    f32 halfNearPlaneWidth = halfNearPlaneHeight * aspect;
 
     const glm::vec3 nearUp = up * halfNearPlaneHeight;
     const glm::vec3 nearRight = right * halfNearPlaneWidth;

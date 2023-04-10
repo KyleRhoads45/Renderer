@@ -1,7 +1,7 @@
 #include <glad/glad.h>
 #include "DepthTexture.h"
 
-DepthTexture::DepthTexture(const uint32_t width, const uint32_t height) {
+DepthTexture::DepthTexture(const u32 width, const u32 height) {
 	glGenTextures(1, &m_Id);
 	glBindTexture(GL_TEXTURE_2D, m_Id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);

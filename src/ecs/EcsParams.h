@@ -1,4 +1,4 @@
 #pragma once
 
-#define MAX_ENTITIES 1000
-#define MAX_COMPONENTS 100
+constexpr auto MAX_ENTITIES = 1000;
+constexpr auto MAX_COMPONENTS = 100;

@@ -2,13 +2,14 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include "core/Base.h"
 
 struct VariableData {
-	uint32_t m_StartOffset;
-	uint32_t m_DataSize;
+	u32 m_StartOffset;
+	u32 m_DataSize;
 
 	VariableData() = default;
-	VariableData(uint32_t offset, uint32_t dataSize) {
+	VariableData(u32 offset, u32 dataSize) {
 		m_StartOffset = offset;
 		m_DataSize = dataSize;
 	}
@@ -16,9 +17,9 @@ struct VariableData {
 
 class UniformBuffer {
 public:
-	UniformBuffer(uint32_t bindingPoint);
+	UniformBuffer(u32 bindingPoint);
 	~UniformBuffer();
-	void Register(const std::string& variable, size_t sizeInBytes);
+	void Register(const std::string& variable, u32 sizeInBytes);
 	void FinishedRegistering();
 	void SubBufferData(const std::string& variable, void* data);
 private:
@@ -26,6 +27,6 @@ private:
 
 	std::unordered_map<std::string, VariableData> m_StartOffsetLookUp;
 
-	size_t m_BufferSizeInBytes;
-	uint32_t m_Id;
+	u32 m_BufferSizeInBytes;
+	u32 m_Id;
 };

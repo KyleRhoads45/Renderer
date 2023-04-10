@@ -1,5 +1,5 @@
 #pragma once
-#include <memory>
+#include "core/Base.h"
 #include "renderer/Material.h"
 #include "renderer/CubeMap.h"
 
@@ -8,5 +8,5 @@ public:
 	CityMaterial(Shader shader, std::string texture);
 	virtual void Bind(Transform* transform) override;
 private:
-	std::shared_ptr<Texture> baseMap;
+	Ref<Texture> m_BaseMap;
 };

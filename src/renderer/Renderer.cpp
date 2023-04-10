@@ -1,12 +1,12 @@
 #include <cassert>
 #include <glad/glad.h>
-#include "Renderer.h"
+#include "core/Base.h"
 #include "core/Primatives.h"
 #include "ecs/Registry.h"
 #include "ecs/View.h"
 #include "ShadowMapper.h"
 #include "core/CameraSystem.h"
-#include <iostream>
+#include "Renderer.h"
 
 void Renderer::Init() {
 	glEnable(GL_FRAMEBUFFER_SRGB);
@@ -20,8 +20,8 @@ void Renderer::RenderScene() {
 	ShadowMapper::PerformShadowPass();
 
     for (auto entity : View<Transform, MeshRenderer>()) {
-        auto transform = entity.Get<Transform>();
-        auto meshRenderer = entity.Get<MeshRenderer>();
+        auto transform = Registry::Get<Transform>(entity);
+        auto meshRenderer = Registry::Get<MeshRenderer>(entity);
         
         assert(meshRenderer->material);
 		Material* mat = meshRenderer->material;
@@ -58,7 +58,7 @@ void Renderer::DebugDrawBounds(glm::vec3* points) {
 	debugShader.Bind();
 	debugShader.SetMat4("model", glm::mat4(1.0f));
 
-	for (int i = 0; i < 8; i++) {
+	for (i32 i = 0; i < 8; i++) {
 		cube.verts[i].position = points[i];
 	}
 	cube.UpdateVertexBuffer();

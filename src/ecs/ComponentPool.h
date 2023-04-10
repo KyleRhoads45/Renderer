@@ -1,10 +1,10 @@
 #pragma once
-#include <memory>
+#include "core/Base.h"
 #include "Entity.h"
 
 class ComponentPool {
 public:
-	ComponentPool(const size_t componentSize);
+	ComponentPool(const u32 compSize);
 
 	template<typename Component>
 	Component* GetComponent(const Entity entity);
@@ -15,8 +15,8 @@ public:
 private:
 	void* GetComponentAddress(const Entity entity) const;
 
-	size_t componentSize = 0;
-	std::unique_ptr<std::byte[]> buffer;
+	u32 m_CompSize = 0;
+	Box<u8[]> m_Buffer;
 };
 
 template <typename Component>

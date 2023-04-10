@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <memory>
+#include "Base.h"
 #include "ecs/Entity.h"
 #include "Components/Camera.h"
 #include "renderer/UniformBuffer.h"
@@ -12,9 +13,9 @@ public:
 	static void Init();
 	static void Update();
 	static void SetActiveCameraEntity(Entity entity);
-    static std::array<glm::vec3, FrustrumPointCount> GetViewFrustrumPoints(float zDist);
+    static std::array<glm::vec3, FrustrumPointCount>& GetViewFrustrumPoints(float zDist);
 private:
 	static void UpdateUniformBuffer(Transform* trans, Camera* cam);
-	inline static std::unique_ptr<UniformBuffer> m_UniformBuffer;
+	inline static Box<UniformBuffer> m_UniformBuffer;
 	inline static Entity activeCamEntity;
 };

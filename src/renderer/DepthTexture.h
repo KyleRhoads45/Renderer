@@ -1,13 +1,13 @@
 #pragma once
-#include <cstdint>
+#include "core/Base.h"
 
 class DepthTexture {
 public:
 	DepthTexture() = default;
-	DepthTexture(const uint32_t width, const uint32_t height);
+	DepthTexture(const u32 width, const u32 height);
 	void Bind();
 	void AttachToActiveFrameBuffer();
 private:
-	uint32_t m_Id;
+	u32 m_Id;
 };
 

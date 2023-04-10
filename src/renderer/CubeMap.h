@@ -2,19 +2,19 @@
 #include <array>
 #include <cstdint>
 #include <unordered_map>
-#include <memory>
 #include <string>
+#include "core/Base.h"
 
 class CubeMap {
 public:
-	static std::shared_ptr<CubeMap> Load(const std::array<std::string, 6>& images);
+	static Ref<CubeMap> Load(const std::array<std::string, 6>& images);
 	CubeMap() = delete;
-	CubeMap(const std::string& key, uint32_t id);
+	CubeMap(const std::string& key, u32 id);
 	~CubeMap();
 	void Bind();
 private:
 	inline static std::unordered_map<std::string, std::weak_ptr<CubeMap>> m_ActiveCubemaps;
 	std::string m_Key;
-	uint32_t m_Id;
+	u32 m_Id;
 };
 

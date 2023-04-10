@@ -3,28 +3,28 @@
 
 class ViewIterator {
 public:
-	ViewIterator(uint32_t startIndex, EntityComponentMask mask);
+	ViewIterator(u32 startIndex, EntityCompMask mask);
 	Entity operator*() const;
 	ViewIterator& operator++();
 	bool operator==(const ViewIterator& other) const;
 	bool operator!=(const ViewIterator& other) const;
 private:
-	uint32_t index;
-	EntityComponentMask mask;
+	u32 m_Index;
+	EntityCompMask m_Mask;
 };
 
 template<typename... Components>
 class View {
 public:
 	View() {
-		uint32_t componentIds[] = {Registry::GetComponentId<Components>()...};
+		u32 componentIds[] = {Registry::GetComponentId<Components>()...};
 		for (int i = 0; i < sizeof...(Components); i++) {
 			mask.set(componentIds[i]);
 		}
 	};
 
 	const ViewIterator begin() const {
-		uint32_t startIndex = 0;
+		u32 startIndex = 0;
 		while (startIndex < Registry::entityCount && Registry::entityCompMasks[startIndex] != mask) {
 			startIndex++;
 		}
@@ -34,7 +34,6 @@ public:
 	const ViewIterator end() const {
 		return ViewIterator(Registry::entityCount, mask);
 	}
-
 private:
-	EntityComponentMask mask;
+	EntityCompMask mask;
 };

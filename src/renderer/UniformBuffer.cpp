@@ -3,7 +3,8 @@
 #include <glm/glm.hpp>
 #include "UniformBuffer.h"
 
-UniformBuffer::UniformBuffer(uint32_t bindingPoint) : m_BufferSizeInBytes(0) {
+UniformBuffer::UniformBuffer(u32 bindingPoint) {
+	m_BufferSizeInBytes = 0;
 	glGenBuffers(1, &m_Id);
 	glBindBuffer(GL_UNIFORM_BUFFER, m_Id);
 	glBindBufferBase(GL_UNIFORM_BUFFER, bindingPoint, m_Id);
@@ -14,9 +15,8 @@ UniformBuffer::~UniformBuffer() {
 	glDeleteBuffers(1, &m_Id);
 }
 
-void UniformBuffer::Register(const std::string& variable, size_t sizeInBytes) {
-	constexpr size_t floatSize = sizeof(float);
-	if (sizeInBytes <= floatSize) {
+void UniformBuffer::Register(const std::string& variable, u32 sizeInBytes) {
+	if (sizeInBytes <= sizeof(float)) {
 		m_StartOffsetLookUp[variable] = VariableData(m_BufferSizeInBytes, sizeInBytes);
 		m_BufferSizeInBytes += sizeInBytes;
 		return;
@@ -43,10 +43,10 @@ void UniformBuffer::SubBufferData(const std::string& variable, void* data) {
 }
 
 void UniformBuffer::MoveSizeToNextOpenChunk() {
-	const uint32_t ChunkSize = 16;
-	const uint32_t ByteSize = 4;
+	const u32 ChunkSize = 16;
+	const u32 ByteSize = 4;
 
-	uint32_t bytesIntoChunk = m_BufferSizeInBytes % ChunkSize;
+	u32 bytesIntoChunk = m_BufferSizeInBytes % ChunkSize;
 	if (bytesIntoChunk == 0) return;
 
 	m_BufferSizeInBytes += ChunkSize - bytesIntoChunk;

@@ -2,6 +2,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "core/Base.h"
 #include "ecs/Entity.h"
 
 class Transform {
@@ -17,8 +18,8 @@ public:
     // Transforms pos from world space to local space
     glm::vec3 InverseTransformPosition(const glm::vec3& pos);
 
-    uint32_t GetChildCount();
-    Transform& GetChild(const uint32_t index);
+    u32 GetChildCount();
+    Transform& GetChild(const u32 index);
     void AddChild(Transform* child);
     void SetParent(Transform* newParent);
 
