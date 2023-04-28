@@ -16,9 +16,9 @@ constexpr Ref<T> MakeRef(Args&&... args) {
 }
 
 template<typename T>
-using Box = std::unique_ptr<T>;
+using Scope = std::unique_ptr<T>;
 
 template<typename T, typename... Args>
-constexpr Box<T> MakeBox(Args&&... args) {
+constexpr Scope<T> MakeScope(Args&&... args) {
 	return std::make_unique<T>(std::forward<Args>(args)...);
 }

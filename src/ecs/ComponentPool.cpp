@@ -3,7 +3,7 @@
 
 ComponentPool::ComponentPool(const u32 compSize) {
 	m_CompSize = compSize;
-	m_Buffer = MakeBox<u8[]>(compSize * MAX_ENTITIES);
+	m_Buffer = MakeScope<u8[]>(compSize * MAX_ENTITIES);
 }
 
 void* ComponentPool::GetComponentAddress(const Entity entity) const {

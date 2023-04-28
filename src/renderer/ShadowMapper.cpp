@@ -58,41 +58,12 @@ void ShadowMapper::PerformShadowPass() {
 }
 
 void ShadowMapper::CalculateLightViewProjection() {
-	auto& frustrumPoints = CameraSystem::GetViewFrustrumPoints(m_ShadowDist);
-
 	glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
-	glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
-
-	// Convert camera frustrum points to light space
-	// its as if we are viewing the frustrum from the lights point of view.
-	// Note: this is still in world space so its not always centered at origin. 
-	for (i32 i = 0; i < frustrumPoints.size(); i++) {
-		frustrumPoints[i] = lightSpaceView * glm::vec4(frustrumPoints[i], 1.0f);
-	}
-
-	Bounds bounds(frustrumPoints.data(), frustrumPoints.size());
-
-	f32 width = glm::abs(bounds.m_Max.x - bounds.m_Min.x);
-	f32 height = glm::abs(bounds.m_Max.y - bounds.m_Min.y);
-	f32 depth = glm::abs(bounds.m_Max.z - bounds.m_Min.z);
-
-	// Transform the min and max points from light space into world space.
-	// Calculate the center of the bounding box in world space. 
-	glm::vec3 worldSpaceMin = glm::inverse(lightSpaceView) * glm::vec4(bounds.m_Min, 1.0f);
-	glm::vec3 worldSpaceMax = glm::inverse(lightSpaceView) * glm::vec4(bounds.m_Max, 1.0f);
-	glm::vec3 center = (worldSpaceMin + worldSpaceMax) / 2.0f;
-
-	// Create the light's view matrix with the view position being
-	// the center of the bounding box.
+	glm::vec3 center = CameraSystem::GetActiveTransform().Position();
 	glm::mat4 view = glm::lookAt(center - lightDir, center, glm::vec3(0, 1, 0));
 
-	f32 halfWidth = width / 2.0f;
-	f32 halfHeight = height / 2.0f;
-
-	// When creating the light's projection matrix we extend the depth so that
-	// close, but out of view fragments of models don't get discarded by the 
-	// tight clip space and create holes in shadows that the camera can see.
-	glm::mat4 projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depth, depth);
+	f32 halfShadowDist = m_ShadowDist / 2.0f;
+	glm::mat4 projection = glm::ortho(-halfShadowDist, halfShadowDist, -halfShadowDist, halfShadowDist, -halfShadowDist, halfShadowDist);
 
 	m_LightViewProjection = projection * view;
 }
