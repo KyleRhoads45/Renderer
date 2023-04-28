@@ -14,7 +14,7 @@ public:
 	glm::vec3 GetLightDir();
 	Ref<CubeMap> m_Skybox;
 private:
-    Scope<UniformBuffer> m_UniformBuffer;
+    Box<UniformBuffer> m_UniformBuffer;
 	glm::vec3 m_LightDir;
 	f32 m_AmbientStrength;
 };

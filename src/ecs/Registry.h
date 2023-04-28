@@ -32,7 +32,7 @@ private:
 	static inline u32 componentCounter = 0;
 	static inline std::vector<ComponentPool> pools;
 
-	static inline Ref<EntityCompMask[]> entityCompMasks = MakeScope<EntityCompMask[]>(MAX_ENTITIES);
+	static inline Ref<EntityCompMask[]> entityCompMasks = MakeBox<EntityCompMask[]>(MAX_ENTITIES);
 };
 
 template<typename Component>
@@ -57,7 +57,7 @@ Component* Registry::Get(Entity entity) {
 }
 
 template<typename Component>
-u32 Registry::GetComponentId() {
+uint32_t Registry::GetComponentId() {
 	static u32 compId = componentCounter++;
 	return compId;
 }

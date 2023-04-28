@@ -5,7 +5,7 @@
 #include "CameraSystem.h"
 
 void CameraSystem::Init() {
-	m_UniformBuffer = MakeScope<UniformBuffer>(0);
+	m_UniformBuffer = MakeBox<UniformBuffer>(0);
 	m_UniformBuffer->Register("camPos", sizeof(glm::vec3));
 	m_UniformBuffer->Register("view", sizeof(glm::mat4));
 	m_UniformBuffer->Register("projection", sizeof(glm::mat4));
@@ -57,10 +57,6 @@ void CameraSystem::SetActiveCameraEntity(Entity entity) {
     auto trans = Registry::Get<Transform>(activeCamEntity);
     auto cam = Registry::Get<Camera>(activeCamEntity);
     UpdateUniformBuffer(trans, cam);
-}
-
-const Transform& CameraSystem::GetActiveTransform() {
-    return *Registry::Get<Transform>(activeCamEntity);
 }
 
 std::array<glm::vec3, FrustrumPointCount>&

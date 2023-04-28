@@ -72,7 +72,7 @@ void Transform::SetParent(Transform* newParent) {
 	UpdateModelRecursive(parent->Model());
 }
 
-glm::vec3 Transform::Position() const {
+glm::vec3 Transform::Position() {
 	if (parent == nullptr) {
 		return position;
 	}
@@ -82,7 +82,7 @@ glm::vec3 Transform::Position() const {
 	return glm::vec3(model[3]);
 }
 
-glm::quat Transform::Rotation() const {
+glm::quat Transform::Rotation() {
 	if (parent == nullptr) {
 		return rotation;
 	}
@@ -92,7 +92,7 @@ glm::quat Transform::Rotation() const {
 	return glm::quat_cast(glm::mat3(model));
 }
 
-glm::vec3 Transform::Scale() const {
+glm::vec3 Transform::Scale() {
 	if (parent == nullptr) {
 		return scale;
 	}
@@ -110,7 +110,7 @@ glm::vec3 Transform::Scale() const {
 	return glm::vec3(x, y, z);
 }
 
-glm::vec3 Transform::LocalPosition() const {
+glm::vec3 Transform::LocalPosition() {
 	return position;
 	if (parent == nullptr) {
 		return position;
@@ -118,23 +118,23 @@ glm::vec3 Transform::LocalPosition() const {
 	return parent->InverseTransformPosition(position);
 }
 
-glm::quat Transform::LocalRotation() const {
+glm::quat Transform::LocalRotation() {
 	return rotation;
 }
 
-glm::vec3 Transform::LocalScale() const {
+glm::vec3 Transform::LocalScale() {
 	return scale;
 }
 
-glm::vec3 Transform::Forward() const {
+glm::vec3 Transform::Forward() {
 	return glm::rotate(Rotation(), glm::vec3(0, 0, -1));
 }
 
-glm::vec3 Transform::Right() const {
+glm::vec3 Transform::Right() {
 	return glm::rotate(Rotation(), glm::vec3(1, 0, 0));
 }
 
-glm::vec3 Transform::Up() const {
+glm::vec3 Transform::Up() {
 	return glm::rotate(Rotation(), glm::vec3(0, 1, 0));
 }
 

@@ -97,8 +97,11 @@ float CalculateShadow(vec3 normal, vec3 lightNormal) {
     // Transform to [0, 1] for depth map sampling
     projCoord = projCoord * 0.5 + 0.5;
 
-    // Prevent fragments from being black that are outside of the shadowMap's range
-    if (projCoord.z > 1.0 || projCoord.z < 0.0) return 1.0;
+    // Prevent fragments from being black that are
+    // outside of the shadowMap's range
+    if (projCoord.z > 1.0 || projCoord.z < 0.0) {
+        return 1.0;
+    }
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -136,11 +139,11 @@ vec3 FrensnelSchlick(float cosTheta, vec3 F0) {
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-    float num = a2;
+    float a      = roughness*roughness;
+    float a2     = a*a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH*NdotH;
+    float num   = a2;
     float denom = (NdotH2 * (a2 - 1.0) + 1.0);
     denom = PI * denom * denom;
     return num / denom;
@@ -148,8 +151,8 @@ float DistributionGGX(vec3 N, vec3 H, float roughness) {
 
 float GeometrySchlickGGX(float NdotV, float roughness) {
     float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
-    float num = NdotV;
+    float k = (r*r) / 8.0;
+    float num   = NdotV;
     float denom = NdotV * (1.0 - k) + k;
     return num / denom;
 }
@@ -157,8 +160,8 @@ float GeometrySchlickGGX(float NdotV, float roughness) {
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
     float NdotV = max(dot(N, V), 0.0);
     float NdotL = max(dot(N, L), 0.0);
-    float ggx2 = GeometrySchlickGGX(NdotV, roughness);
-    float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
     return ggx1 * ggx2;
 }
 
@@ -168,5 +171,5 @@ vec3 ACESFilm(in vec3 x) {
 	float c = 2.43;
 	float d = 0.59;
 	float e = 0.14;
-	return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+	return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
 }

@@ -16,7 +16,7 @@ private:
 	void* GetComponentAddress(const Entity entity) const;
 
 	u32 m_CompSize = 0;
-	Scope<u8[]> m_Buffer;
+	Box<u8[]> m_Buffer;
 };
 
 template <typename Component>
