@@ -82,7 +82,7 @@ void SetupEnviroment() {
 	Enviroment::Instance()->SetLightDir(lightDir);
 	Enviroment::Instance()->SetAmbientStrength(0.5f);
 
-	ShadowMapper::Init(8192, 60.0f);
+	ShadowMapper::Init(4096, 15.0f);
 }
 
 void InstantiateDemo() {

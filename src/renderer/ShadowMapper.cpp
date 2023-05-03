@@ -7,6 +7,7 @@
 #include "core/CameraSystem.h"
 #include "Enviroment.h"
 #include "ShadowMapper.h"
+#include <iostream>
 
 void ShadowMapper::Init(u32 textureSize, u32 shadowDist) {
 	m_ShadowMap = DepthTexture(textureSize, textureSize);
@@ -72,9 +73,21 @@ void ShadowMapper::CalculateLightViewProjection() {
 
 	Bounds bounds(frustrumPoints.data(), frustrumPoints.size());
 
-	f32 width = glm::abs(bounds.m_Max.x - bounds.m_Min.x);
-	f32 height = glm::abs(bounds.m_Max.y - bounds.m_Min.y);
-	f32 depth = glm::abs(bounds.m_Max.z - bounds.m_Min.z);
+	f32 width = bounds.XLength();
+	f32 height = bounds.YLength();
+	f32 depth = bounds.ZLength();
+
+	// Make the light's projection move to texel size increments.
+	// This fixes the shimmering effect when translating the camera.
+	glm::vec3 worldUnitsPerTexel = glm::vec3(width / m_TextureSize, height / m_TextureSize, 1.0f);
+
+	bounds.m_Min /= worldUnitsPerTexel;
+	bounds.m_Min = glm::floor(bounds.m_Min);
+	bounds.m_Min *= worldUnitsPerTexel;
+
+	bounds.m_Max /= worldUnitsPerTexel;
+	bounds.m_Max = glm::floor(bounds.m_Max);
+	bounds.m_Max *= worldUnitsPerTexel;
 
 	// Transform the min and max points from light space into world space.
 	// Calculate the center of the bounding box in world space. 
@@ -92,7 +105,7 @@ void ShadowMapper::CalculateLightViewProjection() {
 	// When creating the light's projection matrix we extend the depth so that
 	// close, but out of view fragments of models don't get discarded by the 
 	// tight clip space and create holes in shadows that the camera can see.
-	glm::mat4 projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depth, depth);
+	glm::mat4 projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depth * 5, depth * 5);
 
 	m_LightViewProjection = projection * view;
 }

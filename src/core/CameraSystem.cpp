@@ -32,17 +32,18 @@ void CameraSystem::Update() {
 
     trans->SetRotation(yawRot * pitchRot);
 
+    float speed = 0.01f;
     if (Input::OnKeyHold(GLFW_KEY_W)) {
-        trans->SetPosition(trans->Position() + trans->Forward() * 0.1f);
+        trans->SetPosition(trans->Position() + trans->Forward() * speed);
     }
     if (Input::OnKeyHold(GLFW_KEY_S)) {
-        trans->SetPosition(trans->Position() - trans->Forward() * 0.1f);
+        trans->SetPosition(trans->Position() - trans->Forward() * speed);
     }
     if (Input::OnKeyHold(GLFW_KEY_D)) {
-        trans->SetPosition(trans->Position() + trans->Right() * 0.1f);
+        trans->SetPosition(trans->Position() + trans->Right() * speed);
     }
     if (Input::OnKeyHold(GLFW_KEY_A)) {
-        trans->SetPosition(trans->Position() - trans->Right() * 0.1f);
+        trans->SetPosition(trans->Position() - trans->Right() * speed);
     }
 
     cam->m_View = glm::translate(glm::mat4(1.0f), trans->Position());
@@ -108,6 +109,10 @@ CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     };
 
     return points;
+}
+
+const Transform& CameraSystem::GetActiveTransform() {
+    return *Registry::Get<Transform>(activeCamEntity);
 }
 
 void CameraSystem::UpdateUniformBuffer(Transform* trans, Camera* cam) {

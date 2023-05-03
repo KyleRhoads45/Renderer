@@ -28,3 +28,19 @@ Bounds::Bounds(glm::vec3* points, u32 size) {
 		}
 	}
 }
+
+f32 Bounds::XLength() {
+	return m_Max.x - m_Min.x;
+}
+
+f32 Bounds::YLength() {
+	return m_Max.y - m_Min.y;
+}
+
+f32 Bounds::ZLength() {
+	return m_Max.z - m_Min.z;
+}
+
+glm::vec3 Bounds::Center() {
+	return (m_Max + m_Min) / 2.0f;
+}

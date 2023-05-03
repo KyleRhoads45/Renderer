@@ -23,19 +23,19 @@ public:
     void AddChild(Transform* child);
     void SetParent(Transform* newParent);
 
-    glm::vec3 Position();
-    glm::quat Rotation();
-    glm::vec3 Scale();
+    glm::vec3 Position() const;
+    glm::quat Rotation() const;
+    glm::vec3 Scale() const;
 
-    glm::vec3 LocalPosition();
-    glm::quat LocalRotation();
-    glm::vec3 LocalScale();
+    glm::vec3 LocalPosition() const;
+    glm::quat LocalRotation() const;
+    glm::vec3 LocalScale() const;
 
-    glm::vec3 Forward();
-    glm::vec3 Right();
-    glm::vec3 Up();
+    glm::vec3 Forward() const;
+    glm::vec3 Right() const;
+    glm::vec3 Up() const;
 
-    glm::mat4 Model();
+    glm::mat4 Model() const;
 
     Entity entity;
 private:
