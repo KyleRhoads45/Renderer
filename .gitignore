@@ -4,6 +4,7 @@
 
 /lib
 /Assets/Model
+/.idea
 /.vs/Renderer
 /include
 /x64
@@ -15,3 +16,4 @@
 /Assets/Skybox
 /Assets/PolygonCity
 /Assets/Demo
+/SampleScene.yaml
