@@ -12,6 +12,7 @@ public:
     void Bind() const;
     void SetInt(const std::string& name, i32 num);
     void SetFloat(const std::string& name, f32 num);
+    void SetVec3(const std::string& name, glm::vec3& num);
     void SetMat4(const std::string& name, const glm::mat4& mat4);
 private:
     inline i32 GetUniformLocation(const std::string& name);

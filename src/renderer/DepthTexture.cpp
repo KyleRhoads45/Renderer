@@ -21,6 +21,12 @@ void DepthTexture::Bind() {
 	glBindTexture(GL_TEXTURE_2D, m_Id);
 }
 
+void DepthTexture::Resize(const glm::i32vec2 size) {
+	glBindTexture(GL_TEXTURE_2D, m_Id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, size.x, size.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void DepthTexture::AttachToActiveFrameBuffer() {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_Id, 0);
 }

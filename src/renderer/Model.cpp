@@ -1,8 +1,8 @@
+#include <iostream>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include "core/Base.h"
 #include "ecs/Registry.h"
-#include "core/Components.h"
 #include "Model.h"
 
 Entity Model::Instantiate(const char* meshPath, Material* mat) {
@@ -15,35 +15,32 @@ Entity Model::Instantiate(const char* meshPath, Material* mat) {
 }
 
 Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent, Material* mat) {
-	auto entity = Registry::Create();
-	auto trans = Registry::Add<Transform>(entity);
+	const auto entity = Registry::Create();
+	auto& trans = Registry::Add<Transform>(entity);
 
 	aiVector3t<f32> scale;
 	aiVector3t<f32> position;
 	aiQuaterniont<f32> rotation;
 	node->mTransformation.Decompose(scale, rotation, position);
 	
-	trans->Set(
-		glm::vec3(position.x, position.y, position.z), 
-		glm::quat(rotation.w, rotation.x, rotation.y, rotation.z),
-		glm::vec3(scale.x, scale.y, scale.z)
-	);
-	trans->entity = entity;
+	trans.position = glm::vec3(position.x, position.y, position.z);
+	trans.rotation = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z);
+	trans.scale = glm::vec3(scale.x, scale.y, scale.z);
 
 	if (parent != nullptr) {
-		trans->SetParent(parent);
+		//trans.SetParent(parent);
 	}
 
 	for (u32 i = 0; i < node->mNumMeshes; i++) {
-		auto meshRenderer = Registry::Add<MeshRenderer>(entity);
+		auto& meshRenderer = Registry::Add<MeshRenderer>(entity);
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		meshRenderer->mesh = Mesh::FromAssimpMesh(mesh);
-		meshRenderer->material = mat;
+		meshRenderer.mesh = Mesh::FromAssimpMesh(mesh);
+		meshRenderer.material = mat;
 	}
 
 	for (u32 i = 0; i < node->mNumChildren; i++) {
-		auto child = ProcessNode(scene, node->mChildren[i], trans, mat);
-		trans->AddChild(Registry::Get<Transform>(child));
+		auto child = ProcessNode(scene, node->mChildren[i], &trans, mat);
+		//trans.AddChild(&Registry::Get<Transform>(child));
 	}
 
 	return entity;

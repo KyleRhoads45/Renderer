@@ -1,13 +1,11 @@
 #include <glad/glad.h>
 #include "Model.h"
-#include "ecs/Registry.h"
-#include "ecs/View.h"
 #include "Renderer.h"
-#include "core/Primatives.h"
 #include "core/CameraSystem.h"
 #include "Enviroment.h"
+#include "ecs/Registry.h"
+#include "ecs/View.h"
 #include "ShadowMapper.h"
-#include <iostream>
 
 void ShadowMapper::Init(u32 textureSize, u32 shadowDist) {
 	m_ShadowMap = DepthTexture(textureSize, textureSize);
@@ -42,14 +40,15 @@ void ShadowMapper::PerformShadowPass() {
 	m_DepthShader.Bind();
 	m_DepthShader.SetMat4("viewProjection", m_LightViewProjection);
 
-    for (auto entity : View<Transform, MeshRenderer>()) {
-        auto transform = Registry::Get<Transform>(entity);
-        auto meshRenderer = Registry::Get<MeshRenderer>(entity);
+	const auto view = View<Transform, MeshRenderer>();
+    for (auto entity : view) {
+        auto& transform = Registry::Get<Transform>(entity);
+        auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
         
-		m_DepthShader.SetMat4("model", transform->Model());
+		m_DepthShader.SetMat4("model", transform.model);
 
-        glBindVertexArray(meshRenderer->mesh.vao);
-        glDrawElements(GL_TRIANGLES, meshRenderer->mesh.numIndices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(meshRenderer.mesh.vao);
+        glDrawElements(GL_TRIANGLES, meshRenderer.mesh.numIndices, GL_UNSIGNED_INT, 0);
     }
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

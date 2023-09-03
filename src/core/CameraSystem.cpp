@@ -1,79 +1,49 @@
 #include <glm/gtx/string_cast.hpp>
-#include "ecs/View.h"
 #include "Input.h"
-#include "Components.h"
 #include "CameraSystem.h"
+#include "Components.h"
+#include "editor/Editor.h"
+#include "ecs/Registry.h"
 
 void CameraSystem::Init() {
-	m_UniformBuffer = MakeBox<UniformBuffer>(0);
-	m_UniformBuffer->Register("camPos", sizeof(glm::vec3));
-	m_UniformBuffer->Register("view", sizeof(glm::mat4));
-	m_UniformBuffer->Register("projection", sizeof(glm::mat4));
-	m_UniformBuffer->Register("viewProjection", sizeof(glm::mat4));
-	m_UniformBuffer->FinishedRegistering();
+	s_UniformBuffer = MakeScope<UniformBuffer>(0);
+	s_UniformBuffer->Register("camPos", sizeof(glm::vec3));
+	s_UniformBuffer->Register("view", sizeof(glm::mat4));
+	s_UniformBuffer->Register("projection", sizeof(glm::mat4));
+	s_UniformBuffer->Register("viewProjection", sizeof(glm::mat4));
+	s_UniformBuffer->FinishedRegistering();
 }
 
 void CameraSystem::Update() {
-    if (!Input::OnMouseHold(GLFW_MOUSE_BUTTON_2)) return;
+    static Camera lastCamera;
 
-    auto trans = Registry::Get<Transform>(activeCamEntity);
-    auto cam = Registry::Get<Camera>(activeCamEntity);
-
-    const glm::vec2 mouseDeltas = Input::GetMouseDeltas();
-    cam->m_Yaw -= mouseDeltas.x * 0.1;
-    cam->m_Pitch -= mouseDeltas.y * 0.1;
-
-    if (glm::abs(cam->m_Pitch) > 89.0) {
-        cam->m_Pitch = glm::clamp(cam->m_Pitch, -89.0f, 89.0f);
+    // Optamization: Don't update buffer unless camera data changed
+    if (*s_ActiveCamera != lastCamera) {
+        UpdateUniformBuffer();
     }
 
-    const glm::quat pitchRot = glm::angleAxis(glm::radians(cam->m_Pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-    const glm::quat yawRot = glm::angleAxis(glm::radians(cam->m_Yaw), glm::vec3(0.0f, 1.0f, 0.0f));
-
-    trans->SetRotation(yawRot * pitchRot);
-
-    float speed = 0.01f;
-    if (Input::OnKeyHold(GLFW_KEY_W)) {
-        trans->SetPosition(trans->Position() + trans->Forward() * speed);
-    }
-    if (Input::OnKeyHold(GLFW_KEY_S)) {
-        trans->SetPosition(trans->Position() - trans->Forward() * speed);
-    }
-    if (Input::OnKeyHold(GLFW_KEY_D)) {
-        trans->SetPosition(trans->Position() + trans->Right() * speed);
-    }
-    if (Input::OnKeyHold(GLFW_KEY_A)) {
-        trans->SetPosition(trans->Position() - trans->Right() * speed);
-    }
-
-    cam->m_View = glm::translate(glm::mat4(1.0f), trans->Position());
-    cam->m_View = cam->m_View * glm::mat4_cast(trans->Rotation());
-    cam->m_View = glm::inverse(cam->m_View);
-
-    UpdateUniformBuffer(trans, cam);
+    lastCamera = *s_ActiveCamera;
 }
 
-void CameraSystem::SetActiveCameraEntity(Entity entity) {
-    activeCamEntity = entity;
-    auto trans = Registry::Get<Transform>(activeCamEntity);
-    auto cam = Registry::Get<Camera>(activeCamEntity);
-    UpdateUniformBuffer(trans, cam);
+void CameraSystem::SetActiveCamera(Camera* camera, Transform* transform) {
+    s_ActiveCamera = camera;
+    s_ActiveCameraTransform = transform;
+    UpdateUniformBuffer();
 }
 
-std::array<glm::vec3, FrustrumPointCount>&
-CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
-    auto trans = Registry::Get<Transform>(activeCamEntity);
-    auto cam = Registry::Get<Camera>(activeCamEntity);
+FrustrumPoints& CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
+    auto& trans = *s_ActiveCameraTransform;
+    auto& cam = *s_ActiveCamera;
 
-    f32 farDist = (zDist == 0.0f) ? cam->m_Far : zDist;
-    f32 nearDist = cam->m_Near;
-    f32 aspect = cam->m_Aspect;
-    f32 pheta = glm::radians(cam->m_Fov / 2.0f);
+    f32 farDist = (zDist == 0.0f) ? cam.m_Far : zDist;
+    f32 nearDist = cam.m_Near;
+    f32 aspect = cam.m_Aspect;
+    f32 pheta = glm::radians(cam.m_Fov / 2.0f);
 
-    const glm::vec3 pos = trans->Position();
-    const glm::vec3 forward = trans->Forward();
-    const glm::vec3 right = trans->Right();
-    const glm::vec3 up = trans->Up();
+    const glm::vec3 pos = trans.position;
+    const glm::vec3 forward = trans.Forward();
+    const glm::vec3 right = trans.Right();
+    const glm::vec3 up = trans.Up();
 
     // Calculate far plane positions
 
@@ -103,7 +73,7 @@ CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     glm::vec3 nTopLeft = nearCenter - nearRight + nearUp;
     glm::vec3 nBottomLeft = nearCenter - nearRight - nearUp;
 
-    std::array<glm::vec3, FrustrumPointCount> points {
+    FrustrumPoints points {
         fTopRight, fBottomRight, fTopLeft, fBottomLeft,
         nTopRight, nBottomRight, nTopLeft, nBottomLeft
     };
@@ -111,16 +81,12 @@ CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     return points;
 }
 
-const Transform& CameraSystem::GetActiveTransform() {
-    return *Registry::Get<Transform>(activeCamEntity);
-}
+void CameraSystem::UpdateUniformBuffer() {
+    glm::vec3 camPos = s_ActiveCameraTransform->position;
+    glm::mat4 viewProjection = s_ActiveCamera->ViewProjection();
 
-void CameraSystem::UpdateUniformBuffer(Transform* trans, Camera* cam) {
-    glm::vec3 camPos = trans->Position();
-    glm::mat4 viewProjection = cam->ViewProjection();
-
-	m_UniformBuffer->SubBufferData("camPos", &camPos);
-	m_UniformBuffer->SubBufferData("view", &cam->m_View);
-	m_UniformBuffer->SubBufferData("projection", &cam->m_Projection);
-	m_UniformBuffer->SubBufferData("viewProjection", &viewProjection);
+	s_UniformBuffer->SubBufferData("camPos", &camPos);
+	s_UniformBuffer->SubBufferData("view", &s_ActiveCamera->m_View);
+	s_UniformBuffer->SubBufferData("projection", &s_ActiveCamera->m_Projection);
+	s_UniformBuffer->SubBufferData("viewProjection", &viewProjection);
 }

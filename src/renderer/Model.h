@@ -1,8 +1,7 @@
 #pragma once
-#include <glm/glm.hpp>
-#include "ecs/Entity.h"
 #include "Mesh.h"
 #include "Material.h"
+#include "core/Components.h"
 
 class Model {
 public:

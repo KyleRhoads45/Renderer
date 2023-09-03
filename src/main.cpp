@@ -5,20 +5,18 @@
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include "core/Base.h"
-#include "core/Components.h"
 #include "core/Input.h"
+#include "editor/Editor.h"
 #include "renderer/Renderer.h"
-#include "renderer/Texture.h"
 #include "renderer/Model.h"
 #include "renderer/CubeMap.h"
 #include "renderer/Material.h"
-#include "core/Primatives.h"
-#include "ecs/Registry.h"
 #include "core/CameraSystem.h"
-#include "materials/CityMaterial.h"
-#include <glm/gtx/quaternion.hpp>
+#include "core/TransformSystem.h"
 #include "renderer/ShadowMapper.h"
+#include "ecs/Registry.h"
 
 void SetupEnviroment();
 void InstantiateDemo();
@@ -35,7 +33,7 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-	auto window = glfwCreateWindow(1920, 1080, "OpenGL Renderer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1920, 1080, "OpenGL Renderer", NULL, NULL);
 	if (!window) {
 		glfwTerminate();
 		return -1;
@@ -49,21 +47,21 @@ int main() {
 	}
 
 	SetupEnviroment();
+	CameraSystem::Init();
 	Input::Init(window);
 	Renderer::Init();
-	CameraSystem::Init();
+	Editor::Init(window);
 
-	auto camEntity = Registry::Create();
-	auto camTrans = Registry::Add<Transform>(camEntity);
-	auto camera = Registry::Add<Camera>(camEntity);
-	CameraSystem::SetActiveCameraEntity(camEntity);
+	Shader simple("src/shaders/SimpleLit.vert", "src/shaders/SimpleLit.frag");
+	Material mat(simple);
 
-	InstantiateDemo();
+	auto lucy = Model::Instantiate("Assets/Model/Lucy.fbx", &mat);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
+		Editor::Update();
 		CameraSystem::Update();
-		Renderer::RenderScene();
+		TransformSystem::Update();
 		glfwSwapBuffers(window);
 	}
 
@@ -89,15 +87,15 @@ void InstantiateDemo() {
 	static std::vector<Ref<Material>> mats;
 	Shader litShader("src/shaders/lit.vert", "src/shaders/lit.frag");
 
-	auto entity = Model::Instantiate("Assets/PolygonCity/City.fbx", NULL);
-	auto trans = Registry::Get<Transform>(entity);
-	trans->SetScale(glm::vec3(0.01f));
+	//auto entity = Model::Instantiate("Assets/PolygonCity/City.fbx", NULL);
+	//auto trans = Registry::Get<Transform>(entity);
+	//trans->SetScale(glm::vec3(0.01f));
 
 	i32 childIndex = 0;
 	auto directory = std::filesystem::directory_iterator("Assets/PolygonCity/Textures");
 	for (auto& file : directory) {
-		auto mat = MakeRef<CityMaterial>(litShader, file.path().string());
-		mats.push_back(mat);
-		Registry::Get<MeshRenderer>(trans->GetChild(childIndex++).entity)->material = mat.get();
+		//auto mat = MakeRefCount<CityMaterial>(litShader, file.path().string());
+		//mats.push_back(mat);
+		//Registry::Get<MeshRenderer>(trans->GetChild(childIndex++).entity)->material = mat.get();
 	}
 }

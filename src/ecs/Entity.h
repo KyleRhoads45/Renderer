@@ -1,12 +1,11 @@
 #pragma once
-#include "EcsParams.h"
 #include "core/Base.h"
 
 class Entity {
 public:
-	friend class Registry;
-	friend class ComponentPool;
 	Entity() = default;
+	Entity(const u32 id);
+	u32 Id() const;
 private:
-	u32 id = MAX_ENTITIES;
+	u32 m_Id;
 };

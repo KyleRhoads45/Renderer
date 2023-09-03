@@ -1,9 +1,21 @@
+#include <glad/glad.h>
+#include "renderer/ShadowMapper.h"
+#include "renderer/Enviroment.h"
 #include "Material.h"
 
-Material::Material(Shader shader) {
+Material::Material(const Shader& shader) {
 	m_Shader = shader;
 }
 
-void Material::Bind() { }
+void Material::Bind(const Transform& transform) {
+	m_Shader.Bind();
+	m_Shader.SetMat4("model", transform.model);
 
-void Material::Bind(Transform* transform) { }
+	glActiveTexture(GL_TEXTURE4);
+	ShadowMapper::m_ShadowMap.Bind();
+	m_Shader.SetInt("shadowMap", 0);
+
+	glActiveTexture(GL_TEXTURE5);
+	Enviroment::Instance()->m_Skybox->Bind();
+	m_Shader.SetInt("skybox", 1);
+}

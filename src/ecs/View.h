@@ -9,6 +9,8 @@ public:
 	bool operator==(const ViewIterator& other) const;
 	bool operator!=(const ViewIterator& other) const;
 private:
+	bool MaskIsSubset(const EntityCompMask& subSet, const EntityCompMask& superSet);
+private:
 	u32 m_Index;
 	EntityCompMask m_Mask;
 };
@@ -21,18 +23,18 @@ public:
 		for (int i = 0; i < sizeof...(Components); i++) {
 			mask.set(componentIds[i]);
 		}
-	};
+	}
 
 	const ViewIterator begin() const {
 		u32 startIndex = 0;
-		while (startIndex < Registry::entityCount && Registry::entityCompMasks[startIndex] != mask) {
+		while (startIndex < Registry::GetEntityCount() && Registry::m_EntityCompMasks[startIndex] != mask) {
 			startIndex++;
 		}
 		return ViewIterator(startIndex, mask);
 	}
 
 	const ViewIterator end() const {
-		return ViewIterator(Registry::entityCount, mask);
+		return ViewIterator(Registry::GetEntityCount(), mask);
 	}
 private:
 	EntityCompMask mask;

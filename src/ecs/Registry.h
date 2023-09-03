@@ -1,64 +1,70 @@
 #pragma once
 #include <vector>
 #include <bitset>
-#include <cassert>
 #include "core/Base.h"
 #include "ComponentPool.h"
-#include "EcsParams.h"
 
+constexpr auto MAX_COMPONENTS = 100;
 using EntityCompMask = std::bitset<MAX_COMPONENTS>;
 
 class Registry {
 public:
-	template<typename... T>
-	friend class View;
-	friend class ViewIterator;
-	
 	static Entity Create();
 
 	template<typename Component>
-	static Component* Add(Entity entity);
+	static Component& Add(Entity entity);
 
 	template<typename Component>
-	static Component* Get(Entity entity);
+	static Component& Get(Entity entity);
+
+	template<typename Component>
+	static bool Has(const Entity entity);
 
 	template<typename Component>
 	static u32 GetComponentId();
 
+	static size_t GetEntityCount();
+
 private:
-	static inline u32 entityCount = 0;
-	static inline Ref<Entity[]> entities = MakeRef<Entity[]>(MAX_ENTITIES);
+	static inline u32 m_ComponentCounter = 0;
+	static inline std::vector<Entity> m_Entities;
+	static inline std::vector<ComponentPool> m_Pools;
+	static inline std::vector<EntityCompMask> m_EntityCompMasks;
 
-	static inline u32 componentCounter = 0;
-	static inline std::vector<ComponentPool> pools;
-
-	static inline Ref<EntityCompMask[]> entityCompMasks = MakeBox<EntityCompMask[]>(MAX_ENTITIES);
+	template<typename... T>
+	friend class View;
+	friend class ViewIterator;
+	friend class Editor;
+	friend class Serializer;
 };
 
 template<typename Component>
-Component* Registry::Add(Entity entity) {
-	assert(entity.id != MAX_ENTITIES); // Unregistered entity
-
-	u32 compId = GetComponentId<Component>();
-
-	if (pools.size() == compId) {
-		pools.push_back(ComponentPool(sizeof(Component)));
+Component& Registry::Add(const Entity entity) {
+	const u32 compId = GetComponentId<Component>();
+	
+	if (m_Pools.size() == compId) {
+		m_Pools.push_back(ComponentPool(sizeof(Component)));
 	}
 
-	entityCompMasks[entity.id].set(compId);
-	return pools[compId].InitComponent<Component>(entity);
+	m_EntityCompMasks[entity.Id()].set(compId);
+	return m_Pools[compId].Add<Component>(entity);
 }
 
 template<typename Component>
-Component* Registry::Get(Entity entity) {
-	assert(entity.id != MAX_ENTITIES); // Unregistered entity
-	u32 compId = GetComponentId<Component>();
-	return pools[compId].GetComponent<Component>(entity);
+Component& Registry::Get(const Entity entity) {
+	const u32 compId = GetComponentId<Component>();
+	return m_Pools[compId].Get<Component>(entity);
+}
+
+
+template<typename Component>
+bool Registry::Has(const Entity entity) {
+	const u32 compId = GetComponentId<Component>();
+	return m_EntityCompMasks[entity.Id()].test(compId);
 }
 
 template<typename Component>
-uint32_t Registry::GetComponentId() {
-	static u32 compId = componentCounter++;
+u32 Registry::GetComponentId() {
+	static u32 compId = m_ComponentCounter++;
 	return compId;
 }
-
