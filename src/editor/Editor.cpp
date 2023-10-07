@@ -74,18 +74,18 @@ void Editor::DrawMenuBar() {
 void Editor::DrawScene() {
 	ImGui::Begin("Scene");
 	ImGui::BeginChild("Scene Frame Buffer");
-	ImVec2 windowSize = ImGui::GetWindowSize();
-	glm::i32vec2 sceneWindowSize = glm::i32vec2(windowSize.x, windowSize.y);
+	const ImVec2 windowSize = ImGui::GetWindowSize();
+	const glm::i32vec2 sceneWindowSize(windowSize.x, windowSize.y);
 
-	ImVec2 sceneWindowPos = ImGui::GetCursorScreenPos();
-	ImVec2 mousePos = ImGui::GetMousePos();
+	const ImVec2 sceneWindowPos = ImGui::GetCursorScreenPos();
+	const ImVec2 mousePos = ImGui::GetMousePos();
 
-	glm::vec2 minScreenPos(sceneWindowPos.x, sceneWindowPos.y);
-	glm::vec2 maxScreenPos(sceneWindowPos.x + sceneWindowSize.x, sceneWindowPos.y + sceneWindowSize.y);
+	const glm::vec2 minScreenPos(sceneWindowPos.x, sceneWindowPos.y);
+	const glm::vec2 maxScreenPos(sceneWindowPos.x + sceneWindowSize.x, sceneWindowPos.y + sceneWindowSize.y);
 
-	bool mouseXInsideScene = mousePos.x >= minScreenPos.x && mousePos.x <= maxScreenPos.x;
-	bool mouseYInsideScene = mousePos.y >= minScreenPos.y && mousePos.y <= maxScreenPos.y;
-	bool leftMousePressed = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+	const bool mouseXInsideScene = mousePos.x >= minScreenPos.x && mousePos.x <= maxScreenPos.x;
+	const bool mouseYInsideScene = mousePos.y >= minScreenPos.y && mousePos.y <= maxScreenPos.y;
+	const bool leftMousePressed = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
 
 	if (mouseXInsideScene && mouseYInsideScene && leftMousePressed) {
 
@@ -99,16 +99,16 @@ void Editor::DrawScene() {
 		s_SelectionBuffer.Bind();
 		s_SelectionBuffer.RedIntegerFill(-1);
 
-		const auto view = View<Transform, MeshRenderer>();
+		const auto view = View<LocalToWorld, MeshRenderer>();
 		for (const auto entity : view) {
-			auto& transform = Registry::Get<Transform>(entity);
+			auto& toWorld = Registry::Get<LocalToWorld>(entity);
 			auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
 			s_SelectionShader.SetInt("entityId", entity.Id());
-			Renderer::DrawMesh(meshRenderer, transform, s_SelectionShader);
+			Renderer::DrawMesh(meshRenderer, toWorld, s_SelectionShader);
 		}
 
-		glm::vec2 pixelCoords(mousePos.x - sceneWindowPos.x, sceneWindowSize.y - (mousePos.y - sceneWindowPos.y));
-		i32 possibleEntityId = s_SelectionBuffer.ReadPixel(pixelCoords);
+		const glm::vec2 pixelCoords(mousePos.x - sceneWindowPos.x, sceneWindowSize.y - (mousePos.y - sceneWindowPos.y));
+		const i32 possibleEntityId = s_SelectionBuffer.ReadPixel(pixelCoords);
 		s_SelectionBuffer.UnBind();
 
 		s_SelectedEntity = possibleEntityId >= 0 ? &Registry::m_Entities[possibleEntityId] : nullptr;
@@ -148,7 +148,7 @@ void Editor::DrawInspector() {
 		ImGui::Text(entityName.c_str());
 
 		if (Registry::Has<Transform>(*s_SelectedEntity)) {
-			Transform* trans = &Registry::Get<Transform>(*s_SelectedEntity);
+			auto* trans = &Registry::Get<Transform>(*s_SelectedEntity);
 			ImGui::PushItemWidth(60);
 			ImGui::DragFloat("x", &trans->position.x, 0.1f);
 			ImGui::SameLine();

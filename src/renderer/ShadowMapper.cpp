@@ -40,12 +40,12 @@ void ShadowMapper::PerformShadowPass() {
 	m_DepthShader.Bind();
 	m_DepthShader.SetMat4("viewProjection", m_LightViewProjection);
 
-	const auto view = View<Transform, MeshRenderer>();
-    for (auto entity : view) {
-        auto& transform = Registry::Get<Transform>(entity);
-        auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
+	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
+    for (const auto entity : view) {
+        auto& toWorld = Registry::Get<LocalToWorld>(entity);
+        const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
         
-		m_DepthShader.SetMat4("model", transform.model);
+		m_DepthShader.SetMat4("model", toWorld.matrix);
 
         glBindVertexArray(meshRenderer.mesh.vao);
         glDrawElements(GL_TRIANGLES, meshRenderer.mesh.numIndices, GL_UNSIGNED_INT, 0);

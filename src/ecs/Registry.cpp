@@ -10,3 +10,4 @@ Entity Registry::Create() {
 size_t Registry::GetEntityCount() {
     return m_Entities.size();
 }
+

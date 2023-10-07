@@ -14,8 +14,9 @@ Entity Model::Instantiate(const char* meshPath, Material* mat) {
 	return ProcessNode(scene, scene->mRootNode, nullptr, mat);
 }
 
-Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Transform* parent, Material* mat) {
-	const auto entity = Registry::Create();
+Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, const Entity* parent, Material* mat) {
+	const auto& entity = Registry::Create();
+	Registry::Add<LocalToWorld>(entity);
 	auto& trans = Registry::Add<Transform>(entity);
 
 	aiVector3t<f32> scale;
@@ -28,7 +29,7 @@ Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Transform* p
 	trans.scale = glm::vec3(scale.x, scale.y, scale.z);
 
 	if (parent != nullptr) {
-		//trans.SetParent(parent);
+		Registry::Add<Parent>(entity).entity = *parent;
 	}
 
 	for (u32 i = 0; i < node->mNumMeshes; i++) {
@@ -38,9 +39,12 @@ Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Transform* p
 		meshRenderer.material = mat;
 	}
 
-	for (u32 i = 0; i < node->mNumChildren; i++) {
-		auto child = ProcessNode(scene, node->mChildren[i], &trans, mat);
-		//trans.AddChild(&Registry::Get<Transform>(child));
+	if (node->mNumChildren > 0) {
+		auto& children = Registry::Add<Children>(entity);
+		for (u32 i = 0; i < node->mNumChildren; i++) {
+			auto child = ProcessNode(scene, node->mChildren[i], &entity, mat);
+			children.entities.push_back(child);
+		}
 	}
 
 	return entity;

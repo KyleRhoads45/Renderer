@@ -7,9 +7,9 @@ Material::Material(const Shader& shader) {
 	m_Shader = shader;
 }
 
-void Material::Bind(const Transform& transform) {
+void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.Bind();
-	m_Shader.SetMat4("model", transform.model);
+	m_Shader.SetMat4("model", toWorld.matrix);
 
 	glActiveTexture(GL_TEXTURE4);
 	ShadowMapper::m_ShadowMap.Bind();

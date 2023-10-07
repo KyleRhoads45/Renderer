@@ -55,7 +55,8 @@ int main() {
 	Shader simple("src/shaders/SimpleLit.vert", "src/shaders/SimpleLit.frag");
 	Material mat(simple);
 
-	auto lucy = Model::Instantiate("Assets/Model/Lucy.fbx", &mat);
+	//auto lucy = Model::Instantiate("Assets/Model/Lucy.fbx", &mat);
+	auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_2.fbx", &mat);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);

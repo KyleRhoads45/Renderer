@@ -35,10 +35,10 @@ FrustrumPoints& CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     auto& trans = *s_ActiveCameraTransform;
     auto& cam = *s_ActiveCamera;
 
-    f32 farDist = (zDist == 0.0f) ? cam.m_Far : zDist;
-    f32 nearDist = cam.m_Near;
-    f32 aspect = cam.m_Aspect;
-    f32 pheta = glm::radians(cam.m_Fov / 2.0f);
+    f32 farDist = (zDist == 0.0f) ? cam.far : zDist;
+    f32 nearDist = cam.near;
+    f32 aspect = cam.aspect;
+    f32 pheta = glm::radians(cam.fov / 2.0f);
 
     const glm::vec3 pos = trans.position;
     const glm::vec3 forward = trans.Forward();
@@ -86,7 +86,7 @@ void CameraSystem::UpdateUniformBuffer() {
     glm::mat4 viewProjection = s_ActiveCamera->ViewProjection();
 
 	s_UniformBuffer->SubBufferData("camPos", &camPos);
-	s_UniformBuffer->SubBufferData("view", &s_ActiveCamera->m_View);
-	s_UniformBuffer->SubBufferData("projection", &s_ActiveCamera->m_Projection);
+	s_UniformBuffer->SubBufferData("view", &s_ActiveCamera->view);
+	s_UniformBuffer->SubBufferData("projection", &s_ActiveCamera->projection);
 	s_UniformBuffer->SubBufferData("viewProjection", &viewProjection);
 }

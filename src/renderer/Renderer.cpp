@@ -29,15 +29,15 @@ void Renderer::RenderScene() {
 
 	DrawSkybox();
 
-	const auto view = View<Transform, MeshRenderer>();
+	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
     for (const auto entity : view) {
-        auto& transform = Registry::Get<Transform>(entity);
-        auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
+        auto& toWorld = Registry::Get<LocalToWorld>(entity);
+        const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
         
         assert(meshRenderer.material);
 		Material* mat = meshRenderer.material;
 
-        mat->Bind(transform);
+        mat->Bind(toWorld);
 
         glBindVertexArray(meshRenderer.mesh.vao);
         glDrawElements(GL_TRIANGLES, meshRenderer.mesh.numIndices, GL_UNSIGNED_INT, 0);
@@ -48,9 +48,9 @@ void Renderer::RenderScene() {
 	}
 }
 
-void Renderer::DrawMesh(MeshRenderer& meshRenderer, Transform& transform, Shader& shader) {
+void Renderer::DrawMesh(const MeshRenderer& meshRenderer, const LocalToWorld& toWorld, Shader& shader) {
 	shader.Bind();
-	shader.SetMat4("model", transform.model);
+	shader.SetMat4("model", toWorld.matrix);
 	glBindVertexArray(meshRenderer.mesh.vao);
 	glDrawElements(GL_TRIANGLES, meshRenderer.mesh.numIndices, GL_UNSIGNED_INT, 0);
 }

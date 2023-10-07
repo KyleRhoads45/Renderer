@@ -1,29 +1,37 @@
-#include "Input.h"
 #include "Components.h"
 
 Camera::Camera() {
-    m_Yaw = 0.0;
-    m_Pitch = 0.0;
-    m_Fov = 60.0f;
-    m_Aspect = 1920.0f / 1080.0f;
-    m_Near = 0.01f;
-    m_Far = 500.0f;
-    m_View = glm::mat4(1.0f);
-    m_Projection = glm::perspective(glm::radians(m_Fov), m_Aspect, m_Near, m_Far);
-}
-
-bool Camera::operator!=(const Camera& other) const {
-    if (m_Fov != other.m_Fov)               return true;
-    if (m_Aspect != other.m_Aspect)         return true;
-    if (m_Near != other.m_Near)             return true;
-    if (m_Far != other.m_Far)               return true;
-    if (m_View != other.m_View)             return true;
-    if (m_Projection != other.m_Projection) return true;
-    return false;
+    yaw = 0.0;
+    pitch = 0.0;
+    fov = 60.0f;
+    aspect = 1920.0f / 1080.0f;
+    near = 0.01f;
+    far = 500.0f;
+    view = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(fov), aspect, near, far);
 }
 
 glm::mat4 Camera::ViewProjection() const {
-    return m_Projection * m_View;
+    return projection * view;
+}
+
+static bool cameras_are_equal(const Camera& cam1, const Camera& cam2) {
+    return (
+        cam1.fov == cam2.fov &&
+        cam1.aspect == cam2.aspect &&
+        cam1.near == cam2.near &&
+        cam1.far == cam2.far &&
+        cam1.view == cam2.view &&
+        cam1.projection == cam2.projection
+    );
+}
+
+bool Camera::operator!=(const Camera& other) const {
+    return !cameras_are_equal(*this, other);
+}
+
+bool Camera::operator==(const Camera& other) const {
+    return cameras_are_equal(*this, other);
 }
 
 glm::vec3 Transform::Forward() const {

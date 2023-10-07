@@ -5,7 +5,7 @@
 class Material {
 public:
 	Material(const Shader& shader);
-	void Bind(const Transform& transform);
+	void Bind(const LocalToWorld& toWorld);
 private:
 	Shader m_Shader;
 };
