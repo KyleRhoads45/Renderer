@@ -3,7 +3,7 @@
 #include <memory>
 #include "Components.h"
 #include "renderer/UniformBuffer.h"
-#include "ecs/Entity.h"
+#include "ecs/Registry.h"
 
 constexpr size_t FrustrumPointCount = 8;
 using FrustrumPoints = std::array<glm::vec3, FrustrumPointCount>;

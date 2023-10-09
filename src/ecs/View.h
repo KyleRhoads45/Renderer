@@ -8,7 +8,7 @@ public:
 	ViewIterator(const EntityCompMask mask, const EntityCompMask excludeMask, ViewFilter filter);
 	void SeekBegin();
 	void SeekEnd();
-	Entity operator*() const;
+	Entity& operator*() const;
 	ViewIterator& operator++();
 	bool operator==(const ViewIterator& other) const;
 	bool operator!=(const ViewIterator& other) const;

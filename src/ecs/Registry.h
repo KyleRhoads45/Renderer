@@ -6,6 +6,7 @@
 
 constexpr auto MAX_COMPONENTS = 100;
 
+class Entity;
 class EntityCompMask;
 
 class Registry {
@@ -24,11 +25,7 @@ public:
 	template<typename Component>
 	static u32 GetComponentId();
 
-	//template<typename... Components>
-	//static EntityCompMask CreateComponentMask();
-
 	static size_t GetEntityCount();
-
 private:
 	static inline u32 m_ComponentCounter = 0;
 	static inline std::vector<Entity> m_Entities;
@@ -42,45 +39,43 @@ private:
 	friend class Serializer;
 };
 
+class Entity {
+public:
+	Entity() = default;
+	Entity(const u32 id);
+
+	bool operator==(const Entity& other) const;
+
+	u32 Id() const;
+
+	template<typename Component>
+	Component& Get();
+
+	template<typename Component>
+	Component& Add();
+
+	template<typename Component>
+	bool Has();
+
+	static Entity Null();
+private:
+	u32 m_Id;
+};
+
 class EntityCompMask {
 public:
-
 	EntityCompMask() = default;
 
 	template<typename... Components>
-	static EntityCompMask From() {
-		EntityCompMask mask;
-		u32 componentIds[] = {Registry::GetComponentId<Components>()...};
-		for (int i = 0; i < sizeof...(Components); i++) {
-			mask.Set(componentIds[i]);
-		}
-		return mask;
-	}
+	static EntityCompMask From();
 
-	inline bool operator==(const EntityCompMask& otherMask) const {
-		return m_Mask == otherMask.m_Mask;
-	}
+	bool operator==(const EntityCompMask& otherMask) const;
 
-	inline bool Empty() {
-		return m_Mask.none();
-	}
-
-	inline bool IsSubsetOf(const EntityCompMask& superSet) const {
-		return (m_Mask & superSet.m_Mask) == m_Mask;
-	}
-
-	inline bool SharesAnyWith(const EntityCompMask& otherMask) const {
-		return (m_Mask & otherMask.m_Mask).any();
-	}
-
-	inline void Set(u32 index) {
-		m_Mask.set(index);
-	}
-
-	inline bool Test(u32 index) {
-		return m_Mask.test(index);
-	}
-
+	bool Empty();
+	bool IsSubsetOf(const EntityCompMask& superSet) const;
+	bool SharesAnyWith(const EntityCompMask& otherMask) const;
+	void Set(u32 index);
+	bool Test(u32 index);
 public:
 	std::bitset<MAX_COMPONENTS> m_Mask;
 };
@@ -94,15 +89,14 @@ Component& Registry::Add(const Entity entity) {
 	}
 
 	m_EntityCompMasks[entity.Id()].Set(compId);
-	return m_Pools[compId].Add<Component>(entity);
+	return m_Pools[compId].Add<Component>(entity.Id());
 }
 
 template<typename Component>
 Component& Registry::Get(const Entity entity) {
 	const u32 compId = GetComponentId<Component>();
-	return m_Pools[compId].Get<Component>(entity);
+	return m_Pools[compId].Get<Component>(entity.Id());
 }
-
 
 template<typename Component>
 bool Registry::Has(const Entity entity) {
@@ -116,14 +110,28 @@ u32 Registry::GetComponentId() {
 	return compId;
 }
 
-//template<typename... Components>
-//EntityCompMask Registry::CreateComponentMask() {
-//	EntityCompMask mask;
-//
-//	u32 componentIds[] = {Registry::GetComponentId<Components>()...};
-//	for (int i = 0; i < sizeof...(Components); i++) {
-//		mask.set(componentIds[i]);
-//	}
-//
-//	return mask;
-//}
+template<typename Component>
+Component& Entity::Get() {
+	return Registry::Get<Component>(m_Id);
+}
+
+template<typename Component>
+Component& Entity::Add() {
+	return Registry::Add<Component>(m_Id);
+}
+
+template<typename Component>
+bool Entity::Has() {
+	return Registry::Has<Component>(m_Id);
+}
+
+template<typename... Components>
+EntityCompMask EntityCompMask::From() {
+	EntityCompMask mask;
+	u32 componentIds[] = { Registry::GetComponentId<Components>()... };
+	for (int i = 0; i < sizeof...(Components); i++) {
+		mask.Set(componentIds[i]);
+	}
+	return mask;
+}
+

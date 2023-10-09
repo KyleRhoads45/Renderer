@@ -10,6 +10,6 @@ ComponentPool::ComponentPool(const u32 compSize) {
 	m_ComponentOffsets = MakeRef<u32[]>(m_CurBufferSize);
 }
 
-void* ComponentPool::GetComponentAddress(const Entity entity) const {
-	return (m_Buffer.get() + (m_CompSize * m_ComponentOffsets[entity.Id()]));
+void* ComponentPool::GetComponentAddress(const u32 index) const {
+	return (m_Buffer.get() + (m_CompSize * m_ComponentOffsets[index]));
 }

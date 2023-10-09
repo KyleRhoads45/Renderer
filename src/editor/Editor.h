@@ -1,6 +1,6 @@
 #pragma once
-#include <ecs/Entity.h>
 #include <GLFW/glfw3.h>
+#include "ecs/Registry.h"
 #include "renderer/FrameBuffer.h"
 
 class Editor {
@@ -12,9 +12,10 @@ private:
 	static void DrawMenuBar();
 	static void DrawScene();
 	static void DrawWorld();
+	static void DrawEntityHierarchy(Entity entity);
 	static void DrawInspector();
 private: 
 	inline static FrameBuffer s_SceneFrameBuffer;
-	inline static Entity* s_SelectedEntity;
+	inline static Entity s_SelectedEntity;
 };
 

@@ -1,4 +1,5 @@
 #include "Components.h"
+#include <iostream>
 
 Camera::Camera() {
     yaw = 0.0;

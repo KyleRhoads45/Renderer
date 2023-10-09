@@ -3,7 +3,6 @@
 #include "CameraSystem.h"
 #include "Components.h"
 #include "editor/Editor.h"
-#include "ecs/Registry.h"
 
 void CameraSystem::Init() {
 	s_UniformBuffer = MakeScope<UniformBuffer>(0);

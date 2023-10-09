@@ -56,7 +56,8 @@ int main() {
 	Material mat(simple);
 
 	//auto lucy = Model::Instantiate("Assets/Model/Lucy.fbx", &mat);
-	auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_2.fbx", &mat);
+	//auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_2.fbx", &mat);
+	auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_Complex_Parents_2.fbx", &mat);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);

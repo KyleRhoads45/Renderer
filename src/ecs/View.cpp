@@ -11,7 +11,7 @@ void ViewIterator::SeekEnd() {
 	m_Index = Registry::GetEntityCount();
 }
 
-Entity ViewIterator::operator*() const {
+Entity& ViewIterator::operator*() const {
 	return Registry::m_Entities[m_Index];
 }
 
