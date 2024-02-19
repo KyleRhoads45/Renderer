@@ -12,8 +12,13 @@ class Renderer {
 public:
     static void Init();
     static void RenderScene();
+
+    static void PerformAllPrePass();
+    static void PerformShadowPass();
+    static void PerformSkyboxPass();
+
     static void DrawMesh(const MeshRenderer& meshRenderer, const LocalToWorld& toWorld, Shader& shader);
-    static void DrawSkybox();
+    static void DrawMesh(const Mesh& mesh, const LocalToWorld& toWorld, Shader& shader);
     static void DebugDrawBounds(glm::vec3* points);
     static void DebugDrawPoint(const glm::vec3 point);
 public:

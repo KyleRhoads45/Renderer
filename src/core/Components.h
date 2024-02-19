@@ -46,6 +46,10 @@ struct Transform {
 
 struct LocalToWorld {
     glm::mat4 matrix;
+
+    Transform ToTransform() const;
+    static LocalToWorld FromTransform(Transform& trans);
+    static LocalToWorld From(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale);
 };
 
 struct Parent {

@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <assimp/postprocess.h>
+#include <assimp/Importer.hpp>
 #include "core/Base.h"
 
 class Texture {

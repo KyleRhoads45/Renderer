@@ -14,6 +14,10 @@ public:
 	static void Update();
 	static void SetActiveCamera(Camera* camera, Transform* transform);
     static FrustrumPoints& GetViewFrustrumPoints(float zDist);
+	static glm::vec3 ActiveCamPos();
+	static glm::mat4 ActiveCamViewProjection();
+	static glm::mat4 ActiveCamView();
+	static glm::mat4 ActiveCamProjection();
 private:
 	static void UpdateUniformBuffer();
 private:

@@ -17,23 +17,11 @@ void Renderer::Init() {
 }
 
 void Renderer::RenderScene() {
-	if (s_FrameBuffer == nullptr) {
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	}
-
-	ShadowMapper::PerformShadowPass();
-
-	if (s_FrameBuffer != nullptr) {
-		s_FrameBuffer->Bind();
-	}
-
-	DrawSkybox();
-
 	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
     for (const auto entity : view) {
         auto& toWorld = Registry::Get<LocalToWorld>(entity);
         const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
-        
+
         assert(meshRenderer.material);
 		Material* mat = meshRenderer.material;
 
@@ -42,20 +30,18 @@ void Renderer::RenderScene() {
         glBindVertexArray(meshRenderer.mesh.vao);
         glDrawElements(GL_TRIANGLES, meshRenderer.mesh.numIndices, GL_UNSIGNED_INT, 0);
     }
-
-	if (s_FrameBuffer != nullptr) {
-		s_FrameBuffer->UnBind();
-	}
 }
 
-void Renderer::DrawMesh(const MeshRenderer& meshRenderer, const LocalToWorld& toWorld, Shader& shader) {
-	shader.Bind();
-	shader.SetMat4("model", toWorld.matrix);
-	glBindVertexArray(meshRenderer.mesh.vao);
-	glDrawElements(GL_TRIANGLES, meshRenderer.mesh.numIndices, GL_UNSIGNED_INT, 0);
+void Renderer::PerformAllPrePass() {
+	PerformShadowPass();
+	PerformSkyboxPass();
 }
 
-void Renderer::DrawSkybox() {
+void Renderer::PerformShadowPass() {
+	ShadowMapper::PerformShadowPass();
+}
+
+void Renderer::PerformSkyboxPass() {
 	static Mesh skyboxMesh = Primatives::Cube(true);
 	static Shader skyboxShader = Shader("src/shaders/Skybox.vert", "src/shaders/Skybox.frag");
 
@@ -71,6 +57,17 @@ void Renderer::DrawSkybox() {
 
 	glDepthFunc(GL_LESS);
 	glDepthMask(GL_TRUE);
+}
+
+void Renderer::DrawMesh(const MeshRenderer& meshRenderer, const LocalToWorld& toWorld, Shader& shader) {
+	DrawMesh(meshRenderer.mesh, toWorld, shader);
+}
+
+void Renderer::DrawMesh(const Mesh& mesh, const LocalToWorld& toWorld, Shader& shader) {
+	shader.Bind();
+	shader.SetMat4("model", toWorld.matrix);
+	glBindVertexArray(mesh.vao);
+	glDrawElements(GL_TRIANGLES, mesh.numIndices, GL_UNSIGNED_INT, 0);
 }
 
 void Renderer::DebugDrawBounds(glm::vec3* points) {

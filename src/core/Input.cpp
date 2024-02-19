@@ -4,7 +4,7 @@ void Input::Init(GLFWwindow* window) {
     if (glfwRawMouseMotionSupported()) {
         glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     }
-    glfwGetCursorPos(window, &s_LastMouseXPos, &s_LastMouseYPos);
+    glfwGetCursorPos(window, &s_MouseXPos, &s_MouseYPos);
     glfwSetKeyCallback(window, KeyCallback);
     glfwSetMouseButtonCallback(window, MouseCallback);
 }
@@ -31,6 +31,10 @@ bool Input::OnMousePress(const i32 button) {
     return (s_MouseMap[button] == INPUT_PRESSED);
 }
 
+glm::vec2 Input::MousePosition() {
+    return glm::vec2(s_MouseXPos, s_MouseYPos);
+}
+
 glm::vec2 Input::GetMouseDeltas() {
     return s_MouseDelta; 
 }
@@ -52,11 +56,11 @@ void Input::UpdateMouseDeltas(GLFWwindow* window) {
     f64 curMouseXPos, curMouseYPos;
     glfwGetCursorPos(window, &curMouseXPos, &curMouseYPos);
     
-    s_MouseDelta.x = curMouseXPos - s_LastMouseXPos;
-    s_MouseDelta.y = curMouseYPos - s_LastMouseYPos;
+    s_MouseDelta.x = curMouseXPos - s_MouseXPos;
+    s_MouseDelta.y = curMouseYPos - s_MouseYPos;
     
-    s_LastMouseXPos = curMouseXPos;
-    s_LastMouseYPos = curMouseYPos;
+    s_MouseXPos = curMouseXPos;
+    s_MouseYPos = curMouseYPos;
 }
 
 void Input::KeyCallback(GLFWwindow* window, i32 key, i32 scancode, i32 action, i32 mods) {

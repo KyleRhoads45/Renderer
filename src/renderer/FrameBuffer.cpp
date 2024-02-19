@@ -76,6 +76,10 @@ i32 FrameBuffer::ReadPixel(const glm::vec2& pixelCoord) const {
 	return pixel;
 }
 
+f32 FrameBuffer::ReadDepth(const glm::vec2& pixelCoord) const {
+	return m_DepthTexture.ReadPixel(pixelCoord);
+}
+
 glm::i32vec2 FrameBuffer::Size() const {
 	return m_Size;
 }

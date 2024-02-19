@@ -27,6 +27,7 @@ layout (std140, binding = 0) uniform camera {
 
 layout (std140, binding = 1) uniform enviorment {
     float ambientStrength;
+    float lightStrength;
     vec3 lightDir;
     mat4 lightViewProjection;
 };
@@ -64,7 +65,7 @@ void main() {
 
     for (int i = 0; i < 1; i++) {
         // Directional light radiance is just light color 
-        vec3 radiance = vec3(1.0, 1.0, 1.0) * 0.14;
+        vec3 radiance = vec3(1.0, 1.0, 1.0) * lightStrength;
 
         float metallic = 0.0;
         if (useMetallicMap) {

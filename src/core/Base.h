@@ -22,3 +22,15 @@ template<typename T, typename... Args>
 constexpr Scope<T> MakeScope(Args&&... args) {
 	return std::make_unique<T>(std::forward<Args>(args)...);
 }
+
+#ifndef NDEBUG
+#   define ASSERT(condition, message) \
+    do { \
+        if (! (condition)) { \
+            std::cerr << __FILE__ << ":" << __LINE__ << " " << message << std::endl; \
+            std::terminate(); \
+        } \
+    } while (false)
+#else
+#   define ASSERT(condition, message) ((void)0)
+#endif

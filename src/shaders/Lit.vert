@@ -14,6 +14,7 @@ layout (std140, binding = 0) uniform camera {
 
 layout (std140, binding = 1) uniform enviorment {
     float ambientStrength;
+    float lightStrength;
 	vec3 lightDir;
     mat4 lightViewProjection;
 };

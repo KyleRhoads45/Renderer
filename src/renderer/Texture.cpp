@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include "Texture.h"
 
-std::shared_ptr<Texture> Texture::Load(const std::string& filePath) {
+Ref<Texture> Texture::Load(const std::string& filePath) {
     if (m_ActiveTextures.contains(filePath)) {
         return m_ActiveTextures[filePath].lock();
     }

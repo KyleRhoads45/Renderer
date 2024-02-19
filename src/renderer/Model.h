@@ -8,5 +8,5 @@ class Model {
 public:
 	static Entity Instantiate(const char* meshPath, Material* mat);
 private:
-	static Entity ProcessNode(const aiScene* scene, const aiNode* node, const Entity parent, Material* mat);
+	static Entity ProcessNode(const std::string& directoryPath, const aiScene* scene, const aiNode* node, const Entity parent, Material* mat);
 };

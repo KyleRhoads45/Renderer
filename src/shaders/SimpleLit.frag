@@ -2,8 +2,11 @@
 
 in vec3 fragPos;
 in vec3 modelNormal;
+in vec2 textureCoord;
+in mat3 tbn;
 in vec4 lightFragPos;
 
+uniform sampler2D baseMap;
 uniform sampler2D shadowMap;
 uniform samplerCube skybox;
 
@@ -16,6 +19,7 @@ layout (std140, binding = 0) uniform camera {
 
 layout (std140, binding = 1) uniform enviorment {
     float ambientStrength;
+    float lightStrength;
     vec3 lightDir;
     mat4 lightViewProjection;
 };
@@ -39,11 +43,11 @@ void main() {
 
     vec3 normal = modelNormal;
     
-    vec3 baseColor = vec3(1, 1, 1);
+	vec3 baseColor = texture(baseMap, textureCoord).rgb;
 
     for (int i = 0; i < 1; i++) {
         // Directional light radiance is just light color 
-        vec3 radiance = vec3(1.0, 1.0, 1.0) * 0.14;
+        vec3 radiance = vec3(1.0, 1.0, 1.0) * lightStrength;
 
         float metallic = 0.0;
         float roughness = 0.5;

@@ -1,7 +1,9 @@
+#include <filesystem>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include "core/Base.h"
 #include "Model.h"
+#include <iostream>
 
 Entity Model::Instantiate(const char* meshPath, Material* mat) {
 	Assimp::Importer importer;
@@ -9,10 +11,13 @@ Entity Model::Instantiate(const char* meshPath, Material* mat) {
 
 	assert(scene || !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || scene->mRootNode);
 
-	return ProcessNode(scene, scene->mRootNode, Entity::Null(), mat);
+	std::string directoryPath(meshPath);
+	directoryPath = directoryPath.substr(0, directoryPath.find_last_of("\\/"));
+
+	return ProcessNode(directoryPath, scene, scene->mRootNode, Entity::Null(), mat);
 }
 
-Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Entity parent, Material* mat) {
+Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene, const aiNode* node, Entity parent, Material* mat) {
 	auto entity = Registry::Create();
 	entity.Add<LocalToWorld>();
 	auto& trans = entity.Add<Transform>();
@@ -33,18 +38,44 @@ Entity Model::ProcessNode(const aiScene* scene, const aiNode* node, Entity paren
 	for (u32 i = 0; i < node->mNumMeshes; i++) {
 		auto& meshRenderer = entity.Add<MeshRenderer>();
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		meshRenderer.mesh = Mesh::FromAssimpMesh(mesh);
-		meshRenderer.material = mat;
+
+		const aiMaterial* meshMaterial = scene->mMaterials[mesh->mMaterialIndex];
+		u32 diffuseCount = meshMaterial->GetTextureCount(aiTextureType_DIFFUSE);
+
+		if (diffuseCount > 0) {
+			aiString textureName;
+			meshMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &textureName);
+
+			std::string texturePath = textureName.C_Str();
+
+			ASSERT(texturePath.find("\\/") == std::string::npos, "Textures need to be in same directory as model");
+
+			texturePath = directoryPath + "/" + texturePath;
+
+			Ref<Texture> diffuse = Texture::Load(texturePath);
+			Material* betterMat = Material::NewStarndardMaterial();
+			betterMat->SetDiffuse(diffuse);
+
+			meshRenderer.mesh = Mesh::FromAssimpMesh(mesh);
+			meshRenderer.material = betterMat;
+		}
+		else {
+			Ref<Texture> diffuse = Texture::Load("res/Missing.png");
+			Material* betterMat = Material::NewStarndardMaterial();
+			betterMat->SetDiffuse(diffuse);
+
+			meshRenderer.mesh = Mesh::FromAssimpMesh(mesh);
+			meshRenderer.material = betterMat;
+		}
 	}
 
 	if (node->mNumChildren > 0) {
 		entity.Add<Children>();
 		for (u32 i = 0; i < node->mNumChildren; i++) {
-			auto child = ProcessNode(scene, node->mChildren[i], entity, mat);
+			auto child = ProcessNode(directoryPath, scene, node->mChildren[i], entity, mat);
 			entity.Get<Children>().entities.push_back(child);
 		}
 	}
 
 	return entity;
 }
-

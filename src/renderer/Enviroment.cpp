@@ -9,6 +9,7 @@ Enviroment::Enviroment() {
 	constexpr uint32_t bindingPoint = 1;
 	m_UniformBuffer = std::make_unique<UniformBuffer>(bindingPoint);
 	m_UniformBuffer->Register("ambientStrength", sizeof(f32));
+	m_UniformBuffer->Register("lightStrength", sizeof(f32));
 	m_UniformBuffer->Register("lightDir", sizeof(glm::vec3));
 	m_UniformBuffer->Register("lightViewProjection", sizeof(glm::mat4));
 	m_UniformBuffer->FinishedRegistering();
@@ -21,6 +22,11 @@ void Enviroment::SetLightViewProjection(glm::mat4& lightViewProjection) {
 void Enviroment::SetLightDir(glm::vec3 lightDir) {
 	m_UniformBuffer->SubBufferData("lightDir", &lightDir);
 	m_LightDir = lightDir;
+}
+
+void Enviroment::SetLightStrength(f32 lightStrength) {
+	m_UniformBuffer->SubBufferData("lightStrength", &lightStrength);
+	m_LightStrength = lightStrength;
 }
 
 void Enviroment::SetAmbientStrength(f32 ambientStrength) {

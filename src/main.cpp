@@ -56,8 +56,10 @@ int main() {
 	Material mat(simple);
 
 	//auto lucy = Model::Instantiate("Assets/Model/Lucy.fbx", &mat);
-	//auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_2.fbx", &mat);
-	auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_Complex_Parents_2.fbx", &mat);
+	auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_2.fbx", &mat);
+	//auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_Complex_Parents_2.fbx", &mat);
+	//auto lucy = Model::Instantiate("Assets/PolygonCity/City.fbx", &mat);
+	lucy.Get<Transform>().scale = glm::vec3(0.1f);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
@@ -80,6 +82,7 @@ void SetupEnviroment() {
 
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
 	Enviroment::Instance()->SetLightDir(lightDir);
+	Enviroment::Instance()->SetLightStrength(0.08f);
 	Enviroment::Instance()->SetAmbientStrength(0.5f);
 
 	ShadowMapper::Init(4096, 15.0f);

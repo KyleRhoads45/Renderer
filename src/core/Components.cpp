@@ -46,3 +46,42 @@ glm::vec3 Transform::Right() const {
 glm::vec3 Transform::Up() const {
 	return glm::rotate(rotation, glm::vec3(0, 1, 0));
 }
+
+LocalToWorld LocalToWorld::FromTransform(Transform& trans) {
+    LocalToWorld toWorld;
+
+	toWorld.matrix = glm::translate(glm::mat4(1.0f), trans.position);
+	toWorld.matrix = toWorld.matrix * glm::mat4_cast(trans.rotation);
+	toWorld.matrix = glm::scale(toWorld.matrix, trans.scale);
+
+    return toWorld;
+}
+
+LocalToWorld LocalToWorld::From(const glm::vec3& position, const glm::quat& rotation, const glm::vec3& scale) {
+    LocalToWorld toWorld;
+
+	toWorld.matrix = glm::translate(glm::mat4(1.0f), position);
+	toWorld.matrix = toWorld.matrix * glm::mat4_cast(rotation);
+	toWorld.matrix = glm::scale(toWorld.matrix, scale);
+
+    return toWorld;
+}
+
+Transform LocalToWorld::ToTransform() const {
+    Transform trans;
+
+    trans.position = matrix[3];
+
+    f32 xScale = glm::length(glm::vec3(matrix[0]));
+    f32 yScale = glm::length(glm::vec3(matrix[1]));
+    f32 zScale = glm::length(glm::vec3(matrix[2]));
+    trans.scale = glm::vec3(xScale, yScale, zScale);
+
+    glm::vec3 xRot = glm::vec3(matrix[0]) / trans.scale.x;
+    glm::vec3 yRot = glm::vec3(matrix[1]) / trans.scale.y;
+    glm::vec3 zRot = glm::vec3(matrix[2]) / trans.scale.z;
+    glm::mat3 rotMat(xRot, yRot, zRot);
+    trans.rotation = glm::quat_cast(rotMat);
+
+    return trans;
+}

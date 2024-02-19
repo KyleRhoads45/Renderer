@@ -12,6 +12,7 @@ public:
 	void RedIntegerFill(i32 fillValue);
 	void Resize(glm::i32vec2 size);
 	i32 ReadPixel(const glm::vec2& pixelCoord) const;
+	f32 ReadDepth(const glm::vec2& pixelCoord) const;
 	glm::i32vec2 Size() const;
 	u32 Texture() const;
 private:

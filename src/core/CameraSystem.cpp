@@ -80,6 +80,22 @@ FrustrumPoints& CameraSystem::GetViewFrustrumPoints(float zDist = 0.0f) {
     return points;
 }
 
+glm::vec3 CameraSystem::ActiveCamPos() {
+    return s_ActiveCameraTransform->position;
+}
+
+glm::mat4 CameraSystem::ActiveCamViewProjection() {
+    return s_ActiveCamera->ViewProjection();
+}
+
+glm::mat4 CameraSystem::ActiveCamView() {
+    return s_ActiveCamera->view;
+}
+
+glm::mat4 CameraSystem::ActiveCamProjection() {
+    return s_ActiveCamera->projection;
+}
+
 void CameraSystem::UpdateUniformBuffer() {
     glm::vec3 camPos = s_ActiveCameraTransform->position;
     glm::mat4 viewProjection = s_ActiveCamera->ViewProjection();
