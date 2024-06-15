@@ -1,11 +1,11 @@
 #pragma once
 #include <memory>
 
-using u8  = char;
-using i32 = int;
-using u32 = unsigned int;
-using f32 = float;
-using f64 = double;
+using u8   = char;
+using i32  = int;
+using u32  = unsigned int;
+using f32  = float;
+using f64  = double;
 
 template<typename T>
 using Ref = std::shared_ptr<T>;

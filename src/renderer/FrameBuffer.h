@@ -1,4 +1,8 @@
 #pragma once
+#include "Bounds.h"
+#include "Bounds.h"
+#include "Bounds.h"
+#include "Bounds.h"
 #include "core/Base.h"
 #include "DepthTexture.h"
 
@@ -8,11 +12,11 @@ public:
 	FrameBuffer() = default;
 	FrameBuffer(glm::i32vec2 size, Format format);
 	void Bind();
-	void UnBind();
-	void RedIntegerFill(i32 fillValue);
+	void UnBind() const;
+	void RedIntegerFill(i32 fillValue) const;
 	void Resize(glm::i32vec2 size);
-	i32 ReadPixel(const glm::vec2& pixelCoord) const;
-	f32 ReadDepth(const glm::vec2& pixelCoord) const;
+	i32 ReadPixel(const glm::i32vec2& pixelCoord) const;
+	f32 ReadDepth(const glm::i32vec2& pixelCoord) const;
 	glm::i32vec2 Size() const;
 	u32 Texture() const;
 private:

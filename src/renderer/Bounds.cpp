@@ -1,10 +1,10 @@
 #include "Bounds.h"
 
-Bounds::Bounds(glm::vec3* points, u32 size) {
+Bounds::Bounds(const glm::vec3* points, const size_t size) {
 	m_Min = points[0];
 	m_Max = points[0];
 
-	for (u32 i = 0; i < size; i++) {
+	for (size_t i = 0; i < size; i++) {
 		glm::vec3 pos = points[i];
 
 		if (pos.x < m_Min.x) {
@@ -27,20 +27,4 @@ Bounds::Bounds(glm::vec3* points, u32 size) {
 			m_Max.z = pos.z;
 		}
 	}
-}
-
-f32 Bounds::XLength() {
-	return m_Max.x - m_Min.x;
-}
-
-f32 Bounds::YLength() {
-	return m_Max.y - m_Min.y;
-}
-
-f32 Bounds::ZLength() {
-	return m_Max.z - m_Min.z;
-}
-
-glm::vec3 Bounds::Center() {
-	return (m_Max + m_Min) / 2.0f;
 }

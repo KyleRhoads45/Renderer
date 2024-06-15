@@ -13,12 +13,12 @@ public:
 	bool operator==(const ViewIterator& other) const;
 	bool operator!=(const ViewIterator& other) const;
 private:
-	void FindNextIndex(int startIndex);
+	void FindNextIndex(const size_t startIndex);
 private:
-	u32 m_Index;
+	size_t m_Index;
 	EntityCompMask m_Mask;
 	EntityCompMask m_ExcludeMask;
-	ViewFilter m_filter;
+	ViewFilter m_Filter;
 };
 
 template<typename... Components>

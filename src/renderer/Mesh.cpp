@@ -14,13 +14,13 @@ Mesh Mesh::FromFile(const char* meshPath) {
 
 Mesh Mesh::FromAssimpMesh(const aiMesh* meshData) {
 	Mesh mesh;
-	mesh.numIndices = meshData->mNumFaces * 3;
-	mesh.numVerts = meshData->mNumVertices;
+	mesh.m_NumIndices = meshData->mNumFaces * 3;
+	mesh.m_NumVerts = meshData->mNumVertices;
 
-	mesh.verts = MakeRef<Vertex[]>(meshData->mNumVertices);
-	mesh.indices = MakeRef<u32[]>(mesh.numIndices);
+	mesh.m_Verts = MakeRef<Vertex[]>(meshData->mNumVertices);
+	mesh.m_Indices = MakeRef<u32[]>(mesh.m_NumIndices);
 	
-	for (i32 i = 0; i < meshData->mNumVertices; i++) {
+	for (u32 i = 0; i < meshData->mNumVertices; i++) {
 		Vertex vertex;
 
 		const aiVector3D pos = meshData->mVertices[i];
@@ -37,14 +37,14 @@ Mesh Mesh::FromAssimpMesh(const aiMesh* meshData) {
 			vertex.textureCoord = glm::vec2(textureCoord.x, textureCoord.y);
 		}
 
-		mesh.verts[i] = vertex;
+		mesh.m_Verts[i] = vertex;
 	}
 
-	i32 count = 0;
-	for (i32 i = 0; i < meshData->mNumFaces; i++) {
+	u32 count = 0;
+	for (u32 i = 0; i < meshData->mNumFaces; i++) {
 		const aiFace face = meshData->mFaces[i];
-		for (i32 j = 0; j < face.mNumIndices; j++) {
-			mesh.indices[count] = face.mIndices[j];
+		for (u32 j = 0; j < face.mNumIndices; j++) {
+			mesh.m_Indices[count] = face.mIndices[j];
 			count++;
 		}
 	}
@@ -54,12 +54,12 @@ Mesh Mesh::FromAssimpMesh(const aiMesh* meshData) {
 }
 
 void Mesh::GenOpenGLBuffers() {
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	glGenVertexArrays(1, &m_Vao);
+	glBindVertexArray(m_Vao);
 
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * numVerts, &verts[0], GL_STATIC_DRAW);
+	glGenBuffers(1, &m_Vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, m_Vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_NumVerts, &m_Verts[0], GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
@@ -70,13 +70,13 @@ void Mesh::GenOpenGLBuffers() {
 	glEnableVertexAttribArray(2);
 	glEnableVertexAttribArray(3);
 
-	glGenBuffers(1, &ebo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * numIndices, &indices[0], GL_STATIC_DRAW);
+	glGenBuffers(1, &m_Ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * m_NumIndices, &m_Indices[0], GL_STATIC_DRAW);
 }
 
-void Mesh::UpdateVertexBuffer() {
-	glBindVertexArray(vao);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * numVerts, &verts[0], GL_STATIC_DRAW);
+void Mesh::UpdateVertexBuffer() const {
+	glBindVertexArray(m_Vao);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * m_NumVerts, &m_Verts[0], GL_STATIC_DRAW);
 	glBindVertexArray(0);
 }

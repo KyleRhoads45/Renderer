@@ -1,32 +1,126 @@
 #include <filesystem>
+#include <iostream>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include "core/Base.h"
+#include "core/Serializer.h"
 #include "Model.h"
-#include <iostream>
 
-Entity Model::Instantiate(const char* meshPath, Material* mat) {
+Entity Model::Instantiate(const char* importedModelFile) {
+	std::vector<YAML::Node> nodes = YAML::LoadAllFromFile(importedModelFile);
+
+	YAML::Node& header = nodes.front();
+	const auto& modelFile = header["SourceFile"].as<std::string>();
+
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(meshPath, aiProcess_Triangulate | aiProcess_CalcTangentSpace);
+	const aiScene* scene = importer.ReadFile(modelFile, aiProcess_Triangulate | aiProcess_CalcTangentSpace);
 
 	assert(scene || !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || scene->mRootNode);
 
-	std::string directoryPath(meshPath);
-	directoryPath = directoryPath.substr(0, directoryPath.find_last_of("\\/"));
+	Entity rootEntity = Entity::Null();
 
-	return ProcessNode(directoryPath, scene, scene->mRootNode, Entity::Null(), mat);
+	std::vector<Entity> entityLookUp;
+
+	for (size_t i = 1; i < nodes.size(); i++) {
+		YAML::Node node = nodes[i];
+
+		Entity entity = Registry::Create();
+		entityLookUp.push_back(entity);
+		entity.Add<LocalToWorld>();
+
+		YAML::Node components = node["Components"];
+		YAML::Node transNode = components["Transform"];
+
+		const auto& pos   = transNode["Position"].as<glm::vec3>();
+		const auto& rot   = transNode["Orientation"].as<glm::quat>();
+		const auto& scale = transNode["Scale"].as<glm::vec3>();
+
+		auto& trans = entity.Add<Transform>();
+		trans.position = pos;
+		trans.rotation = rot;
+		trans.scale    = scale;
+
+		if (YAML::Node parentNode = node["ParentId"]; !parentNode.IsNull()) {
+			i32 parentIndex = parentNode.as<i32>();
+			Entity parentEntity = entityLookUp[parentIndex];
+
+			entity.Add<Parent>().entity = parentEntity;
+			parentEntity.GetAdd<Children>().entities.push_back(entity);
+		}
+
+		YAML::Node meshRendrNode = components["MeshRenderer"];
+		YAML::Node meshIndicesNode = meshRendrNode["MeshIndicies"];
+		YAML::Node materialsNode = meshRendrNode["Materials"];
+
+		if (meshIndicesNode.IsNull() || materialsNode.IsNull()) continue;
+
+		auto& meshRenderer = entity.Add<MeshRenderer>();
+
+		const auto& meshIndicies = meshIndicesNode.as<std::vector<i32>>();
+		for (const i32 meshIndex : meshIndicies) {
+			meshRenderer.meshes.push_back(Mesh::FromAssimpMesh(scene->mMeshes[meshIndex]));
+		}
+
+		const auto& materialFiles = materialsNode.as<std::vector<std::string>>();
+		for (const std::string& materialFile : materialFiles) {
+			Material* standardMaterial = Material::NewStarndardMaterial();
+
+			YAML::Node materialNode = YAML::LoadFile(materialFile);
+			YAML::Node renderOrderNode = materialNode["RenderOrder"];
+			YAML::Node alphaCutoffNode = materialNode["AlphaCutoff"];
+			YAML::Node diffuseNode = materialNode["DiffuseTexture"];
+			YAML::Node normalNode = materialNode["NormalTexture"];
+
+			const auto& renderOrder = renderOrderNode.as<std::string>();
+			if (renderOrder == "Opaque") {
+				standardMaterial->SetRenderOrder(RenderOrder::opaque);
+			}
+			else if (renderOrder == "Cutout") {
+				standardMaterial->SetRenderOrder(RenderOrder::cutout);
+			}
+			else if (renderOrder == "Transparent") {
+				standardMaterial->SetRenderOrder(RenderOrder::transparent);
+			}
+			else {
+				ASSERT(false, "Invalid rendering order");
+			}
+			
+			standardMaterial->SetAlphaCutoff(alphaCutoffNode.as<f32>());
+
+			if (!diffuseNode.IsNull()) {
+				const auto& diffuseTextureFile = diffuseNode.as<std::string>();
+				Ref<Texture> diffuse = Texture::Load(diffuseTextureFile);
+				standardMaterial->SetDiffuse(diffuse);
+			}
+			
+			if (!normalNode.IsNull()) {
+				const auto& normalTextureFile = normalNode.as<std::string>();
+				Ref<Texture> normal = Texture::Load(normalTextureFile);
+				standardMaterial->SetNormal(normal);
+			}
+
+			meshRenderer.materials.push_back(standardMaterial);
+		}
+
+		if (rootEntity == Entity::Null()) {
+			rootEntity = entity;
+		}
+
+	}
+
+	return rootEntity;
 }
 
 Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene, const aiNode* node, Entity parent, Material* mat) {
 	auto entity = Registry::Create();
 	entity.Add<LocalToWorld>();
-	auto& trans = entity.Add<Transform>();
 
 	aiVector3t<f32> scale;
 	aiVector3t<f32> position;
 	aiQuaterniont<f32> rotation;
 	node->mTransformation.Decompose(scale, rotation, position);
 	
+	auto& trans = entity.Add<Transform>();
 	trans.position = glm::vec3(position.x, position.y, position.z);
 	trans.rotation = glm::quat(rotation.w, rotation.x, rotation.y, rotation.z);
 	trans.scale = glm::vec3(scale.x, scale.y, scale.z);
@@ -35,8 +129,16 @@ Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene
 		entity.Add<Parent>().entity = parent;
 	}
 
-	for (u32 i = 0; i < node->mNumMeshes; i++) {
+	std::vector<Mesh>* meshes = nullptr;
+	std::vector<Material*>* materials = nullptr;
+
+	if (node->mNumMeshes > 0) {
 		auto& meshRenderer = entity.Add<MeshRenderer>();
+		meshes = &meshRenderer.meshes;
+		materials = &meshRenderer.materials;
+	}
+
+	for (u32 i = 0; i < node->mNumMeshes; i++) {
 		const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 
 		const aiMaterial* meshMaterial = scene->mMaterials[mesh->mMaterialIndex];
@@ -53,19 +155,21 @@ Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene
 			texturePath = directoryPath + "/" + texturePath;
 
 			Ref<Texture> diffuse = Texture::Load(texturePath);
+
 			Material* betterMat = Material::NewStarndardMaterial();
+			betterMat->SetRenderOrder(diffuse->HasTransparency() ? RenderOrder::transparent : RenderOrder::opaque);
 			betterMat->SetDiffuse(diffuse);
 
-			meshRenderer.mesh = Mesh::FromAssimpMesh(mesh);
-			meshRenderer.material = betterMat;
+			meshes->push_back(Mesh::FromAssimpMesh(mesh));
+			materials->push_back(betterMat);
 		}
 		else {
 			Ref<Texture> diffuse = Texture::Load("res/Missing.png");
 			Material* betterMat = Material::NewStarndardMaterial();
 			betterMat->SetDiffuse(diffuse);
 
-			meshRenderer.mesh = Mesh::FromAssimpMesh(mesh);
-			meshRenderer.material = betterMat;
+			meshes->push_back(Mesh::FromAssimpMesh(mesh));
+			materials->push_back(betterMat);
 		}
 	}
 

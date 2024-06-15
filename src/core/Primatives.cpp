@@ -61,20 +61,20 @@ Mesh Primatives::Cube(bool invert = false) {
 
 	Mesh cube;
 
-	cube.numVerts = vertCount;
-	cube.verts = MakeRef<Vertex[]>(vertCount);
+	cube.m_NumVerts = vertCount;
+	cube.m_Verts = MakeRef<Vertex[]>(vertCount);
 
 	for (i32 i = 0; i < vertCount; i++) {
 		Vertex vert;
 		vert.position = verts[i];
-		cube.verts[i] = vert;
+		cube.m_Verts[i] = vert;
 	}
 
-	cube.numIndices = indexCount;
-	cube.indices = MakeRef<u32[]>(indexCount);
+	cube.m_NumIndices = indexCount;
+	cube.m_Indices = MakeRef<u32[]>(indexCount);
 
 	for (i32 i = 0; i < indexCount; i++) {
-		cube.indices[i] = indices[i];
+		cube.m_Indices[i] = indices[i];
 	}
 	
 	cube.GenOpenGLBuffers();
@@ -105,8 +105,8 @@ Mesh Primatives::Plane() {
 
 	Mesh plane;
 
-	plane.numVerts = vertCount;
-	plane.verts = MakeRef<Vertex[]>(vertCount);
+	plane.m_NumVerts = vertCount;
+	plane.m_Verts = MakeRef<Vertex[]>(vertCount);
 
 	for (i32 i = 0; i < vertCount; i++) {
 		Vertex vert;
@@ -115,14 +115,14 @@ Mesh Primatives::Plane() {
 		vert.tangent = glm::vec3(0, 0, 1);
 		vert.textureCoord = texCoords[i];
 
-		plane.verts[i] = vert;
+		plane.m_Verts[i] = vert;
 	}
 
-	plane.numIndices = indexCount;
-	plane.indices = MakeRef<u32[]>(indexCount);
+	plane.m_NumIndices = indexCount;
+	plane.m_Indices = MakeRef<u32[]>(indexCount);
 
 	for (i32 i = 0; i < indexCount; i++) {
-		plane.indices[i] = indices[i];
+		plane.m_Indices[i] = indices[i];
 	}
 	
 	plane.GenOpenGLBuffers();

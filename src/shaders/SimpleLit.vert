@@ -31,7 +31,7 @@ void main() {
 	textureCoord = iTextureCoord;
 	fragPos = vec3(model * vec4(iPos, 1.0));
 	lightFragPos = lightViewProjection * vec4(fragPos, 1.0);
-	modelNormal = mat3(transpose(inverse(model))) * iNormal;
+	modelNormal = normalize(mat3(transpose(inverse(model))) * iNormal);
 
 	// Calculate tbn matrix
 	vec3 tangent = normalize(vec3(model * vec4(iTangent, 0.0)));

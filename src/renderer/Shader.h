@@ -3,7 +3,6 @@
 #include <string>
 #include <unordered_map>
 #include "core/Base.h"
-#include "Texture.h"
 
 class Shader {
 public:
@@ -20,7 +19,7 @@ private:
     void CreateShader(const std::string& vertFile, const std::string& fragFile);
     std::string LoadShaderFile(const std::string& filePath) const;
     void CheckCompileErrors(u32 shader, const std::string& type) const;
-
-    i32 shaderId; 
+private:
+    i32 m_ShaderId; 
     std::unordered_map<std::string, i32> m_UniformLocations;
 };

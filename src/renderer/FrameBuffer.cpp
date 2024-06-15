@@ -12,10 +12,10 @@ FrameBuffer::FrameBuffer(glm::i32vec2 size, Format format)
 	glBindTexture(GL_TEXTURE_2D, m_Texture);
 
 	switch (m_Format) {
-		case Format::RGB:
+		case RGB:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, NULL);
 			break;
-		case Format::RED_INTEGER:
+		case RED_INTEGER:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, m_Size.x, m_Size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
 			break;
 	}
@@ -44,39 +44,39 @@ void FrameBuffer::Bind() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void FrameBuffer::UnBind() {
+void FrameBuffer::UnBind() const {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, m_PrevViewportSize.x, m_PrevViewportSize.y);
 }
 
-void FrameBuffer::RedIntegerFill(i32 fillValue) {
+void FrameBuffer::RedIntegerFill(const i32 fillValue) const {
 	glClearTexImage(m_Texture, 0, GL_RED_INTEGER, GL_INT, &fillValue);
 }
 
-void FrameBuffer::Resize(glm::i32vec2 size) {
+void FrameBuffer::Resize(const glm::i32vec2 size) {
 	m_Size = size;
 	m_DepthTexture.Resize(size);
 
 	glBindTexture(GL_TEXTURE_2D, m_Texture);
 	switch (m_Format) {
-		case Format::RGB:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, NULL);
+		case RGB:
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, nullptr);
 			break;
-		case Format::RED_INTEGER:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, m_Size.x, m_Size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+		case RED_INTEGER:
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, m_Size.x, m_Size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, nullptr);
 			break;
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-i32 FrameBuffer::ReadPixel(const glm::vec2& pixelCoord) const {
+i32 FrameBuffer::ReadPixel(const glm::i32vec2& pixelCoord) const {
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	i32 pixel;
 	glReadPixels(pixelCoord.x, pixelCoord.y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel);
 	return pixel;
 }
 
-f32 FrameBuffer::ReadDepth(const glm::vec2& pixelCoord) const {
+f32 FrameBuffer::ReadDepth(const glm::i32vec2& pixelCoord) const {
 	return m_DepthTexture.ReadPixel(pixelCoord);
 }
 

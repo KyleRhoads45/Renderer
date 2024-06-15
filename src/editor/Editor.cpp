@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <glad/glad.h>
 #include <glm/gtx/string_cast.hpp>
@@ -13,8 +14,6 @@
 #include "renderer/Renderer.h"
 #include "SceneCamera.h"
 #include "Editor.h"
-
-#include <iostream>
 
 void Editor::Init(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
@@ -102,9 +101,7 @@ void Editor::DrawScene() {
 	const bool leftMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
 	static bool selectedGizmo = false;
-	static bool needToSetStart = false;
 	static i32 gizmoId = 0;
-	static f32 lastDragZ = 0.0f;
 	if (selectedGizmo && !leftMouseDown) {
 		selectedGizmo = false;
 	}
@@ -125,7 +122,7 @@ void Editor::DrawScene() {
 		for (const auto entity : view) {
 			auto& toWorld = Registry::Get<LocalToWorld>(entity);
 			auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
-			s_SelectionShader.SetInt("entityId", entity.Id());
+			s_SelectionShader.SetInt("entityId", static_cast<i32>(entity.Id()));
 			Renderer::DrawMesh(meshRenderer, toWorld, s_SelectionShader);
 		}
 
@@ -135,20 +132,8 @@ void Editor::DrawScene() {
 
 			gizmoTrans.rotation = glm::quatLookAt(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
 
-			//f32 dist = glm::distance(CameraSystem::ActiveCamPos(), gizmoTrans.position);
-			//gizmoTrans.scale = glm::vec3(dist * 0.03f);
-
-			//s_SelectionShader.SetInt("entityId", -2);
-			//Renderer::DrawMesh(s_ArrowGizmo, LocalToWorld::FromTransform(gizmoTrans), s_SelectionShader);
-
 			s_TransGizmos->NotifyStartDrag();
 			s_TransGizmos->SelectionDraw(gizmoTrans.position, s_SelectionShader);
-
-			//s_TransGizmos->TransformArrow(-2, pos, glm::quat(glm::vec3(0.0, glm::radians(90.0), 0.0)), sceneWindowPos, usage);
-			//s_TransGizmos->TransformArrow(-3, pos, glm::quat(glm::vec3(glm::radians(-90.0), 0.0, 0.0)), sceneWindowPos, usage);
-			//s_TransGizmos->TransformArrow(-4, pos, glm::quat(glm::vec3(0)), sceneWindowPos, usage);
-
-			//s_TransGizmos->TransformArrow(-2, gizmoTrans.position, gizmoTrans.rotation, sceneWindowPos, TransformGizmos::Selection);
 		}
 
 		const glm::vec2 pixelCoords(mousePos.x - sceneWindowPos.x, sceneWindowSize.y - (mousePos.y - sceneWindowPos.y));
@@ -156,7 +141,6 @@ void Editor::DrawScene() {
 
 		if (possibleEntityId == -2 || possibleEntityId == -3 || possibleEntityId == -4) {
 			selectedGizmo = true;
-			needToSetStart = true;
 			gizmoId = possibleEntityId;
 		}
 		else {
@@ -174,11 +158,6 @@ void Editor::DrawScene() {
 		s_SceneFrameBuffer.Resize(sceneWindowSize);
 	}
 		
-	Transform gizmoTrans;
-	if (s_SelectedEntity != Entity::Null()) {
-		gizmoTrans = s_SelectedEntity.Get<LocalToWorld>().ToTransform();
-	}
-
 	Renderer::PerformShadowPass();
 
 	Renderer::s_FrameBuffer = &s_SceneFrameBuffer;
@@ -189,7 +168,6 @@ void Editor::DrawScene() {
 
 	if (s_SelectedEntity != Entity::Null()) {
 		glm::vec3 gizmoPos = s_SelectedEntity.Get<LocalToWorld>().ToTransform().position;
-	//	glm::vec3 movePos = s_TransGizmos->TransformHandles(gizmoPos, sceneWindowPos, TransformGizmos::Translation);
 		s_TransGizmos->Draw(gizmoPos);
 
 		if (selectedGizmo) {
@@ -201,7 +179,8 @@ void Editor::DrawScene() {
 
 	s_SceneFrameBuffer.UnBind();
 
-	ImGui::Image((ImTextureID)s_SceneFrameBuffer.Texture(), windowSize, ImVec2(0, 1), ImVec2(1, 0));
+	auto frameBufferTexture = reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(s_SceneFrameBuffer.Texture()));
+	ImGui::Image(frameBufferTexture, windowSize, ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::EndChild();
 	ImGui::End();
 
@@ -231,7 +210,7 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 		flags |= ImGuiTreeNodeFlags_Selected;
 	}
 
-	bool open = ImGui::TreeNodeEx((void*)entity.Id(), flags, "Entity %d", entity.Id());
+	bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(entity.Id()), flags, "Entity %d", entity.Id());
 
 	if (ImGui::IsItemClicked()) {
 		s_SelectedEntity = entity;

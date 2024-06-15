@@ -42,11 +42,11 @@ private:
 class Entity {
 public:
 	Entity() = default;
-	Entity(const u32 id);
+	Entity(const size_t id);
 
 	bool operator==(const Entity& other) const;
 
-	u32 Id() const;
+	size_t Id() const;
 
 	template<typename Component>
 	Component& Get();
@@ -55,11 +55,14 @@ public:
 	Component& Add();
 
 	template<typename Component>
+	Component& GetAdd();
+
+	template<typename Component>
 	bool Has();
 
 	static Entity Null();
 private:
-	u32 m_Id;
+	size_t m_Id;
 };
 
 class EntityCompMask {
@@ -71,11 +74,11 @@ public:
 
 	bool operator==(const EntityCompMask& otherMask) const;
 
-	bool Empty();
+	bool Empty() const;
 	bool IsSubsetOf(const EntityCompMask& superSet) const;
 	bool SharesAnyWith(const EntityCompMask& otherMask) const;
 	void Set(u32 index);
-	bool Test(u32 index);
+	bool Test(u32 index) const;
 public:
 	std::bitset<MAX_COMPONENTS> m_Mask;
 };
@@ -118,6 +121,14 @@ Component& Entity::Get() {
 template<typename Component>
 Component& Entity::Add() {
 	return Registry::Add<Component>(m_Id);
+}
+
+template<typename Component>
+Component& Entity::GetAdd() {
+	if (Has<Component>()) {
+		return Get<Component>();
+	}
+	return Add<Component>();
 }
 
 template<typename Component>

@@ -6,7 +6,7 @@
 
 class Model {
 public:
-	static Entity Instantiate(const char* meshPath, Material* mat);
+	static Entity Instantiate(const char* importedModelFile);
 private:
 	static Entity ProcessNode(const std::string& directoryPath, const aiScene* scene, const aiNode* node, const Entity parent, Material* mat);
 };

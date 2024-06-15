@@ -10,7 +10,7 @@ Shader::Shader(const std::string& vertFile, const std::string& fragFile) {
 }
 
 void Shader::Bind() const {
-    glUseProgram(shaderId);
+    glUseProgram(m_ShaderId);
 }
 
 void Shader::SetInt(const std::string& name, i32 num) {
@@ -35,7 +35,7 @@ void Shader::SetMat4(const std::string& name, const glm::mat4& mat4) {
 
 inline int Shader::GetUniformLocation(const std::string& name) {
     if (!m_UniformLocations.contains(name)) {
-        i32 location = glGetUniformLocation(shaderId, name.c_str());
+        i32 location = glGetUniformLocation(m_ShaderId, name.c_str());
         m_UniformLocations[name] = location;
         return location;
     }
@@ -69,13 +69,13 @@ void Shader::CreateShader(const std::string& vertFile, const std::string& fragFi
     #endif
 
     // Shader Program
-    shaderId = glCreateProgram();
-    glAttachShader(shaderId, vertex);
-    glAttachShader(shaderId, fragment);
-    glLinkProgram(shaderId);
+    m_ShaderId = glCreateProgram();
+    glAttachShader(m_ShaderId, vertex);
+    glAttachShader(m_ShaderId, fragment);
+    glLinkProgram(m_ShaderId);
 
     #if _DEBUG
-    CheckCompileErrors(shaderId, "Shader Linking");
+    CheckCompileErrors(m_ShaderId, "Shader Linking");
     #endif
 
     // Delete the shaders as they're linked into our program and are no longer necessary

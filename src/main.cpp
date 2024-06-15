@@ -17,9 +17,9 @@
 #include "core/TransformSystem.h"
 #include "renderer/ShadowMapper.h"
 #include "ecs/Registry.h"
+#include "editor/importers/ModelImporter.h"
 
 void SetupEnviroment();
-void InstantiateDemo();
 
 int main() {
 	if (!glfwInit()) {
@@ -52,14 +52,9 @@ int main() {
 	Renderer::Init();
 	Editor::Init(window);
 
-	Shader simple("src/shaders/SimpleLit.vert", "src/shaders/SimpleLit.frag");
-	Material mat(simple);
-
-	//auto lucy = Model::Instantiate("Assets/Model/Lucy.fbx", &mat);
-	auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_2.fbx", &mat);
-	//auto lucy = Model::Instantiate("Assets/Model/Survival_BackPack_Complex_Parents_2.fbx", &mat);
-	//auto lucy = Model::Instantiate("Assets/PolygonCity/City.fbx", &mat);
-	lucy.Get<Transform>().scale = glm::vec3(0.1f);
+	ModelImporter::Import("Assets/Demo/SteamPunkCity.fbx");
+	auto city = Model::Instantiate("Assets/Demo/SteamPunkCity.fbx.model");
+	city.Get<Transform>().scale = glm::vec3(0.001f);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
@@ -82,25 +77,8 @@ void SetupEnviroment() {
 
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
 	Enviroment::Instance()->SetLightDir(lightDir);
-	Enviroment::Instance()->SetLightStrength(0.08f);
+	Enviroment::Instance()->SetLightStrength(3.0f);
 	Enviroment::Instance()->SetAmbientStrength(0.5f);
 
 	ShadowMapper::Init(4096, 15.0f);
-}
-
-void InstantiateDemo() {
-	static std::vector<Ref<Material>> mats;
-	Shader litShader("src/shaders/lit.vert", "src/shaders/lit.frag");
-
-	//auto entity = Model::Instantiate("Assets/PolygonCity/City.fbx", NULL);
-	//auto trans = Registry::Get<Transform>(entity);
-	//trans->SetScale(glm::vec3(0.01f));
-
-	i32 childIndex = 0;
-	auto directory = std::filesystem::directory_iterator("Assets/PolygonCity/Textures");
-	for (auto& file : directory) {
-		//auto mat = MakeRefCount<CityMaterial>(litShader, file.path().string());
-		//mats.push_back(mat);
-		//Registry::Get<MeshRenderer>(trans->GetChild(childIndex++).entity)->material = mat.get();
-	}
 }

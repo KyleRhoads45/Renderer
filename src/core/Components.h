@@ -29,8 +29,8 @@ struct Camera {
 };
 
 struct MeshRenderer {
-    Mesh mesh;
-    Material* material;
+    std::vector<Mesh> meshes;
+    std::vector<Material*> materials;
 };
 
 struct Transform {

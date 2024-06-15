@@ -7,7 +7,7 @@
 #include "ecs/View.h"
 #include "ShadowMapper.h"
 
-void ShadowMapper::Init(u32 textureSize, u32 shadowDist) {
+void ShadowMapper::Init(const u32 textureSize, const f32 shadowDist) {
 	m_ShadowMap = DepthTexture(textureSize, textureSize);
 	m_ShadowDist = shadowDist;
 	m_LightViewProjection = glm::mat4(1.0f);
@@ -47,8 +47,10 @@ void ShadowMapper::PerformShadowPass() {
         
 		m_DepthShader.SetMat4("model", toWorld.matrix);
 
-        glBindVertexArray(meshRenderer.mesh.vao);
-        glDrawElements(GL_TRIANGLES, meshRenderer.mesh.numIndices, GL_UNSIGNED_INT, 0);
+		for (const auto& mesh : meshRenderer.meshes) {
+			glBindVertexArray(mesh.m_Vao);
+			glDrawElements(GL_TRIANGLES, mesh.m_NumIndices, GL_UNSIGNED_INT, 0);
+		}
     }
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -58,7 +60,8 @@ void ShadowMapper::PerformShadowPass() {
 }
 
 void ShadowMapper::CalculateLightViewProjection() {
-	auto& frustrumPoints = CameraSystem::GetViewFrustrumPoints(m_ShadowDist);
+	FrustrumPoints frustrumPoints;
+	CameraSystem::GetViewFrustrumPoints(frustrumPoints, m_ShadowDist);
 
 	glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
 	glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
@@ -66,8 +69,8 @@ void ShadowMapper::CalculateLightViewProjection() {
 	// Convert camera frustrum points to light space
 	// its as if we are viewing the frustrum from the lights point of view.
 	// Note: this is still in world space so its not always centered at origin. 
-	for (i32 i = 0; i < frustrumPoints.size(); i++) {
-		frustrumPoints[i] = lightSpaceView * glm::vec4(frustrumPoints[i], 1.0f);
+	for (glm::vec3& frustrumPoint : frustrumPoints) {
+		frustrumPoint = lightSpaceView * glm::vec4(frustrumPoint, 1.0f);
 	}
 
 	Bounds bounds(frustrumPoints.data(), frustrumPoints.size());

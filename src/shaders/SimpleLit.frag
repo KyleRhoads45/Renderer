@@ -6,9 +6,15 @@ in vec2 textureCoord;
 in mat3 tbn;
 in vec4 lightFragPos;
 
-uniform sampler2D baseMap;
-uniform sampler2D shadowMap;
-uniform samplerCube skybox;
+layout (binding = 0) uniform sampler2D baseMap;
+layout (binding = 1) uniform sampler2D normalMap;
+layout (binding = 2) uniform sampler2D shadowMap;
+layout (binding = 3) uniform samplerCube skybox;
+
+uniform bool useDiffuse;
+uniform bool useNormal;
+uniform bool alphaClippingEnabled;
+uniform float alphaCutoff;
 
 layout (std140, binding = 0) uniform camera {
 	vec3 camPos;
@@ -37,13 +43,27 @@ float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 
 void main() {
+    vec4 baseColorWithAlpha = vec4(1.0);
+    vec3 baseColor = vec3(1.0);
+    
+    if (useDiffuse) {
+        baseColorWithAlpha = texture(baseMap, textureCoord);
+        baseColor = baseColorWithAlpha.rgb;
+        if (alphaClippingEnabled && baseColorWithAlpha.a < alphaCutoff) {
+            discard;
+        }
+    }
+
+    vec3 normal = modelNormal;
+    if (useNormal) {
+        normal = texture(normalMap, textureCoord).rgb;
+        normal = normalize((normal * 2.0) - 1.0);
+        normal = normalize(tbn * normal);
+    }
+
     vec3 lightNormal = -lightDir;
     vec3 totalRadiance = vec3(0.0);
     vec3 diffuse;
-
-    vec3 normal = modelNormal;
-    
-	vec3 baseColor = texture(baseMap, textureCoord).rgb;
 
     for (int i = 0; i < 1; i++) {
         // Directional light radiance is just light color 
@@ -64,7 +84,7 @@ void main() {
     vec3 ambientColor = texture(skybox, normal).rgb * baseColor * diffuse * ambientStrength;
     //vec3 finalColor = totalRadiance * CalculateShadow(normal, lightNormal) + ambientColor;
     vec3 finalColor = totalRadiance + ambientColor;
-    fragColor = vec4(finalColor, 1.0);
+    fragColor = vec4(finalColor, baseColorWithAlpha.a);
 }
 
 float CalculateShadow(vec3 normal, vec3 lightNormal) {

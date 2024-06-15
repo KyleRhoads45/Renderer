@@ -9,7 +9,7 @@ public:
 	void Bind();
 	void Resize(const glm::i32vec2 size);
 	void AttachToActiveFrameBuffer();
-	f32 ReadPixel(const glm::vec2& pixelCoord) const;
+	f32 ReadPixel(const glm::i32vec2& pixelCoord) const;
 private:
 	u32 m_Id;
 };

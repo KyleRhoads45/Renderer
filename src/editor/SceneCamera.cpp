@@ -10,10 +10,10 @@ void SceneCamera::Update(const glm::vec2 sceneWindowSize) {
     auto& trans = s_Transform;
 
     const glm::vec2 mouseDeltas = Input::GetMouseDeltas();
-    s_Camera.yaw -= mouseDeltas.x * 0.1;
-    s_Camera.pitch -= mouseDeltas.y * 0.1;
+    s_Camera.yaw -= mouseDeltas.x * 0.1f;
+    s_Camera.pitch -= mouseDeltas.y * 0.1f;
 
-    if (glm::abs(s_Camera.pitch) > 89.0) {
+    if (glm::abs(s_Camera.pitch) > 89.0f) {
         s_Camera.pitch = glm::clamp(s_Camera.pitch, -89.0f, 89.0f);
     }
 

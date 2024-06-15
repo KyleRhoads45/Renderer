@@ -3,17 +3,16 @@
 #include <memory>
 #include "Components.h"
 #include "renderer/UniformBuffer.h"
-#include "ecs/Registry.h"
 
-constexpr size_t FrustrumPointCount = 8;
-using FrustrumPoints = std::array<glm::vec3, FrustrumPointCount>;
+constexpr size_t frustrumPointCount = 8;
+using FrustrumPoints = std::array<glm::vec3, frustrumPointCount>;
 
 class CameraSystem {
 public:
 	static void Init();
 	static void Update();
 	static void SetActiveCamera(Camera* camera, Transform* transform);
-    static FrustrumPoints& GetViewFrustrumPoints(float zDist);
+    static void GetViewFrustrumPoints(FrustrumPoints& points, f32 zDist);
 	static glm::vec3 ActiveCamPos();
 	static glm::mat4 ActiveCamViewProjection();
 	static glm::mat4 ActiveCamView();

@@ -32,7 +32,7 @@ bool Input::OnMousePress(const i32 button) {
 }
 
 glm::vec2 Input::MousePosition() {
-    return glm::vec2(s_MouseXPos, s_MouseYPos);
+    return { s_MouseXPos, s_MouseYPos };
 }
 
 glm::vec2 Input::GetMouseDeltas() {
@@ -56,8 +56,8 @@ void Input::UpdateMouseDeltas(GLFWwindow* window) {
     f64 curMouseXPos, curMouseYPos;
     glfwGetCursorPos(window, &curMouseXPos, &curMouseYPos);
     
-    s_MouseDelta.x = curMouseXPos - s_MouseXPos;
-    s_MouseDelta.y = curMouseYPos - s_MouseYPos;
+    s_MouseDelta.x = static_cast<f32>(curMouseXPos - s_MouseXPos);
+    s_MouseDelta.y = static_cast<f32>(curMouseYPos - s_MouseYPos);
     
     s_MouseXPos = curMouseXPos;
     s_MouseYPos = curMouseYPos;

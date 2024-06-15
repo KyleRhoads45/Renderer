@@ -1,7 +1,7 @@
 #include "View.h"
 
 ViewIterator::ViewIterator(const EntityCompMask mask, const EntityCompMask excludeMask, ViewFilter filter) 
-	: m_Index(0), m_Mask(mask), m_ExcludeMask(excludeMask), m_filter(filter) { }
+	: m_Index(0), m_Mask(mask), m_ExcludeMask(excludeMask), m_Filter(filter) { }
 
 void ViewIterator::SeekBegin() {
 	FindNextIndex(0);
@@ -29,11 +29,11 @@ bool ViewIterator::operator!=(const ViewIterator& other) const {
 	return (m_Index != other.m_Index || m_Mask.m_Mask != other.m_Mask.m_Mask);
 }
 
-void ViewIterator::FindNextIndex(int startIndex) {
-	for (u32 i = startIndex; i < Registry::GetEntityCount(); i++) {
+void ViewIterator::FindNextIndex(const size_t startIndex) {
+	for (size_t i = startIndex; i < Registry::GetEntityCount(); i++) {
 		const EntityCompMask& entityMask = Registry::m_EntityCompMasks[i];
 
-		switch (m_filter) 
+		switch (m_Filter) 
 		{
 		case ViewFilter::With:
 			if (m_Mask.IsSubsetOf(entityMask)) {

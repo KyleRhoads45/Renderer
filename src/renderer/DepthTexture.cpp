@@ -31,7 +31,7 @@ void DepthTexture::AttachToActiveFrameBuffer() {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_Id, 0);
 }
 
-f32 DepthTexture::ReadPixel(const glm::vec2& pixelCoord) const {
+f32 DepthTexture::ReadPixel(const glm::i32vec2& pixelCoord) const {
 	f32 pixel;
 	glReadPixels(pixelCoord.x, pixelCoord.y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pixel);
 	return pixel;
