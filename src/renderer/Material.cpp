@@ -4,28 +4,16 @@
 #include "Material.h"
 
 Material::Material(Shader shader)
-	: m_Diffuse(nullptr), m_Normal(nullptr), m_Specular(nullptr),
+	: m_Albedo(nullptr), m_Normal(nullptr), m_Specular(nullptr),
 	  m_Shader(std::move(shader)), m_RenderOrder(RenderOrder::opaque), m_AlphaCutoff(0.0f) { }
 
 void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.Bind();
 	m_Shader.SetMat4("model", toWorld.matrix);
 
-	bool useDiffuse = m_Diffuse != nullptr;
-	m_Shader.SetInt("useDiffuse", useDiffuse);
-	if (useDiffuse) {
-		glActiveTexture(GL_TEXTURE0);
-		m_Diffuse->Bind();
-		m_Shader.SetInt("baseMap", 0);
-	}
-
-	bool useNormal = m_Normal != nullptr;
-	m_Shader.SetInt("useNormal", useNormal);
-	if (useNormal) {
-		glActiveTexture(GL_TEXTURE1);
-		m_Normal->Bind();
-		m_Shader.SetInt("normalMap", 1);
-	}
+	BindTextureIfExists("albedoMap", m_Albedo, 0);
+	BindTextureIfExists("normalMap", m_Normal, 1);
+	BindTextureIfExists("specularMap", m_Specular, 2);
 
 	bool alphaClippingEnabled = m_RenderOrder == RenderOrder::cutout;
 	m_Shader.SetInt("alphaClippingEnabled", alphaClippingEnabled);
@@ -33,13 +21,23 @@ void Material::Bind(const LocalToWorld& toWorld) {
 		m_Shader.SetFloat("alphaCutoff", m_AlphaCutoff);
 	}
 	
-	glActiveTexture(GL_TEXTURE2);
-	ShadowMapper::m_ShadowMap.Bind();
-	m_Shader.SetInt("shadowMap", 2);
-
 	glActiveTexture(GL_TEXTURE3);
+	ShadowMapper::m_ShadowMap.Bind();
+	m_Shader.SetInt("shadowMap", 3);
+
+	glActiveTexture(GL_TEXTURE4);
 	Enviroment::Instance()->m_Skybox->Bind();
-	m_Shader.SetInt("skybox", 3);
+	m_Shader.SetInt("skybox", 4);
+}
+
+void Material::BindTextureIfExists(const std::string& uniformName, const Ref<Texture>& texture, const u32 textureUnit) {
+	bool useTexture = texture != nullptr;
+	m_Shader.SetInt(uniformName + "Enabled", useTexture);
+	if (useTexture) {
+		glActiveTexture(GL_TEXTURE0 + textureUnit);
+		texture->Bind();
+		m_Shader.SetInt(uniformName, textureUnit);
+	}
 }
 
 Material* Material::NewStarndardMaterial() {

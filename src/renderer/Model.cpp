@@ -70,6 +70,7 @@ Entity Model::Instantiate(const char* importedModelFile) {
 			YAML::Node alphaCutoffNode = materialNode["AlphaCutoff"];
 			YAML::Node diffuseNode = materialNode["DiffuseTexture"];
 			YAML::Node normalNode = materialNode["NormalTexture"];
+			YAML::Node specularNode = materialNode["SpecularTexture"];
 
 			const auto& renderOrder = renderOrderNode.as<std::string>();
 			if (renderOrder == "Opaque") {
@@ -90,13 +91,19 @@ Entity Model::Instantiate(const char* importedModelFile) {
 			if (!diffuseNode.IsNull()) {
 				const auto& diffuseTextureFile = diffuseNode.as<std::string>();
 				Ref<Texture> diffuse = Texture::Load(diffuseTextureFile);
-				standardMaterial->SetDiffuse(diffuse);
+				standardMaterial->SetAlbedo(diffuse);
 			}
 			
 			if (!normalNode.IsNull()) {
 				const auto& normalTextureFile = normalNode.as<std::string>();
 				Ref<Texture> normal = Texture::Load(normalTextureFile);
 				standardMaterial->SetNormal(normal);
+			}
+
+			if (!specularNode.IsNull()) {
+				const auto& specularTextureFile = specularNode.as<std::string>();
+				Ref<Texture> specular = Texture::Load(specularTextureFile);
+				standardMaterial->SetSpecular(specular);
 			}
 
 			meshRenderer.materials.push_back(standardMaterial);
@@ -158,7 +165,7 @@ Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene
 
 			Material* betterMat = Material::NewStarndardMaterial();
 			betterMat->SetRenderOrder(diffuse->HasTransparency() ? RenderOrder::transparent : RenderOrder::opaque);
-			betterMat->SetDiffuse(diffuse);
+			betterMat->SetAlbedo(diffuse);
 
 			meshes->push_back(Mesh::FromAssimpMesh(mesh));
 			materials->push_back(betterMat);
@@ -166,7 +173,7 @@ Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene
 		else {
 			Ref<Texture> diffuse = Texture::Load("res/Missing.png");
 			Material* betterMat = Material::NewStarndardMaterial();
-			betterMat->SetDiffuse(diffuse);
+			betterMat->SetAlbedo(diffuse);
 
 			meshes->push_back(Mesh::FromAssimpMesh(mesh));
 			materials->push_back(betterMat);

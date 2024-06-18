@@ -6,13 +6,15 @@ in vec2 textureCoord;
 in mat3 tbn;
 in vec4 lightFragPos;
 
-layout (binding = 0) uniform sampler2D baseMap;
-layout (binding = 1) uniform sampler2D normalMap;
-layout (binding = 2) uniform sampler2D shadowMap;
-layout (binding = 3) uniform samplerCube skybox;
+uniform sampler2D albedoMap;
+uniform sampler2D normalMap;
+uniform sampler2D specularMap;
+uniform sampler2D shadowMap;
+uniform samplerCube skybox;
 
-uniform bool useDiffuse;
-uniform bool useNormal;
+uniform bool albedoMapEnabled;
+uniform bool normalMapEnabled;
+uniform bool specularMapEnabled;
 uniform bool alphaClippingEnabled;
 uniform float alphaCutoff;
 
@@ -35,7 +37,7 @@ out vec4 fragColor;
 #define PI 3.1415926538
 
 float CalculateShadow(vec3 normal, vec3 lightNormal);
-vec3 CalculateSpecular(vec3 baseColor, vec3 lightNormal, vec3 normal, float metallic, float roughness);
+vec3 CalculateSpecular(vec3 albedoColor, vec3 lightNormal, vec3 normal, float metallic, float roughness);
 vec3 ACESFilm(in vec3 x);
 vec3 FrensnelSchlick(float cosTheta, vec3 F0);
 float DistributionGGX(vec3 N, vec3 H, float roughness);
@@ -43,48 +45,39 @@ float GeometrySchlickGGX(float NdotV, float roughness);
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness);
 
 void main() {
-    vec4 baseColorWithAlpha = vec4(1.0);
-    vec3 baseColor = vec3(1.0);
+    vec4 albedoColorWithAlpha = vec4(1.0);
+    vec3 albedoColor = vec3(1.0);
     
-    if (useDiffuse) {
-        baseColorWithAlpha = texture(baseMap, textureCoord);
-        baseColor = baseColorWithAlpha.rgb;
-        if (alphaClippingEnabled && baseColorWithAlpha.a < alphaCutoff) {
+    if (albedoMapEnabled) {
+        albedoColorWithAlpha = texture(albedoMap, textureCoord);
+        albedoColor = albedoColorWithAlpha.rgb;
+        if (alphaClippingEnabled && albedoColorWithAlpha.a < alphaCutoff) {
             discard;
         }
     }
 
     vec3 normal = modelNormal;
-    if (useNormal) {
+    if (normalMapEnabled) {
         normal = texture(normalMap, textureCoord).rgb;
         normal = normalize((normal * 2.0) - 1.0);
         normal = normalize(tbn * normal);
     }
 
-    vec3 lightNormal = -lightDir;
-    vec3 totalRadiance = vec3(0.0);
-    vec3 diffuse;
-
-    for (int i = 0; i < 1; i++) {
-        // Directional light radiance is just light color 
-        vec3 radiance = vec3(1.0, 1.0, 1.0) * lightStrength;
-
-        float metallic = 0.0;
-        float roughness = 0.5;
-
-        vec3 specular = CalculateSpecular(baseColor, lightNormal, normal, metallic, roughness);
-        diffuse = vec3(1.0) - specular;
-       
-        diffuse = diffuse * (1.0 - metallic);
-
-        float NdotL = max(dot(normal, lightNormal), 0.0);
-        totalRadiance += (diffuse * baseColor / PI + specular) * radiance * NdotL;
+    vec3 specularColor = vec3(0.0);
+    if (specularMapEnabled) {
+        specularColor = texture(specularMap, textureCoord).rgb;
     }
-
-    vec3 ambientColor = texture(skybox, normal).rgb * baseColor * diffuse * ambientStrength;
-    //vec3 finalColor = totalRadiance * CalculateShadow(normal, lightNormal) + ambientColor;
-    vec3 finalColor = totalRadiance + ambientColor;
-    fragColor = vec4(finalColor, baseColorWithAlpha.a);
+    
+    float albedoStrength = dot(normal, -lightDir);
+    
+    vec3 fragToCamDir = normalize(camPos - fragPos);
+    vec3 specularReflectDir = reflect(lightDir, normal);
+    
+    float shininess = 128;
+    float specularStrength = pow(max(dot(fragToCamDir, specularReflectDir), 0.0), shininess);
+    
+    vec3 ambientColor = texture(skybox, normal).rgb * ambientStrength * albedoColor;
+    fragColor = vec4((albedoColor * albedoStrength) + (specularColor * specularStrength) + ambientColor, albedoColorWithAlpha.a);
 }
 
 float CalculateShadow(vec3 normal, vec3 lightNormal) {
@@ -114,12 +107,12 @@ float CalculateShadow(vec3 normal, vec3 lightNormal) {
     return shadow / 9.0;
 }
 
-vec3 CalculateSpecular(vec3 baseColor, vec3 lightNormal, vec3 normal, float metallic, float roughness) {
+vec3 CalculateSpecular(vec3 albedoColor, vec3 lightNormal, vec3 normal, float metallic, float roughness) {
     vec3 viewDir = normalize(camPos - fragPos);
     vec3 halfWay = normalize(viewDir + lightNormal);
 
 	vec3 F0 = vec3(0.04);
-	F0 = mix(F0, baseColor, metallic);
+	F0 = mix(F0, albedoColor, metallic);
 
 	float D = DistributionGGX(normal, halfWay, roughness);
 	float G = GeometrySmith(normal, viewDir, lightNormal, roughness);

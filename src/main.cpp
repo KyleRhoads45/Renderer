@@ -78,7 +78,7 @@ void SetupEnviroment() {
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
 	Enviroment::Instance()->SetLightDir(lightDir);
 	Enviroment::Instance()->SetLightStrength(3.0f);
-	Enviroment::Instance()->SetAmbientStrength(0.5f);
+	Enviroment::Instance()->SetAmbientStrength(1.5f);
 
 	ShadowMapper::Init(4096, 15.0f);
 }
