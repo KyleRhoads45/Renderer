@@ -22,7 +22,7 @@ where
 * $G(\theta_l) =$ Geometric Attenuation Function
 
 ##### Diffuse
-
+For diffuse reflections where light hits a surface and scatters evenly in all directions, the Lambertion diffuse is a simple and common model. $$ Lambert Diffuse = colr * cos\theta_l $$
 
 
 ### About
