@@ -23,7 +23,7 @@ where
 
 ##### Diffuse
 For diffuse reflections where light hits a surface and scatters evenly in all directions, the Lambertion diffuse is a simple and common model. 
-$$Diffuse = color * cos\theta_l$ where $cos\theta_l = /omega_l /cdot N$$
+$$Diffuse = color * cos\theta_l \$where $cos\theta_l = /omega_l /cdot N$$
 
 
 
