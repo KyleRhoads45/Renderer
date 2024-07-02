@@ -15,9 +15,10 @@ A 3D OpenGL Physically Based Renderer written in C++.
 ### Physically Based Shader
 The PBR shader derives from microfacet theory and models dielectric and metallic materials isotropically.
 The rendering equation implemented in general form is
-$$f(l, v) = diffuse + {D(\theta_h)F(\theta_d)G(\theta_l, \theta_v) \over 4cos\theta_lcos\theta_v}$$
+$$f(l, v) = diffuse + {D(\theta_h)F(\theta_d)G(\theta_l, \theta_v) \over 4cos\theta_lcos\theta_v} where $$
 
-- Diffuse
+##### Diffuse
+
 
 
 ### About
