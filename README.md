@@ -23,8 +23,9 @@ where
 
 ##### Diffuse
 For diffuse reflections where light hits a surface and scatters evenly in all directions, the Lambertion diffuse is a simple and common model. 
-$$Diffuse = color * cos\theta_l$$ $$\text{where } cos\theta_l=\omega_l \cdot N$$
-
+$$Diffuse = color * cos\theta_l$$ 
+$$\text{where } cos\theta_l=\omega_l \cdot N$$
+The lambertion diffuse takes the base color of a fragment and multiplies it by a scalar based on how much the fragment's normal aligns with the  light direction. A closely aligned normal will make the fragment brighter as it is in direct light and continue to get darker as the angle of incidence decreases until normals at $90^\circ$ or greater become black.    
 
 
 ### About
