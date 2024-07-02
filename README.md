@@ -12,5 +12,10 @@ A 3D OpenGL Physically Based Renderer written in C++.
 * Support for Skyboxes using Cubemaps
 * FPS Style Camera for Viewing the Scene
 
+### Physically Based Shader
+The PBR shader derives from microfacet theory and models dielectric and metallic materials isotropically.
+The rendering equation implamented in general form is
+\[ L_o(\mathbf{p}, \omega_o) = \int_{\Omega} f_r(\mathbf{p}, \omega_i, \omega_o) L_i(\mathbf{p}, \omega_i) (\mathbf{n} \cdot \omega_i) d\omega_i \]
+
 ### About
 This is currently a hobby project and is still a work in progress. My goal is to continue development and turn this renderer into a small, personal game engine, just for fun.
