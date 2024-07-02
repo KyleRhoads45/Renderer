@@ -17,7 +17,8 @@ The PBR shader derives from microfacet theory and models dielectric and metallic
 The rendering equation implemented in general form is
 $$f(l, v) = diffuse + {D(\theta_h)F(\theta_d)G(\theta_l, \theta_v) \over 4cos\theta_lcos\theta_v}$$
 
-#### Diffuse
+- Diffuse
+
 
 ### About
 This is currently a hobby project and is still a work in progress. My goal is to continue development and turn this renderer into a small, personal game engine, just for fun.
