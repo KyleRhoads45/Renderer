@@ -159,10 +159,10 @@ void Editor::DrawScene() {
 	}
 		
 	Renderer::PerformShadowPass();
-
+	
 	Renderer::s_FrameBuffer = &s_SceneFrameBuffer;
 	s_SceneFrameBuffer.Bind();
-
+	
 	Renderer::PerformSkyboxPass();
 	Renderer::RenderScene();
 
@@ -229,6 +229,42 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 
 void Editor::DrawInspector() {
 	ImGui::Begin("Inspector", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+
+	static float roughness = 0.5f;
+	static float specularStrength = 0.5f;
+	static float metallic = 0.5f;
+	ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.00f, "%.01f");
+	ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f, "%.01f");
+	ImGui::SliderFloat("Metallic", &metallic, 0.0f, 1.0f, "%.01f");
+
+	static float lightStrength;	
+	static float ambientStrength;	
+	ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 10.00f, "%.01f");
+	ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.00f, 10.00f, "%.01f");
+
+	static f32 ambientColor[3];
+	ImGui::ColorPicker3("Ambient Color", ambientColor);
+	glm::vec3 ambient = glm::vec3(ambientColor[0], ambientColor[1], ambientColor[2]);
+	
+	static f32 lightColor[3];
+	ImGui::ColorPicker3("Light Color", lightColor);
+	glm::vec3 light = glm::vec3(lightColor[0], lightColor[1], lightColor[2]);
+
+	Enviroment::Instance()->SetLightStrength(lightStrength);
+	Enviroment::Instance()->SetAmbientStrength(ambientStrength);
+	Enviroment::Instance()->SetAmbientColor(ambient);
+	Enviroment::Instance()->SetLightColor(light);
+
+	auto view = View<MeshRenderer>();
+	for (auto entity : view) {
+		auto mats = entity.Get<MeshRenderer>().materials;
+		for (auto mat : mats) {
+			mat->SetRoughness(roughness);
+			mat->SetSpecularStrength(specularStrength);
+			mat->SetMetallicStrength(metallic);
+		}
+	}
+	
 	if (s_SelectedEntity != Entity::Null()) {
 		std::string entityName = "Selected Entity ";
 		entityName.append(std::to_string(s_SelectedEntity.Id()));

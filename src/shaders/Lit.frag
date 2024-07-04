@@ -6,17 +6,21 @@ in vec2 textureCoord;
 in mat3 tbn;
 in vec4 lightFragPos;
 
-uniform bool useBaseMap = true;
-uniform bool useNormalMap = true;
-uniform bool useMetallicMap = true;
-uniform bool useRoughnessMap = true;
-
-uniform sampler2D baseMap;
+uniform sampler2D albedoMap;
 uniform sampler2D normalMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
+uniform sampler2D specularMap;
 uniform sampler2D shadowMap;
 uniform samplerCube skybox;
+
+uniform bool albedoMapEnabled;
+uniform bool normalMapEnabled;
+uniform bool specularMapEnabled;
+uniform bool alphaClippingEnabled;
+uniform float alphaCutoff;
+
+uniform float roughness;
+uniform float anistropic;
+uniform float specularStrength;
 
 layout (std140, binding = 0) uniform camera {
 	vec3 camPos;
@@ -50,15 +54,15 @@ void main() {
     vec3 diffuse;
 
 	vec3 baseColor = vec3(1.0, 1.0, 1.0);
-    if (useBaseMap) {
-		baseColor = texture(baseMap, textureCoord).rgb;
+    if (albedoMapEnabled) {
+		baseColor = texture(albedoMap, textureCoord).rgb;
 		baseColor.r = pow(baseColor.r, 2.2);
 		baseColor.g = pow(baseColor.g, 2.2);
 		baseColor.b = pow(baseColor.b, 2.2);
     } 
 
     vec3 normal = modelNormal;
-    if (useNormalMap) {
+    if (normalMapEnabled) {
 		normal = normalize(texture(normalMap, textureCoord).rgb * 2.0 - 1.0);
 		normal = normalize(tbn * normal);
     }
@@ -67,27 +71,21 @@ void main() {
         // Directional light radiance is just light color 
         vec3 radiance = vec3(1.0, 1.0, 1.0) * lightStrength;
 
-        float metallic = 0.0;
-        if (useMetallicMap) {
-            metallic = texture(metallicMap, textureCoord).r;
-        }
-
-        float roughness = 0.5;
-        if (useRoughnessMap) {
-            roughness = texture(roughnessMap, textureCoord).r;
-        }
-
-        vec3 specular = CalculateSpecular(baseColor, lightNormal, normal, metallic, roughness);
+        vec3 specular = CalculateSpecular(baseColor, lightNormal, normal, 0.5f, roughness);
+        
         diffuse = vec3(1.0) - specular;
        
-        diffuse = diffuse * (1.0 - metallic);
+        diffuse = diffuse * (1.0 - 0.5f);
 
         float NdotL = max(dot(normal, lightNormal), 0.0);
         totalRadiance += (diffuse * baseColor / PI + specular) * radiance * NdotL;
+        
+        fragColor = vec4((baseColor * NdotL) + specular, 1.0f);
+        return;
     }
 
     vec3 ambientColor = texture(skybox, normal).rgb * baseColor * diffuse * ambientStrength;
-    vec3 finalColor = totalRadiance * CalculateShadow(normal, lightNormal) + ambientColor;
+    vec3 finalColor = totalRadiance + ambientColor;
     fragColor = vec4(finalColor, 1.0);
 }
 
@@ -122,12 +120,12 @@ vec3 CalculateSpecular(vec3 baseColor, vec3 lightNormal, vec3 normal, float meta
     vec3 viewDir = normalize(camPos - fragPos);
     vec3 halfWay = normalize(viewDir + lightNormal);
 
-	vec3 F0 = vec3(0.04);
-	F0 = mix(F0, baseColor, metallic);
+	//vec3 F0 = vec3(0.04);
+	//F0 = mix(F0, baseColor, metallic);
 
 	float D = DistributionGGX(normal, halfWay, roughness);
 	float G = GeometrySmith(normal, viewDir, lightNormal, roughness);
-    vec3 F = FrensnelSchlick(max(dot(halfWay, viewDir), 0.0), F0);
+    vec3 F = FrensnelSchlick(max(dot(halfWay, viewDir), 0.0), vec3(specularStrength));
 
     return (D * F * G) / (4.0 * max(dot(normal, viewDir), 0.0) * max(dot(normal, lightNormal), 0.0) + 0.0001);
 }

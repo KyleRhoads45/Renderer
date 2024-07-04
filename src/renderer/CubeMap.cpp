@@ -6,8 +6,8 @@
 
 Ref<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images) {
     std::string key;
-    for (i32 i = 0; i < images.size(); i++) {
-        key.append(images[i]);
+    for (const auto& image : images) {
+        key.append(image);
     }
 
     if (m_ActiveCubemaps.contains(key)) {
@@ -18,7 +18,7 @@ Ref<CubeMap> CubeMap::Load(const std::array<std::string, 6>& images) {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 
-    for (i32 i = 0; i < images.size(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
 		i32 width, height, numChannels;
 		stbi_uc* imageData = stbi_load(images[i].c_str(), &width, &height, &numChannels, 0);
 

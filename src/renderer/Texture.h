@@ -6,7 +6,8 @@
 
 class Texture {
 public:
-    static Ref<Texture> Load(const std::string& filePath);
+    enum class Type { Default, NormalMap };
+    static Ref<Texture> Load(const std::string& filePath, const Type texType);
 public:
     Texture() = delete;
     Texture(const u32 width, const u32 height, const u32 id, const std::string& path);
@@ -16,6 +17,9 @@ public:
 
     std::string Path() const { return m_Path; }
     bool HasTransparency() const { return m_HasTransparency; }
+private:
+    static i32 GetFormat(const i32 numChannels);
+    static i32 GetInternalFormat(const Type format, const i32 numChannels);
 private:
 	inline static std::unordered_map<std::string, std::weak_ptr<Texture>> m_ActiveTextures;
 private:

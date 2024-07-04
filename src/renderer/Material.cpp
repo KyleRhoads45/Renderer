@@ -4,7 +4,7 @@
 #include "Material.h"
 
 Material::Material(Shader shader)
-	: m_Albedo(nullptr), m_Normal(nullptr), m_Specular(nullptr),
+	: m_Albedo(nullptr), m_Normal(nullptr), m_Metallic(nullptr),
 	  m_Shader(std::move(shader)), m_RenderOrder(RenderOrder::opaque), m_AlphaCutoff(0.0f) { }
 
 void Material::Bind(const LocalToWorld& toWorld) {
@@ -13,20 +13,24 @@ void Material::Bind(const LocalToWorld& toWorld) {
 
 	BindTextureIfExists("albedoMap", m_Albedo, 0);
 	BindTextureIfExists("normalMap", m_Normal, 1);
-	BindTextureIfExists("specularMap", m_Specular, 2);
+	BindTextureIfExists("metallicRoughnessMap", m_Metallic, 2);
 
 	bool alphaClippingEnabled = m_RenderOrder == RenderOrder::cutout;
 	m_Shader.SetInt("alphaClippingEnabled", alphaClippingEnabled);
 	if (alphaClippingEnabled) {
 		m_Shader.SetFloat("alphaCutoff", m_AlphaCutoff);
 	}
+
+	m_Shader.SetFloat("roughness", m_Roughness);
+	m_Shader.SetFloat("specularStrength", m_SpecularStrength);
+	m_Shader.SetFloat("metallic", m_MetallicStrength);
 	
 	glActiveTexture(GL_TEXTURE3);
 	ShadowMapper::m_ShadowMap.Bind();
 	m_Shader.SetInt("shadowMap", 3);
 
 	glActiveTexture(GL_TEXTURE4);
-	Enviroment::Instance()->m_Skybox->Bind();
+	Enviroment::Instance()->BindSkybox();
 	m_Shader.SetInt("skybox", 4);
 }
 
@@ -40,7 +44,7 @@ void Material::BindTextureIfExists(const std::string& uniformName, const Ref<Tex
 	}
 }
 
-Material* Material::NewStarndardMaterial() {
-	static Shader simple("src/shaders/SimpleLit.vert", "src/shaders/SimpleLit.frag");
-	return new Material(simple);
+Material* Material::NewPbrMaterial() {
+	static Shader pbrShader("src/shaders/PBR.vert", "src/shaders/PBR.frag");
+	return new Material(pbrShader);
 }

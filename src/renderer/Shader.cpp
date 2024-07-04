@@ -55,18 +55,14 @@ void Shader::CreateShader(const std::string& vertFile, const std::string& fragFi
     glShaderSource(vertex, 1, &vertCode, NULL);
     glCompileShader(vertex);
 
-    #if _DEBUG
     CheckCompileErrors(vertex, "Vertex");
-    #endif
 
     // Fragment Shader
     const i32 fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragCode, NULL);
     glCompileShader(fragment);
 
-    #if _DEBUG
     CheckCompileErrors(fragment, "Fragment");
-    #endif
 
     // Shader Program
     m_ShaderId = glCreateProgram();
@@ -74,9 +70,7 @@ void Shader::CreateShader(const std::string& vertFile, const std::string& fragFi
     glAttachShader(m_ShaderId, fragment);
     glLinkProgram(m_ShaderId);
 
-    #if _DEBUG
     CheckCompileErrors(m_ShaderId, "Shader Linking");
-    #endif
 
     // Delete the shaders as they're linked into our program and are no longer necessary
     glDeleteShader(vertex);

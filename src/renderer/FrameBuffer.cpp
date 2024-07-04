@@ -13,7 +13,7 @@ FrameBuffer::FrameBuffer(glm::i32vec2 size, Format format)
 
 	switch (m_Format) {
 		case RGB:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, NULL);
 			break;
 		case RED_INTEGER:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, m_Size.x, m_Size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);

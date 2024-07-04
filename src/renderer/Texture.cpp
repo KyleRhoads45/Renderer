@@ -3,7 +3,7 @@
 #include "Texture.h"
 #include <iostream>
 
-Ref<Texture> Texture::Load(const std::string& filePath) {
+Ref<Texture> Texture::Load(const std::string& filePath, const Type texType) {
     if (m_ActiveTextures.contains(filePath)) {
         return m_ActiveTextures[filePath].lock();
     }
@@ -26,19 +26,9 @@ Ref<Texture> Texture::Load(const std::string& filePath) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    if (numChannels == 1) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R16, width, height, 0, GL_R16, GL_UNSIGNED_BYTE, imageData);
-    }
-    else if (numChannels == 2) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, width, height, 0, GL_RG, GL_UNSIGNED_BYTE, imageData);
-    }
-    else if (numChannels == 3) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
-    }
-    else {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
-    }
-
+    i32 format = GetFormat(numChannels);
+    i32 internalFormat = GetInternalFormat(texType, numChannels);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, imageData);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(imageData);
@@ -56,4 +46,41 @@ Texture::Texture(const u32 width, const u32 height, const u32 id, const std::str
 Texture::~Texture() {
     m_ActiveTextures.erase(m_Path);
     glDeleteTextures(1, &m_Id);
+}
+
+i32 Texture::GetFormat(const i32 numChannels) {
+    switch (numChannels) {
+        case 1:
+            return GL_R16;
+        case 2:
+            return GL_RG;
+        case 3:
+            return GL_RGB;
+        default:
+            return GL_RGBA;
+    }
+}
+
+i32 Texture::GetInternalFormat(const Type format, const i32 numChannels) {
+    switch (numChannels) {
+        case 1:
+            return GL_R16;
+        case 2:
+            return GL_RG;
+        case 3:
+            switch (format) {
+                case Type::Default:
+                     return GL_SRGB;
+                case Type::NormalMap:
+                    return GL_RGB;
+            }
+        default:
+            switch (format) {
+                case Type::Default:
+                     return GL_SRGB_ALPHA;
+                case Type::NormalMap:
+                    return GL_RGBA;
+            }
+    }
+    return GL_SRGB;
 }

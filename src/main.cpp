@@ -52,9 +52,8 @@ int main() {
 	Renderer::Init();
 	Editor::Init(window);
 
-	ModelImporter::Import("Assets/Demo/SteamPunkCity.fbx");
-	auto city = Model::Instantiate("Assets/Demo/SteamPunkCity.fbx.model");
-	city.Get<Transform>().scale = glm::vec3(0.001f);
+	auto house = Model::Instantiate("Assets/House/scene.gltf.model");
+	house.Get<Transform>().scale = glm::vec3(0.01f);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
@@ -73,12 +72,12 @@ void SetupEnviroment() {
 		"Assets/Skybox/top.jpg", "Assets/Skybox/bottom.jpg",
 		"Assets/Skybox/front.jpg", "Assets/Skybox/back.jpg"
 	};
-	Enviroment::Instance()->m_Skybox = CubeMap::Load(textures);
+	Enviroment::Instance()->SetSkyBox(CubeMap::Load(textures));
 
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
 	Enviroment::Instance()->SetLightDir(lightDir);
-	Enviroment::Instance()->SetLightStrength(3.0f);
-	Enviroment::Instance()->SetAmbientStrength(1.5f);
+	Enviroment::Instance()->SetLightStrength(0.01f);
+	Enviroment::Instance()->SetAmbientStrength(0.0f);
 
 	ShadowMapper::Init(4096, 15.0f);
 }

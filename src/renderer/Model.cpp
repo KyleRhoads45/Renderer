@@ -63,14 +63,14 @@ Entity Model::Instantiate(const char* importedModelFile) {
 
 		const auto& materialFiles = materialsNode.as<std::vector<std::string>>();
 		for (const std::string& materialFile : materialFiles) {
-			Material* standardMaterial = Material::NewStarndardMaterial();
+			Material* standardMaterial = Material::NewPbrMaterial();
 
 			YAML::Node materialNode = YAML::LoadFile(materialFile);
 			YAML::Node renderOrderNode = materialNode["RenderOrder"];
 			YAML::Node alphaCutoffNode = materialNode["AlphaCutoff"];
 			YAML::Node diffuseNode = materialNode["DiffuseTexture"];
 			YAML::Node normalNode = materialNode["NormalTexture"];
-			YAML::Node specularNode = materialNode["SpecularTexture"];
+			YAML::Node metallicNode = materialNode["MetallicTexture"];
 
 			const auto& renderOrder = renderOrderNode.as<std::string>();
 			if (renderOrder == "Opaque") {
@@ -90,20 +90,20 @@ Entity Model::Instantiate(const char* importedModelFile) {
 
 			if (!diffuseNode.IsNull()) {
 				const auto& diffuseTextureFile = diffuseNode.as<std::string>();
-				Ref<Texture> diffuse = Texture::Load(diffuseTextureFile);
+				Ref<Texture> diffuse = Texture::Load(diffuseTextureFile, Texture::Type::Default);
 				standardMaterial->SetAlbedo(diffuse);
 			}
 			
 			if (!normalNode.IsNull()) {
 				const auto& normalTextureFile = normalNode.as<std::string>();
-				Ref<Texture> normal = Texture::Load(normalTextureFile);
+				Ref<Texture> normal = Texture::Load(normalTextureFile, Texture::Type::NormalMap);
 				standardMaterial->SetNormal(normal);
 			}
 
-			if (!specularNode.IsNull()) {
-				const auto& specularTextureFile = specularNode.as<std::string>();
-				Ref<Texture> specular = Texture::Load(specularTextureFile);
-				standardMaterial->SetSpecular(specular);
+			if (!metallicNode.IsNull()) {
+				const auto& metallicTextureFile = metallicNode.as<std::string>();
+				Ref<Texture> metallic = Texture::Load(metallicTextureFile, Texture::Type::Default);
+				standardMaterial->SetMetallic(metallic);
 			}
 
 			meshRenderer.materials.push_back(standardMaterial);
@@ -161,9 +161,9 @@ Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene
 
 			texturePath = directoryPath + "/" + texturePath;
 
-			Ref<Texture> diffuse = Texture::Load(texturePath);
+			Ref<Texture> diffuse = Texture::Load(texturePath, Texture::Type::Default);
 
-			Material* betterMat = Material::NewStarndardMaterial();
+			Material* betterMat = Material::NewPbrMaterial();
 			betterMat->SetRenderOrder(diffuse->HasTransparency() ? RenderOrder::transparent : RenderOrder::opaque);
 			betterMat->SetAlbedo(diffuse);
 
@@ -171,8 +171,8 @@ Entity Model::ProcessNode(const std::string& directoryPath, const aiScene* scene
 			materials->push_back(betterMat);
 		}
 		else {
-			Ref<Texture> diffuse = Texture::Load("res/Missing.png");
-			Material* betterMat = Material::NewStarndardMaterial();
+			Ref<Texture> diffuse = Texture::Load("res/Missing.png", Texture::Type::Default);
+			Material* betterMat = Material::NewPbrMaterial();
 			betterMat->SetAlbedo(diffuse);
 
 			meshes->push_back(Mesh::FromAssimpMesh(mesh));

@@ -43,11 +43,10 @@ void UniformBuffer::SubBufferData(const std::string& variable, void* data) {
 }
 
 void UniformBuffer::MoveSizeToNextOpenChunk() {
-	const u32 ChunkSize = 16;
-	const u32 ByteSize = 4;
+	constexpr u32 chunkSize = 16;
 
-	u32 bytesIntoChunk = m_BufferSizeInBytes % ChunkSize;
+	u32 bytesIntoChunk = m_BufferSizeInBytes % chunkSize;
 	if (bytesIntoChunk == 0) return;
 
-	m_BufferSizeInBytes += ChunkSize - bytesIntoChunk;
+	m_BufferSizeInBytes += chunkSize - bytesIntoChunk;
 }

@@ -11,6 +11,7 @@
 
 void Renderer::Init() {
 	glEnable(GL_FRAMEBUFFER_SRGB);
+	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -84,7 +85,7 @@ void Renderer::PerformSkyboxPass() {
 
 	skyboxShader.Bind();
 	glActiveTexture(GL_TEXTURE0);
-	Enviroment::Instance()->m_Skybox->Bind();
+	Enviroment::Instance()->BindSkybox();
 
 	glBindVertexArray(skyboxMesh.m_Vao);
 	glDrawElements(GL_TRIANGLES, skyboxMesh.m_NumIndices, GL_UNSIGNED_INT, nullptr);

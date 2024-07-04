@@ -52,10 +52,10 @@ void ModelImporter::Import(const char* meshPath) {
 
 		SerializeTexture(serializeTextureData, "DiffuseTexture", aiTextureType_DIFFUSE);
 		SerializeTexture(serializeTextureData, "NormalTexture", aiTextureType_NORMALS);
-		SerializeTexture(serializeTextureData, "SpecularTexture", aiTextureType_SPECULAR);
+		SerializeTexture(serializeTextureData, "MetallicTexture", aiTextureType_METALNESS);
 
 		emitter << YAML::EndMap;
-		//Serializer::WriteToFile(emitter, matFileName);
+		Serializer::WriteToFile(emitter, matFileName);
 	}
 
 	data.m_Serializer.BeginMap();
