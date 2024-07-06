@@ -1,22 +1,15 @@
 #include <filesystem>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
-#include "core/Base.h"
 #include "core/Serializer.h"
 #include "renderer/Material.h"
 #include "ModelImporter.h"
 
 struct ModelImporter::ProcessData {
-	const aiScene* m_Scene;
 	Serializer m_Serializer;
-	std::string m_DirectoryPath;
+	const aiScene* m_Scene;
 	std::vector<std::string> m_MaterialPaths;
-};
-
-struct ModelImporter::SerializeTextureData {
-	YAML::Emitter* m_Emitter;
-	std::string m_DirPath;
-	const aiMaterial* m_Mat;
+	std::string m_DirectoryPath;
 };
 
 void ModelImporter::Import(const char* meshPath) {
@@ -27,36 +20,12 @@ void ModelImporter::Import(const char* meshPath) {
 
 	std::string dirPath = meshPath;
 	dirPath = dirPath.substr(0, dirPath.find_last_of("\\/"));
-	
+
 	ProcessData data {
 		.m_Scene = scene,
-		.m_DirectoryPath = std::move(dirPath),
+		.m_MaterialPaths = CreateMaterialFiles(scene, dirPath),
+		.m_DirectoryPath = std::move(dirPath), // ! Can't use dirPath after this
 	};
-
-	for (u32 i = 0; i < scene->mNumMaterials; i++) {
-		
-		const aiMaterial* mat = scene->mMaterials[i];
-		std::string matFileName = data.m_DirectoryPath + "/" + std::string(mat->GetName().C_Str()) + ".mat";
-		data.m_MaterialPaths.push_back(matFileName);
-
-		YAML::Emitter emitter;
-		emitter << YAML::BeginMap;
-		emitter << YAML::Key << "RenderOrder" << YAML::Value << "Opaque";
-		emitter << YAML::Key << "AlphaCutoff" << YAML::Value << 0.0f;
-
-		SerializeTextureData serializeTextureData {
-			.m_Emitter = &emitter,
-			.m_DirPath = data.m_DirectoryPath,
-			.m_Mat = mat,
-		};
-
-		SerializeTexture(serializeTextureData, "DiffuseTexture", aiTextureType_DIFFUSE);
-		SerializeTexture(serializeTextureData, "NormalTexture", aiTextureType_NORMALS);
-		SerializeTexture(serializeTextureData, "MetallicTexture", aiTextureType_METALNESS);
-
-		emitter << YAML::EndMap;
-		Serializer::WriteToFile(emitter, matFileName);
-	}
 
 	data.m_Serializer.BeginMap();
 	data.m_Serializer.WriteKeyValue("SourceFile", meshPath);
@@ -68,11 +37,37 @@ void ModelImporter::Import(const char* meshPath) {
 	data.m_Serializer.WriteToFile(importedName);
 }
 
+std::vector<std::string> ModelImporter::CreateMaterialFiles(const aiScene* scene, const std::string& dirPath) {
+	std::vector<std::string> materialPaths;
+	
+	for (u32 i = 0; i < scene->mNumMaterials; i++) {
+		const aiMaterial* mat = scene->mMaterials[i];
+		
+		std::string matFileName = dirPath + "/" + std::string(mat->GetName().C_Str()) + ".mat";
+		materialPaths.push_back(matFileName);
+
+		Serializer serializer;
+		serializer.BeginMap();
+		serializer.WriteKeyValue("AlbedoTexture", TextureFromMaterial(*mat, dirPath, aiTextureType_DIFFUSE));
+		serializer.WriteKeyValue("NormalTexture", TextureFromMaterial(*mat, dirPath, aiTextureType_NORMALS));
+		serializer.WriteKeyValue("MetalRoughTexture", TextureFromMaterial(*mat, dirPath, aiTextureType_METALNESS));
+		serializer.WriteKeyValue("AlphaCutoff", 0.0f);
+		serializer.WriteKeyValue("Metallicness", 0.5f);
+		serializer.WriteKeyValue("Roughness", 0.5f);
+		serializer.WriteKeyValue("Specularity", 1.0f);
+		serializer.WriteKeyValue("RenderOrder", static_cast<i32>(RenderOrder::opaque));
+		serializer.EndMap();
+		serializer.WriteToFile(matFileName);
+	}
+
+	return materialPaths;
+}
+
 void ModelImporter::ProcessNode(ProcessData& data, const aiNode* node, const i32 parentId) {
 	Entity entity = Registry::Create();
 	entity.Add<LocalToWorld>();
 
-	i32 entityId = data.m_Serializer.BeginEntity(parentId);
+	i32 entityId = BeginEntity(data.m_Serializer, parentId);
 
 	aiVector3t<f32> scale;
 	aiVector3t<f32> position;
@@ -86,36 +81,61 @@ void ModelImporter::ProcessNode(ProcessData& data, const aiNode* node, const i32
 
 	data.m_Serializer.Serialize(trans);
 
-	MeshRendererImport meshRendrImport;
+	std::vector<i32> meshIndicies;
+	std::vector<std::string> materialPaths;
 
 	for (u32 i = 0; i < node->mNumMeshes; i++) {
 		u32 meshIndex = node->mMeshes[i];
-		meshRendrImport.meshIndicies.push_back(meshIndex);
+		meshIndicies.push_back(meshIndex);
 
 		const aiMesh* mesh = data.m_Scene->mMeshes[meshIndex];
-		meshRendrImport.materialFilePaths.push_back(data.m_MaterialPaths[mesh->mMaterialIndex]);
+		materialPaths.push_back(data.m_MaterialPaths[mesh->mMaterialIndex]);
 	}
 
-	data.m_Serializer.Serialize(meshRendrImport);
-	data.m_Serializer.EndEntity();
+	data.m_Serializer.BeginKeyMap("MeshRenderer");
+	data.m_Serializer.WriteKeyValue("MeshIndices", meshIndicies);
+	data.m_Serializer.WriteKeyValue("Materials", materialPaths);
+	data.m_Serializer.EndMap();
+
+	EndEntity(data.m_Serializer);
 
 	for (u32 i = 0; i < node->mNumChildren; i++) {
 		ProcessNode(data, node->mChildren[i], entityId);
 	}
 }
 
-void ModelImporter::SerializeTexture(SerializeTextureData& data, const std::string& key, const aiTextureType textureType) {
-	*data.m_Emitter << YAML::Key << key;
+i32 ModelImporter::BeginEntity(Serializer& serializer, const i32 parentId) {
+	static i32 entityId = -1;
+	entityId++;
 
+	serializer.BeginMap();
+	serializer.WriteKeyValue("EntityId", entityId);
+
+	if (parentId >= 0) {
+		serializer.WriteKeyValue("ParentId", parentId);
+	}
+	else {
+		serializer.WriteKeyValue("ParentId", YAML::Null);
+	}
+
+	serializer.BeginKeyMap("Components");
+	return entityId;
+}
+
+void ModelImporter::EndEntity(Serializer& serializer) {
+	serializer.EndMap();
+	serializer.EndMap();
+}
+
+std::string ModelImporter::TextureFromMaterial(const aiMaterial& material, const std::string& dirPath, const aiTextureType textureType) {
 	aiString textureFileName;
-	aiReturn res = data.m_Mat->GetTexture(textureType, 0, &textureFileName);
+	aiReturn res = material.GetTexture(textureType, 0, &textureFileName);
 
 	if (res == aiReturn_FAILURE) {
-		*data.m_Emitter << YAML::Value << YAML::Null;
-		return;
+		return "";
 	}
 
 	std::string texturePath = textureFileName.C_Str();
-	texturePath = data.m_DirPath + "/" + texturePath;
-	*data.m_Emitter << YAML::Value << texturePath;
+	texturePath = dirPath + "/" + texturePath;
+	return texturePath;
 }

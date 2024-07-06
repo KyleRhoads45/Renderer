@@ -14,78 +14,28 @@ YAML::Emitter& operator<<(YAML::Emitter& emitter, glm::quat quat) {
 	return emitter;
 }
 
-void Serializer::SerializeScene() {
-	YAML::Emitter out;
-	for (Entity entity : Registry::m_Entities) {
-		SerializeEntity(out, entity);
-	}
-
-	std::ofstream fout("SampleScene.yaml");
-	fout << out.c_str();
-	fout.close();
-}
-
-void Serializer::SerializeEntity(YAML::Emitter& out, Entity entity) {
-	out << YAML::BeginMap;
-
-	out << YAML::Key << "Entity";
-	out << YAML::Value << entity.Id();
-
-	if (Registry::Has<Transform>(entity)) {
-		out << YAML::Key << "Transform";
-
-		auto& trans = Registry::Get<Transform>(entity);
-
-		out << YAML::BeginMap;
-		out << YAML::Key << "Position";
-		out << YAML::Value << trans.position;
-		out << YAML::EndMap;
-	}
-
-	out << YAML::EndMap;
-}
-
-void Serializer::SerializeMaterial(const std::string& file, const Material& material) {
-	Serializer serializer;
-	serializer.Serialize(material);
-	serializer.WriteToFile(file);
-}
-
-void Serializer::WriteToFile(YAML::Emitter& emitter, const std::string& file) {
+void Serializer::WriteToFile(const YAML::Emitter& emitter, const std::string& file) {
 	std::ofstream fout(file);
 	fout << emitter.c_str();
 	fout.close();
 }
 
-i32 Serializer::BeginEntity(const i32 parentId) {
-	static i32 entityId = -1;
-	entityId++;
-	m_Emitter << YAML::BeginMap;
-	m_Emitter << YAML::Key << "EntityId" << YAML::Value << entityId;
-
-	if (parentId >= 0) {
-		m_Emitter << YAML::Key << "ParentId" << YAML::Value << parentId;
-	}
-	else {
-		m_Emitter << YAML::Key << "ParentId" << YAML::Value << YAML::Null;
-	}
-
-	m_Emitter << YAML::Key << "Components";
-	m_Emitter << YAML::BeginMap;
-	return entityId;
-}
-
-void Serializer::EndEntity() {
-	m_Emitter << YAML::EndMap;
-	m_Emitter << YAML::EndMap;
+void Serializer::Deserialize(const YAML::Node& node, Transform& trans){
+	trans.position = node["Position"].as<glm::vec3>();
+	trans.rotation = node["Orientation"].as<glm::quat>();
+	trans.scale = node["Scale"].as<glm::vec3>();
 }
 
 void Serializer::WriteToFile(const std::string& file) {
-	Serializer::WriteToFile(m_Emitter, file);
+	WriteToFile(m_Emitter, file);
 }
 
 void Serializer::BeginMap() {
 	m_Emitter << YAML::BeginMap;
+}
+
+void Serializer::BeginKeyMap(const std::string& key) {
+	m_Emitter << YAML::Key << key << YAML::BeginMap;
 }
 
 void Serializer::EndMap() {
@@ -107,15 +57,53 @@ void Serializer::Serialize(const Transform& trans) {
 	m_Emitter << YAML::EndMap;
 }
 
-void Serializer::Serialize(const MeshRendererImport& meshRendrImport) {
-	m_Emitter << YAML::Key << "MeshRenderer" << YAML::BeginMap;
-	{
-		m_Emitter << YAML::Key << "MeshIndicies" << YAML::Value << meshRendrImport.meshIndicies;
-		m_Emitter << YAML::Key << "Materials" << YAML::Value << meshRendrImport.materialFilePaths;
-	}
+void Serializer::Serialize(const Material& material) {
+	m_Emitter << YAML::BeginMap;
+	m_Emitter << YAML::Key << "AlbedoTexture" << YAML::Value << material.GetAlbedoPath();
+	m_Emitter << YAML::Key << "NormalTexture" << YAML::Value << material.GetNormalPath();
+	m_Emitter << YAML::Key << "MetalRoughTexture" << YAML::Value << material.GetMetalRoughPath();
+	m_Emitter << YAML::Key << "AlphaCutoff" << YAML::Value << material.GetAlphaCutoff();
+	m_Emitter << YAML::Key << "Metallicness" << YAML::Value << material.GetMetallicness();
+	m_Emitter << YAML::Key << "Roughness" << YAML::Value << material.GetRoughness();
+	m_Emitter << YAML::Key << "Specularity" << YAML::Value << material.GetSpecularity();
+	m_Emitter << YAML::Key << "RenderOrder" << YAML::Value << static_cast<i32>(material.GetRenderOrder());
 	m_Emitter << YAML::EndMap;
 }
 
-void Serializer::Serialize(const Material& material) {
-	m_Emitter << YAML::Key << "DiffuseTexture" << YAML::Value << material.DiffuseTexturePath();
+void Serializer::Deserialize(const std::string& file, Material& material) {
+	material.SetFilePath(file);
+
+	YAML::Node materialNode = YAML::LoadFile(file);
+	YAML::Node albedoTextureNode = materialNode["AlbedoTexture"];
+	YAML::Node normalTextureNode = materialNode["NormalTexture"];
+	YAML::Node metalRoughTextureNode = materialNode["MetalRoughTexture"];
+	YAML::Node alphaCutoffNode = materialNode["AlphaCutoff"];
+	YAML::Node metallicnessNode = materialNode["Metallicness"];
+	YAML::Node roughnessNode = materialNode["Roughness"];
+	YAML::Node specularityNode = materialNode["Specularity"];
+	YAML::Node renderOrderNode = materialNode["RenderOrder"];
+
+	material.SetRenderOrder(static_cast<RenderOrder>(renderOrderNode.as<i32>()));
+	material.SetAlphaCutoff(alphaCutoffNode.as<f32>());
+	material.SetMetallicness(metallicnessNode.as<f32>());
+	material.SetRoughness(roughnessNode.as<f32>());
+	material.SetSpecularity(specularityNode.as<f32>());
+
+	if (!albedoTextureNode.IsNull()) {
+		const auto& albedoTextureFile = albedoTextureNode.as<std::string>();
+		Ref<Texture> albedo = Texture::Load(albedoTextureFile, Texture::Type::Default);
+		material.SetAlbedoTexture(albedo);
+	}
+	
+	if (!normalTextureNode.IsNull()) {
+		const auto& normalTextureFile = normalTextureNode.as<std::string>();
+		Ref<Texture> normal = Texture::Load(normalTextureFile, Texture::Type::NormalMap);
+		material.SetNormalTexture(normal);
+	}
+
+	if (!metalRoughTextureNode.IsNull()) {
+		const auto& metalRoughTextureFile = metalRoughTextureNode.as<std::string>();
+		Ref<Texture> metalRough = Texture::Load(metalRoughTextureFile, Texture::Type::Default);
+		material.SetMetalRoughTexture(metalRough);
+	}
 }

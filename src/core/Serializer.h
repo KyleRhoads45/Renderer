@@ -5,41 +5,39 @@
 
 class Material;
 
-struct MeshRendererImport {
-	std::vector<i32> meshIndicies;
-	std::vector<std::string> materialFilePaths;
-};
-
 class Serializer {
+public:
+	static void WriteToFile(const YAML::Emitter& emitter, const std::string& file);
+	static void Deserialize(const YAML::Node& node, Transform& trans);
+	static void Deserialize(const std::string& file, Material& material);
 public:
 	Serializer() = default;
 
-	static void SerializeScene();
-	static void SerializeEntity(YAML::Emitter& out, Entity entity);
-	static void SerializeMaterial(const std::string& file, const Material& material);
-	static void WriteToFile(YAML::Emitter& emitter, const std::string& file);
-
-	i32 BeginEntity(const i32 parentId);
-	void EndEntity();
 	void WriteToFile(const std::string& file);
 
 	void BeginMap();
+	void BeginKeyMap(const std::string& key);
 	void EndMap();
 
 	template<typename T> 
 	void WriteKeyValue(const std::string& key, T& value);
 
-	void Serialize(const Transform& trans);
-	void Serialize(const MeshRendererImport& meshRendrImport);
-	void Serialize(const Material& material);
+	template<typename T> 
+	void WriteKeyValue(const std::string& key, T&& value);
 
-	void Deserialize();
+	void Serialize(const Transform& trans);
+	void Serialize(const Material& material);
 private:
 	YAML::Emitter m_Emitter;
 };
 
 template<typename T> 
 void Serializer::WriteKeyValue(const std::string& key, T& value) {
+	m_Emitter << YAML::Key << key << YAML::Value << value;
+}
+
+template<typename T>
+void Serializer::WriteKeyValue(const std::string& key, T&& value) {
 	m_Emitter << YAML::Key << key << YAML::Value << value;
 }
 

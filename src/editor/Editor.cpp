@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <glad/glad.h>
 #include <glm/gtx/string_cast.hpp>
@@ -13,6 +14,7 @@
 #include "core/CameraSystem.h"
 #include "renderer/Renderer.h"
 #include "SceneCamera.h"
+#include "core/Serializer.h"
 #include "Editor.h"
 
 void Editor::Init(GLFWwindow* window) {
@@ -74,7 +76,13 @@ void Editor::DrawEditor() {
 void Editor::DrawMenuBar() {
 	ImGui::BeginMainMenuBar();
 	if (ImGui::BeginMenu("File")) {
+		
 		ImGui::MenuItem("Save");
+		
+		if (ImGui::MenuItem("Import")) {
+					
+		}
+		
 		ImGui::EndMenu();
 	}
 	ImGui::EndMainMenuBar();
@@ -230,13 +238,6 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 void Editor::DrawInspector() {
 	ImGui::Begin("Inspector", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
-	static float roughness = 0.5f;
-	static float specularStrength = 0.5f;
-	static float metallic = 0.5f;
-	ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.00f, "%.01f");
-	ImGui::SliderFloat("Specular Strength", &specularStrength, 0.0f, 1.0f, "%.01f");
-	ImGui::SliderFloat("Metallic", &metallic, 0.0f, 1.0f, "%.01f");
-
 	static float lightStrength;	
 	static float ambientStrength;	
 	ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 10.00f, "%.01f");
@@ -255,16 +256,6 @@ void Editor::DrawInspector() {
 	Enviroment::Instance()->SetAmbientColor(ambient);
 	Enviroment::Instance()->SetLightColor(light);
 
-	auto view = View<MeshRenderer>();
-	for (auto entity : view) {
-		auto mats = entity.Get<MeshRenderer>().materials;
-		for (auto mat : mats) {
-			mat->SetRoughness(roughness);
-			mat->SetSpecularStrength(specularStrength);
-			mat->SetMetallicStrength(metallic);
-		}
-	}
-	
 	if (s_SelectedEntity != Entity::Null()) {
 		std::string entityName = "Selected Entity ";
 		entityName.append(std::to_string(s_SelectedEntity.Id()));
@@ -280,6 +271,38 @@ void Editor::DrawInspector() {
 			ImGui::DragFloat("z", &trans->position.z, 0.1f);
 			ImGui::PopItemWidth();
 		}
+
+		if (s_SelectedEntity.Has<MeshRenderer>()) {
+			auto& materials = s_SelectedEntity.Get<MeshRenderer>().materials;
+
+			for (auto& material : materials) {
+				ImGui::Separator();
+				ImGui::Text(material->GetFilePath().c_str());
+
+				float roughness = material->GetRoughness();
+				float specularity = material->GetSpecularity();
+				float metallicness = material->GetMetallicness();
+
+				if (ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.00f, "%.01f")) {
+					material->SetRoughness(roughness);		
+					WriteMaterialToFile(*material);
+				}
+				if (ImGui::SliderFloat("Specularity", &specularity, 0.0f, 1.0f, "%.01f")) {
+					material->SetSpecularity(specularity);		
+					WriteMaterialToFile(*material);
+				}
+				if (ImGui::SliderFloat("Metallicness", &metallicness, 0.0f, 1.0f, "%.01f")) {
+					material->SetMetallicness(metallicness);
+					WriteMaterialToFile(*material);
+				}
+			}
+		}
 	}
 	ImGui::End();
+}
+
+void Editor::WriteMaterialToFile(const Material& material) {
+	Serializer serializer;
+	serializer.Serialize(material);
+	serializer.WriteToFile(material.GetFilePath());
 }

@@ -4,16 +4,16 @@
 #include "Material.h"
 
 Material::Material(Shader shader)
-	: m_Albedo(nullptr), m_Normal(nullptr), m_Metallic(nullptr),
-	  m_Shader(std::move(shader)), m_RenderOrder(RenderOrder::opaque), m_AlphaCutoff(0.0f) { }
+	: m_Shader(std::move(shader)), m_RenderOrder(RenderOrder::opaque), m_AlphaCutoff(0.0f),
+	m_Metallicness(0.5f), m_Roughness(0.5f), m_Specularity(1.0f) { }
 
 void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.Bind();
 	m_Shader.SetMat4("model", toWorld.matrix);
 
-	BindTextureIfExists("albedoMap", m_Albedo, 0);
-	BindTextureIfExists("normalMap", m_Normal, 1);
-	BindTextureIfExists("metallicRoughnessMap", m_Metallic, 2);
+	BindTextureIfExists("albedoMap", m_AlbedoTexture, 0);
+	BindTextureIfExists("normalMap", m_NormalTexture, 1);
+	BindTextureIfExists("metallicRoughnessMap", m_MetalRoughTexture, 2);
 
 	bool alphaClippingEnabled = m_RenderOrder == RenderOrder::cutout;
 	m_Shader.SetInt("alphaClippingEnabled", alphaClippingEnabled);
@@ -22,8 +22,8 @@ void Material::Bind(const LocalToWorld& toWorld) {
 	}
 
 	m_Shader.SetFloat("roughness", m_Roughness);
-	m_Shader.SetFloat("specularStrength", m_SpecularStrength);
-	m_Shader.SetFloat("metallic", m_MetallicStrength);
+	m_Shader.SetFloat("specularStrength", m_Specularity);
+	m_Shader.SetFloat("metallic", m_Metallicness);
 	
 	glActiveTexture(GL_TEXTURE3);
 	ShadowMapper::m_ShadowMap.Bind();
@@ -34,7 +34,7 @@ void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.SetInt("skybox", 4);
 }
 
-void Material::BindTextureIfExists(const std::string& uniformName, const Ref<Texture>& texture, const u32 textureUnit) {
+void Material::BindTextureIfExists(const std::string& uniformName, const Ref<Texture> texture, const u32 textureUnit) {
 	bool useTexture = texture != nullptr;
 	m_Shader.SetInt(uniformName + "Enabled", useTexture);
 	if (useTexture) {

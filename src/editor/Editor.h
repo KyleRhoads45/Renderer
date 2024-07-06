@@ -16,6 +16,7 @@ private:
 	static void DrawWorld();
 	static void DrawEntityHierarchy(Entity entity);
 	static void DrawInspector();
+	static void WriteMaterialToFile(const Material& material);
 private: 
 	inline static FrameBuffer s_SceneFrameBuffer;
 	inline static Entity s_SelectedEntity;
