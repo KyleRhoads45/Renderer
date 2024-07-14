@@ -17,7 +17,8 @@ DepthTexture::DepthTexture(const u32 width, const u32 height) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void DepthTexture::Bind() {
+void DepthTexture::Bind(const i32 textureUnit) const {
+	glActiveTexture(GL_TEXTURE0 + textureUnit);
 	glBindTexture(GL_TEXTURE_2D, m_Id);
 }
 

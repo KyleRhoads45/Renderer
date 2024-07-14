@@ -6,11 +6,12 @@ in vec2 textureCoord;
 in mat3 tbn;
 in vec4 lightFragPos;
 
-uniform sampler2D albedoMap;
-uniform sampler2D normalMap;
-uniform sampler2D metallicRoughnessMap;
-uniform sampler2D shadowMap;
-uniform samplerCube skybox;
+layout (location = 0) uniform sampler2D albedoMap;
+layout (location = 1) uniform sampler2D normalMap;
+layout (location = 2) uniform sampler2D metallicRoughnessMap;
+layout (location = 3) uniform sampler2D shadowMap;
+layout (location = 4) uniform samplerCube skybox;
+layout (location = 5) uniform sampler3D shadowPcfMap;
 
 uniform bool albedoMapEnabled;
 uniform bool normalMapEnabled;
@@ -21,6 +22,7 @@ uniform float alphaCutoff;
 uniform float roughness;
 uniform float specularStrength;
 uniform float metallic;
+
 
 layout (std140, binding = 0) uniform camera {
 	vec3 camPos;
@@ -36,6 +38,9 @@ layout (std140, binding = 1) uniform enviorment {
     float lightStrength;
     vec3 lightDir;
     mat4 lightViewProjection;
+    int pcfWindowSize;
+    int pcfFilterSize;
+    float pcfFilterRadius;
 };
 
 out vec4 fragColor;
@@ -109,6 +114,33 @@ vec3 BRDF(BrdfData brdf) {
     return (diffuse + specular / microfacetFactor) * lightDotNormal;
 }
 
+float CalculateShadow() {
+    // Perform perspective divide manually to get clip coords
+    vec3 clipPos = (lightFragPos / lightFragPos.w).xyz;
+    
+    // Convert the coordinate from clip space [-1, 1]
+    // to the shadow depth map range [0, 1]
+    clipPos = clipPos * 0.5f + 0.5f;
+    
+    float shadow = 0.0f;
+
+    vec2 texelSize = 1.0f / textureSize(shadowMap, 0);
+    
+    vec2 yz = mod(gl_FragCoord.xy, vec2(pcfWindowSize));
+    ivec3 offsetCoord = ivec3(0, yz);
+    
+    int texelsPerFilter = pcfFilterSize * pcfFilterSize;
+    for (int i = 0; i < texelsPerFilter; i++) {
+        offsetCoord.x = i;
+        vec2 offset = texelFetch(shadowPcfMap, offsetCoord, 0).rg * pcfFilterRadius;
+        vec2 shadowCoord = clipPos.xy + (offset * texelSize);
+        float shadowMapDepth = texture(shadowMap, shadowCoord).r;
+        shadow += clipPos.z > shadowMapDepth ? 0.0f : 1.0f; 
+    }
+
+    return shadow / texelsPerFilter;
+}
+
 void main() {
     vec4 albedoColorWithAlpha = vec4(1.0f);
     vec3 albedoColor = vec3(1.0f);
@@ -152,7 +184,7 @@ void main() {
      
     if (albedoMapEnabled) {
         vec3 finalColor = BRDF(brdf) * light + ambient;
-        fragColor = vec4(finalColor, albedoColorWithAlpha.a);
+        fragColor = vec4(finalColor * CalculateShadow(), albedoColorWithAlpha.a);
     }
     else {
         fragColor = vec4(1.0f); 

@@ -82,12 +82,12 @@ Mesh Primatives::Cube(bool invert = false) {
 }
 
 Mesh Primatives::Plane() {
-	const size_t vertCount = 4;
+	constexpr u32 vertCount = 4;
 	glm::vec3 verts[vertCount] {
-		glm::vec3(.5, -1, 0),
+		glm::vec3(-1, -1, 0),
 		glm::vec3(1, -1, 0),
-		glm::vec3(1, -.5, 0),
-		glm::vec3(.5, -.5, 0),
+		glm::vec3(1, 1, 0),
+		glm::vec3(-1, 1, 0),
 	};
 
 	glm::vec2 texCoords[vertCount] {
@@ -97,7 +97,7 @@ Mesh Primatives::Plane() {
 		glm::vec2(0.0, 1.0)
 	};
 
-	const u32 indexCount = 6;
+	constexpr u32 indexCount = 6;
 	u32 indices[indexCount] {
 		0, 1, 2,
 		0, 2, 3,
@@ -108,7 +108,7 @@ Mesh Primatives::Plane() {
 	plane.m_NumVerts = vertCount;
 	plane.m_Verts = MakeRef<Vertex[]>(vertCount);
 
-	for (i32 i = 0; i < vertCount; i++) {
+	for (u32 i = 0; i < vertCount; i++) {
 		Vertex vert;
 		vert.position = verts[i];
 		vert.normal = glm::vec3(0, 0, -1);
@@ -121,7 +121,7 @@ Mesh Primatives::Plane() {
 	plane.m_NumIndices = indexCount;
 	plane.m_Indices = MakeRef<u32[]>(indexCount);
 
-	for (i32 i = 0; i < indexCount; i++) {
+	for (u32 i = 0; i < indexCount; i++) {
 		plane.m_Indices[i] = indices[i];
 	}
 	

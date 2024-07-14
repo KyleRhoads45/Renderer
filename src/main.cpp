@@ -52,7 +52,7 @@ int main() {
 	Renderer::Init();
 	Editor::Init(window);
 
-	ModelImporter::Import("Assets/House/scene.gltf");
+	//ModelImporter::Import("Assets/House/scene.gltf");
 	auto house = Model::Instantiate("Assets/House/scene.gltf.model");
 	house.Get<Transform>().scale = glm::vec3(0.01f);
 
@@ -80,5 +80,5 @@ void SetupEnviroment() {
 	Enviroment::Instance()->SetLightStrength(0.01f);
 	Enviroment::Instance()->SetAmbientStrength(0.0f);
 
-	ShadowMapper::Init(4096, 15.0f);
+	ShadowMapper::Init(4096, 1.3f);
 }

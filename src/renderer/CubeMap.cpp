@@ -50,6 +50,7 @@ CubeMap::~CubeMap() {
     glDeleteTextures(1, &m_Id);
 }
 
-void CubeMap::Bind() {
+void CubeMap::Bind(const i32 textureUnit) const {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_Id);
 }

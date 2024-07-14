@@ -3,6 +3,8 @@
 #include "renderer/Enviroment.h"
 #include "Material.h"
 
+#include "Renderer.h"
+
 Material::Material(Shader shader)
 	: m_Shader(std::move(shader)), m_RenderOrder(RenderOrder::opaque), m_AlphaCutoff(0.0f),
 	m_Metallicness(0.5f), m_Roughness(0.5f), m_Specularity(1.0f) { }
@@ -25,13 +27,14 @@ void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.SetFloat("specularStrength", m_Specularity);
 	m_Shader.SetFloat("metallic", m_Metallicness);
 	
-	glActiveTexture(GL_TEXTURE3);
-	ShadowMapper::m_ShadowMap.Bind();
+	ShadowMapper::m_ShadowMap.Bind(3);
 	m_Shader.SetInt("shadowMap", 3);
 
-	glActiveTexture(GL_TEXTURE4);
-	Enviroment::Instance()->BindSkybox();
+	Enviroment::Instance()->BindSkybox(4);
 	m_Shader.SetInt("skybox", 4);
+
+	Enviroment::Instance()->BindPcfShadow(5);
+	m_Shader.SetInt("shadowPcfMap", 5);
 }
 
 void Material::BindTextureIfExists(const std::string& uniformName, const Ref<Texture> texture, const u32 textureUnit) {

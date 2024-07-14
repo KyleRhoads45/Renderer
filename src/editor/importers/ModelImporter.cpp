@@ -20,7 +20,7 @@ void ModelImporter::Import(const char* meshPath) {
 
 	std::string dirPath = meshPath;
 	dirPath = dirPath.substr(0, dirPath.find_last_of("\\/"));
-
+	
 	ProcessData data {
 		.m_Scene = scene,
 		.m_MaterialPaths = CreateMaterialFiles(scene, dirPath),

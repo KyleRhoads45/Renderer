@@ -1,9 +1,9 @@
 ﻿#version 460 core
 
-in vec3 iPos;
-in vec3 iNormal;
-in vec3 iTangent;
-in vec2 iTextureCoord;
+layout(location = 0) in vec3 iPos;
+layout(location = 1) in vec3 iNormal;
+layout(location = 2) in vec3 iTangent;
+layout(location = 3) in vec2 iTextureCoord;
 
 layout (std140, binding = 0) uniform camera {
 	vec3 camPos;
@@ -13,12 +13,15 @@ layout (std140, binding = 0) uniform camera {
 };
 
 layout (std140, binding = 1) uniform enviorment {
-	vec3 lightColor;
-	vec3 ambientColor;
+    vec3 lightColor;
+    vec3 ambientColor;
     float ambientStrength;
     float lightStrength;
-	vec3 lightDir;
+    vec3 lightDir;
     mat4 lightViewProjection;
+    int pcfWindowSize;
+    int pcfFilterSize;
+    float pcfFilterRadius;
 };
 
 uniform mat4 model;

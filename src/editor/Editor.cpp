@@ -14,8 +14,11 @@
 #include "core/CameraSystem.h"
 #include "renderer/Renderer.h"
 #include "SceneCamera.h"
+#include "core/Primatives.h"
 #include "core/Serializer.h"
 #include "Editor.h"
+
+#include "renderer/ShadowMapper.h"
 
 void Editor::Init(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
@@ -174,6 +177,17 @@ void Editor::DrawScene() {
 	Renderer::PerformSkyboxPass();
 	Renderer::RenderScene();
 
+	static Mesh plane = Primatives::Plane();
+	static LocalToWorld planeLtw;
+	planeLtw.matrix = glm::mat4(1.0f);
+
+	static Shader depthVisualizer("src/shaders/DepthVisualizer.vert", "src/shaders/DepthVisualizer.frag");
+
+	// glActiveTexture(GL_TEXTURE0);
+	// ShadowMapper::m_ShadowMap.Bind();
+	// depthVisualizer.SetInt("depthMap", 0);
+	// Renderer::DrawMesh(plane, planeLtw, depthVisualizer);
+
 	if (s_SelectedEntity != Entity::Null()) {
 		glm::vec3 gizmoPos = s_SelectedEntity.Get<LocalToWorld>().ToTransform().position;
 		s_TransGizmos->Draw(gizmoPos);
@@ -238,6 +252,20 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 void Editor::DrawInspector() {
 	ImGui::Begin("Inspector", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
+	static i32 shadowPcfWindowSize = Enviroment::Instance()->ShadowPcfWindowSize();
+	static i32 shadowPcfFilterSize = Enviroment::Instance()->ShadowPcfFilterSize();
+	static f32 shadowPcfFilterRadius = Enviroment::Instance()->ShadowPcfFilterRadius();
+	
+	if (ImGui::SliderInt("Shadow PCF Window", &shadowPcfWindowSize, 0, 100)) {
+		Enviroment::Instance()->SetShadowPcf(shadowPcfWindowSize, shadowPcfFilterSize);
+	}
+	if (ImGui::SliderInt("Shadow PCF Filter", &shadowPcfFilterSize, 0, 100)) {
+		Enviroment::Instance()->SetShadowPcf(shadowPcfWindowSize, shadowPcfFilterSize);
+	}
+	if (ImGui::SliderFloat("Shadow PCF Radius", &shadowPcfFilterRadius, 0.00f, 10.00f, "%.01f")) {
+		Enviroment::Instance()->SetShadowPcfRadius(shadowPcfFilterRadius);
+	}
+	
 	static float lightStrength;	
 	static float ambientStrength;	
 	ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 10.00f, "%.01f");

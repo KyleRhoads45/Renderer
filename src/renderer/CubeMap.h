@@ -10,7 +10,7 @@ public:
 	CubeMap() = delete;
 	CubeMap(const std::string& key, u32 id);
 	~CubeMap();
-	void Bind();
+	void Bind(const i32 textureUnit) const;
 private:
 	inline static std::unordered_map<std::string, std::weak_ptr<CubeMap>> m_ActiveCubemaps;
 	std::string m_Key;

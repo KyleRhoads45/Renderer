@@ -40,19 +40,23 @@ void ShadowMapper::PerformShadowPass() {
 	m_DepthShader.Bind();
 	m_DepthShader.SetMat4("viewProjection", m_LightViewProjection);
 
+	glCullFace(GL_FRONT);
+	
 	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
-    for (const auto entity : view) {
-        auto& toWorld = Registry::Get<LocalToWorld>(entity);
-        const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
-        
+	for (const auto entity : view) {
+		auto& toWorld = Registry::Get<LocalToWorld>(entity);
+		const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
+		
 		m_DepthShader.SetMat4("model", toWorld.matrix);
 
 		for (const auto& mesh : meshRenderer.meshes) {
 			glBindVertexArray(mesh.m_Vao);
 			glDrawElements(GL_TRIANGLES, mesh.m_NumIndices, GL_UNSIGNED_INT, 0);
 		}
-    }
-
+	}
+	
+	glCullFace(GL_BACK);
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, viewportWidth, viewportHeight);
 
@@ -107,7 +111,8 @@ void ShadowMapper::CalculateLightViewProjection() {
 	// When creating the light's projection matrix we extend the depth so that
 	// close, but out of view fragments of models don't get discarded by the 
 	// tight clip space and create holes in shadows that the camera can see.
-	glm::mat4 projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depth * 5, depth * 5);
+	// Note: Temporarly removed as a constant value of 5 can be too large for our current scale
+	glm::mat4 projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depth, depth);
 
 	m_LightViewProjection = projection * view;
 }

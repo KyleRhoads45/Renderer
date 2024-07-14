@@ -6,7 +6,7 @@ class DepthTexture {
 public:
 	DepthTexture() = default;
 	DepthTexture(const u32 width, const u32 height);
-	void Bind();
+	void Bind(const i32 textureUnit) const;
 	void Resize(const glm::i32vec2 size);
 	void AttachToActiveFrameBuffer();
 	f32 ReadPixel(const glm::i32vec2& pixelCoord) const;

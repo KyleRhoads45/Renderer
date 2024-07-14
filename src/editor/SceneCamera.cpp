@@ -35,6 +35,12 @@ void SceneCamera::Update(const glm::vec2 sceneWindowSize) {
     if (Input::OnKeyHold(GLFW_KEY_A)) {
         trans.position = (trans.position - trans.Right() * speed);
     }
+    if (Input::OnKeyHold(GLFW_KEY_Q)) {
+        trans.position = (trans.position - trans.Up() * speed);
+    }
+    if (Input::OnKeyHold(GLFW_KEY_E)) {
+        trans.position = (trans.position + trans.Up() * speed);
+    }
 
     s_Camera.view = glm::translate(glm::mat4(1.0f), trans.position);
     s_Camera.view = s_Camera.view * glm::mat4_cast(trans.rotation);
