@@ -28,7 +28,7 @@ $$\text{where } cos\theta_l=\omega_l \cdot N$$
 The lambertion diffuse takes the base color of a fragment and multiplies it by a scalar based on how much the fragment's normal aligns with the  light direction. A closely aligned normal will make the fragment brighter as it is in direct light and continue to get darker as the angle of incidence increases until normals at $90^\circ$ or greater become black.
 
 This produces nice results but due to the nature of the dot product the edges appear a bit too dark for my liking. I decided to use the Disney diffuse which builds ontop of the labertion diffuse but introduces a Fresnel factor that makes the edges of rough surfaces appear brighter. 
-$$f_d = (baseColor \over \pi) (1 + (F_D90 - 1)(1 - cos\theta_l))$$
+$$f_d = baseColor\over\pi (1 + (F_D90 - 1)(1 - cos\theta_l))$$
 While not necessarly physicaly accurate, I find it to look nicer without compromising realism. The creator of this mode, Brent Burley, states that "a possible explanation for this effect may be that, for rough surfaces, light enters and exits the sides of micro-surface features, causing an increase in refraction at grazing angles." Which is convincing enough for me I guess.
 
 
