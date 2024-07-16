@@ -22,6 +22,7 @@ layout (std140, binding = 1) uniform enviorment {
     int pcfWindowSize;
     int pcfFilterSize;
     float pcfFilterRadius;
+    float shadowStrength;
 };
 
 uniform mat4 model;

@@ -37,7 +37,7 @@ void CameraSystem::GetViewFrustrumPoints(FrustrumPoints& points, f32 zDist = 0.0
     f32 farDist = zDist == 0.0f ? cam.far : zDist;
     f32 nearDist = cam.near;
     f32 aspect = cam.aspect;
-    f32 pheta = glm::radians(cam.fov / 2.0f);
+    f32 theta = glm::radians(cam.fov / 2.0f);
 
     const glm::vec3 pos = trans.position;
     const glm::vec3 forward = trans.Forward();
@@ -46,7 +46,7 @@ void CameraSystem::GetViewFrustrumPoints(FrustrumPoints& points, f32 zDist = 0.0
 
     // Calculate far plane positions
 
-    f32 halfFarPlaneHeight = glm::tan(pheta) * farDist;
+    f32 halfFarPlaneHeight = glm::tan(theta) * farDist;
     f32 halfFarPlaneWidth = halfFarPlaneHeight * aspect;
 
     const glm::vec3 farUp     = up * halfFarPlaneHeight;
@@ -60,7 +60,7 @@ void CameraSystem::GetViewFrustrumPoints(FrustrumPoints& points, f32 zDist = 0.0
 
     // Calculate near plane positions
 
-    f32 halfNearPlaneHeight = glm::tan(pheta) * nearDist;
+    f32 halfNearPlaneHeight = glm::tan(theta) * nearDist;
     f32 halfNearPlaneWidth = halfNearPlaneHeight * aspect;
 
     const glm::vec3 nearUp     = up * halfNearPlaneHeight;
@@ -76,6 +76,80 @@ void CameraSystem::GetViewFrustrumPoints(FrustrumPoints& points, f32 zDist = 0.0
         fTopRight, fBottomRight, fTopLeft, fBottomLeft,
         nTopRight, nBottomRight, nTopLeft, nBottomLeft
     };
+}
+
+f32 CameraSystem::ViewFrustrumDiagonal(f32 zDist = 0.0f) {
+    auto& trans = *s_ActiveCameraTransform;
+    auto& cam = *s_ActiveCamera;
+
+    f32 farDist = zDist == 0.0f ? cam.far : zDist;
+    f32 nearDist = cam.near;
+    f32 aspect = cam.aspect;
+    f32 theta = glm::radians(cam.fov / 2.0f);
+
+    const glm::vec3 pos = trans.position;
+    const glm::vec3 forward = trans.Forward();
+    const glm::vec3 right = trans.Right();
+    const glm::vec3 up = trans.Up();
+
+    // Calculate far plane top right
+
+    f32 halfFarPlaneHeight = glm::tan(theta) * farDist;
+    f32 halfFarPlaneWidth = halfFarPlaneHeight * aspect;
+
+    const glm::vec3 farUp     = up * halfFarPlaneHeight;
+    const glm::vec3 farRight  = right * halfFarPlaneWidth;
+    const glm::vec3 farCenter = pos + (forward * farDist);
+    glm::vec3 fTopRight = farCenter + farRight + farUp;
+
+    // Calculate near plane bottom left
+
+    f32 halfNearPlaneHeight = glm::tan(theta) * nearDist;
+    f32 halfNearPlaneWidth = halfNearPlaneHeight * aspect;
+
+    const glm::vec3 nearUp     = up * halfNearPlaneHeight;
+    const glm::vec3 nearRight  = right * halfNearPlaneWidth;
+    const glm::vec3 nearCenter = pos + (forward * nearDist);
+    glm::vec3 nBottomLeft = nearCenter - nearRight - nearUp;
+
+    return glm::distance(nBottomLeft, fTopRight);
+}
+
+glm::vec3 CameraSystem::ViewFrustrumCenter(f32 zDist = 0.0f) {
+    auto& trans = *s_ActiveCameraTransform;
+    auto& cam = *s_ActiveCamera;
+
+    f32 farDist = zDist == 0.0f ? cam.far : zDist;
+    f32 nearDist = cam.near;
+    f32 aspect = cam.aspect;
+    f32 theta = glm::radians(cam.fov / 2.0f);
+
+    const glm::vec3 pos = trans.position;
+    const glm::vec3 forward = trans.Forward();
+    const glm::vec3 right = trans.Right();
+    const glm::vec3 up = trans.Up();
+
+    // Calculate far plane top right
+
+    f32 halfFarPlaneHeight = glm::tan(theta) * farDist;
+    f32 halfFarPlaneWidth = halfFarPlaneHeight * aspect;
+
+    const glm::vec3 farUp     = up * halfFarPlaneHeight;
+    const glm::vec3 farRight  = right * halfFarPlaneWidth;
+    const glm::vec3 farCenter = pos + (forward * farDist);
+    glm::vec3 fTopRight = farCenter + farRight + farUp;
+
+    // Calculate near plane bottom left
+
+    f32 halfNearPlaneHeight = glm::tan(theta) * nearDist;
+    f32 halfNearPlaneWidth = halfNearPlaneHeight * aspect;
+
+    const glm::vec3 nearUp     = up * halfNearPlaneHeight;
+    const glm::vec3 nearRight  = right * halfNearPlaneWidth;
+    const glm::vec3 nearCenter = pos + (forward * nearDist);
+    glm::vec3 nBottomLeft = nearCenter - nearRight - nearUp;
+
+    return (nBottomLeft + fTopRight) / 2.0f;
 }
 
 glm::vec3 CameraSystem::ActiveCamPos() {

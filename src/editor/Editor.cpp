@@ -255,6 +255,7 @@ void Editor::DrawInspector() {
 	static i32 shadowPcfWindowSize = Enviroment::Instance()->ShadowPcfWindowSize();
 	static i32 shadowPcfFilterSize = Enviroment::Instance()->ShadowPcfFilterSize();
 	static f32 shadowPcfFilterRadius = Enviroment::Instance()->ShadowPcfFilterRadius();
+	static f32 shadowStrength = Enviroment::Instance()->ShadowStrength();
 	
 	if (ImGui::SliderInt("Shadow PCF Window", &shadowPcfWindowSize, 0, 100)) {
 		Enviroment::Instance()->SetShadowPcf(shadowPcfWindowSize, shadowPcfFilterSize);
@@ -264,6 +265,9 @@ void Editor::DrawInspector() {
 	}
 	if (ImGui::SliderFloat("Shadow PCF Radius", &shadowPcfFilterRadius, 0.00f, 10.00f, "%.01f")) {
 		Enviroment::Instance()->SetShadowPcfRadius(shadowPcfFilterRadius);
+	}
+	if (ImGui::SliderFloat("Shadow Strength", &shadowStrength, 0.0f, 1.0f, "%.01f")) {
+		Enviroment::Instance()->SetShadowStrength(shadowStrength);
 	}
 	
 	static float lightStrength;	

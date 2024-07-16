@@ -17,6 +17,7 @@ Enviroment::Enviroment() {
 	m_UniformBuffer->Register("pcfWindowSize", sizeof(i32));
 	m_UniformBuffer->Register("pcfFilterSize", sizeof(i32));
 	m_UniformBuffer->Register("pcfFilterRadius", sizeof(f32));
+	m_UniformBuffer->Register("shadowStrength", sizeof(f32));
 	m_UniformBuffer->FinishedRegistering();
 
 	SetShadowPcf(16, 10);
@@ -65,4 +66,9 @@ void Enviroment::SetShadowPcf(i32 windowSize, i32 filterSize) {
 void Enviroment::SetShadowPcfRadius(f32 radius) {
 	m_UniformBuffer->SubBufferData("pcfFilterRadius", &radius);
 	m_PcfFilterRadius = radius;
+}
+
+void Enviroment::SetShadowStrength(f32 shadowStrength) {
+	m_UniformBuffer->SubBufferData("shadowStrength", &shadowStrength);
+	m_ShadowStrength = shadowStrength;
 }

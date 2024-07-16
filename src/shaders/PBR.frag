@@ -41,6 +41,7 @@ layout (std140, binding = 1) uniform enviorment {
     int pcfWindowSize;
     int pcfFilterSize;
     float pcfFilterRadius;
+    float shadowStrength;
 };
 
 out vec4 fragColor;
@@ -114,6 +115,16 @@ vec3 BRDF(BrdfData brdf) {
     return (diffuse + specular / microfacetFactor) * lightDotNormal;
 }
 
+float GetShadowBias(float depth) {
+    float dx = abs(dFdx(depth));
+    float dy = abs(dFdy(depth));
+    float slope = max(dx, dy);
+    
+    const float slopeFactor = 0.1f;
+    const float bias = 0.001f;
+    return slopeFactor * slope + bias;
+}
+
 float CalculateShadow() {
     // Perform perspective divide manually to get clip coords
     vec3 clipPos = (lightFragPos / lightFragPos.w).xyz;
@@ -122,8 +133,13 @@ float CalculateShadow() {
     // to the shadow depth map range [0, 1]
     clipPos = clipPos * 0.5f + 0.5f;
     
+    if (clipPos.z > 1.0f) {
+        return 1.0f;
+    }
+    
     float shadow = 0.0f;
-
+    float bias = mix(0.005f, 0.0f, dot(modelNormal, -lightDir));
+    
     vec2 texelSize = 1.0f / textureSize(shadowMap, 0);
     
     vec2 yz = mod(gl_FragCoord.xy, vec2(pcfWindowSize));
@@ -135,7 +151,8 @@ float CalculateShadow() {
         vec2 offset = texelFetch(shadowPcfMap, offsetCoord, 0).rg * pcfFilterRadius;
         vec2 shadowCoord = clipPos.xy + (offset * texelSize);
         float shadowMapDepth = texture(shadowMap, shadowCoord).r;
-        shadow += clipPos.z > shadowMapDepth ? 0.0f : 1.0f; 
+        float bias = GetShadowBias(shadowMapDepth);
+        shadow += clipPos.z > shadowMapDepth + bias ? 0.0f : 1.0f; 
     }
 
     return shadow / texelsPerFilter;
@@ -184,7 +201,8 @@ void main() {
      
     if (albedoMapEnabled) {
         vec3 finalColor = BRDF(brdf) * light + ambient;
-        fragColor = vec4(finalColor * CalculateShadow(), albedoColorWithAlpha.a);
+        float shadow = mix(1.0f, CalculateShadow(), shadowStrength);
+        fragColor = vec4(finalColor * shadow, albedoColorWithAlpha.a);
     }
     else {
         fragColor = vec4(1.0f); 

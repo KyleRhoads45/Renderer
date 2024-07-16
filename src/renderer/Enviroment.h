@@ -20,6 +20,7 @@ public:
 
 	void SetShadowPcf(i32 windowSize, i32 filterSize);
 	void SetShadowPcfRadius(f32 radius);
+	void SetShadowStrength(f32 shadowStrength);
 	
 	void SetSkyBox(const Ref<CubeMap>& skybox) { m_Skybox = skybox; }
 	void BindSkybox(const i32 textureUnit) const { m_Skybox->Bind(textureUnit); }
@@ -28,6 +29,7 @@ public:
 	i32 ShadowPcfWindowSize() const { return m_PcfShadowTexture->WindowSize(); }
 	i32 ShadowPcfFilterSize() const { return m_PcfShadowTexture->FilterSize(); }
 	f32 ShadowPcfFilterRadius() const { return m_PcfFilterRadius; }
+	f32 ShadowStrength() const { return m_ShadowStrength; }
 
 	Ref<CubeMap> GetSkyBox() const { return m_Skybox; }
 	glm::vec3 GetLightDir() const { return m_LightDir; }
@@ -41,4 +43,5 @@ private:
 	f32 m_AmbientStrength;
 	f32 m_LightStrength;
 	f32 m_PcfFilterRadius;
+	f32 m_ShadowStrength;
 };

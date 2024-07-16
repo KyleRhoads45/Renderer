@@ -40,8 +40,6 @@ void ShadowMapper::PerformShadowPass() {
 	m_DepthShader.Bind();
 	m_DepthShader.SetMat4("viewProjection", m_LightViewProjection);
 
-	glCullFace(GL_FRONT);
-	
 	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
 	for (const auto entity : view) {
 		auto& toWorld = Registry::Get<LocalToWorld>(entity);
@@ -55,8 +53,6 @@ void ShadowMapper::PerformShadowPass() {
 		}
 	}
 	
-	glCullFace(GL_BACK);
-	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, viewportWidth, viewportHeight);
 
@@ -64,55 +60,41 @@ void ShadowMapper::PerformShadowPass() {
 }
 
 void ShadowMapper::CalculateLightViewProjection() {
-	FrustrumPoints frustrumPoints;
-	CameraSystem::GetViewFrustrumPoints(frustrumPoints, m_ShadowDist);
-
+	f32 projSize = CameraSystem::ViewFrustrumDiagonal(m_ShadowDist);
+	f32 depth = projSize;
+	
 	glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
-	glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
+	glm::vec3 center = CameraSystem::ViewFrustrumCenter(m_ShadowDist);
 
-	// Convert camera frustrum points to light space
-	// its as if we are viewing the frustrum from the lights point of view.
-	// Note: this is still in world space so its not always centered at origin. 
-	for (glm::vec3& frustrumPoint : frustrumPoints) {
-		frustrumPoint = lightSpaceView * glm::vec4(frustrumPoint, 1.0f);
+	// Make the light's view matrix move in texel size increments by snapping the frustrum center.
+	// This fixes the swimming effect when moving the camera around.
+	{
+		glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
+
+		// Convert camera frustrum center to light space so its as if we are viewing it from the lights perspective.
+		// Note: this is still in world space so its not always centered at origin. 
+		center = lightSpaceView * glm::vec4(center, 1.0f);
+
+		// Snap the center to the shadow texel grid in world space
+		glm::vec3 worldUnitsPerTexel = glm::vec3(projSize / m_TextureSize, projSize / m_TextureSize, 1.0f);
+		center /= worldUnitsPerTexel;
+		center = glm::floor(center);
+		center *= worldUnitsPerTexel;
+
+		// Transform it back into world space so its projected properly
+		center = glm::inverse(lightSpaceView) * glm::vec4(center, 1.0f);
 	}
 
-	Bounds bounds(frustrumPoints.data(), frustrumPoints.size());
-
-	f32 width = bounds.XLength();
-	f32 height = bounds.YLength();
-	f32 depth = bounds.ZLength();
-
-	// Make the light's projection move to texel size increments.
-	// This fixes the shimmering effect when translating the camera.
-	glm::vec3 worldUnitsPerTexel = glm::vec3(width / m_TextureSize, height / m_TextureSize, 1.0f);
-
-	bounds.m_Min /= worldUnitsPerTexel;
-	bounds.m_Min = glm::floor(bounds.m_Min);
-	bounds.m_Min *= worldUnitsPerTexel;
-
-	bounds.m_Max /= worldUnitsPerTexel;
-	bounds.m_Max = glm::floor(bounds.m_Max);
-	bounds.m_Max *= worldUnitsPerTexel;
-
-	// Transform the min and max points from light space into world space.
-	// Calculate the center of the bounding box in world space. 
-	glm::vec3 worldSpaceMin = glm::inverse(lightSpaceView) * glm::vec4(bounds.m_Min, 1.0f);
-	glm::vec3 worldSpaceMax = glm::inverse(lightSpaceView) * glm::vec4(bounds.m_Max, 1.0f);
-	glm::vec3 center = (worldSpaceMin + worldSpaceMax) / 2.0f;
-
-	// Create the light's view matrix with the view position being
-	// the center of the bounding box.
+	// Create the light's view matrix with the view position being the center of the camera's frustrum.
 	glm::mat4 view = glm::lookAt(center - lightDir, center, glm::vec3(0, 1, 0));
 
-	f32 halfWidth = width / 2.0f;
-	f32 halfHeight = height / 2.0f;
+	f32 halfProjSize = projSize / 2.0f;
 
 	// When creating the light's projection matrix we extend the depth so that
 	// close, but out of view fragments of models don't get discarded by the 
 	// tight clip space and create holes in shadows that the camera can see.
 	// Note: Temporarly removed as a constant value of 5 can be too large for our current scale
-	glm::mat4 projection = glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -depth, depth);
+	glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, halfProjSize, -depth, depth);
 
 	m_LightViewProjection = projection * view;
 }

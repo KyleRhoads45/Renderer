@@ -13,6 +13,8 @@ public:
 	static void Update();
 	static void SetActiveCamera(Camera* camera, Transform* transform);
     static void GetViewFrustrumPoints(FrustrumPoints& points, f32 zDist);
+	static f32 ViewFrustrumDiagonal(f32 zDist);
+	static glm::vec3 ViewFrustrumCenter(f32 zDist);
 	static glm::vec3 ActiveCamPos();
 	static glm::mat4 ActiveCamViewProjection();
 	static glm::mat4 ActiveCamView();
