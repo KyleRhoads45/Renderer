@@ -45,7 +45,7 @@ struct Transform {
 };
 
 struct LocalToWorld {
-    glm::mat4 matrix;
+    glm::mat4 matrix = glm::mat4(1.0f);
 
     Transform ToTransform() const;
     static LocalToWorld FromTransform(Transform& trans);

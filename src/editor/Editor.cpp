@@ -15,39 +15,50 @@
 #include "renderer/Renderer.h"
 #include "SceneCamera.h"
 #include "core/Primatives.h"
-#include "core/Serializer.h"
 #include "Editor.h"
 
-#include "renderer/ShadowMapper.h"
+#include "core/Input.h"
+#include "imgui/imgui_internal.h"
 
 void Editor::Init(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
 
 	ImGui::CreateContext();
-
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-	io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/Arial.ttf", 19, nullptr, io.Fonts->GetGlyphRangesDefault());
-
-	ImGui::StyleColorsDark();
-	ImGui::GetStyle().WindowMenuButtonPosition = ImGuiDir_None;
+	ApplyEditorStyle();
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init((char*)glGetString(GL_VERSION_4_6));
 
+	s_Window = window;
+	s_CurWindowSize = s_SceneWindowSize = { 0, 0 };
+	s_SelectionBuffer = FrameBuffer({0, 0}, FrameBuffer::RED_INTEGER);
 	s_SelectedEntity = Entity::Null();
-
-	s_SceneFrameBuffer = FrameBuffer(glm::i32vec2(600, 800), FrameBuffer::RGB);
-	Renderer::s_FrameBuffer = &s_SceneFrameBuffer;
-
 	CameraSystem::SetActiveCamera(&SceneCamera::s_Camera, &SceneCamera::s_Transform);
 	s_TransGizmos = new TransformGizmos();
 	s_ArrowMesh = Mesh::FromFile("Assets/Model/ArrowGizmo.fbx");
 }
 
-void Editor::Update() {
+void Editor::OnPreRenderUpdate() {
+	if (Input::OnKeyPress(GLFW_KEY_ESCAPE) && s_FullscreenEnabled) {
+		s_FullscreenEnabled = false;
+		s_CurWindowSize = s_SceneWindowSize;
+	}
+
+	if (s_CurWindowSize != Renderer::GetFrameBufferSize()) {
+		Renderer::ResizeFrameBuffer(s_CurWindowSize);
+	}
+	if (s_CurWindowSize != s_SelectionBuffer.Size()) {
+		s_SelectionBuffer.Resize(s_CurWindowSize);
+	}
+	
+	SceneCamera::Update(s_CurWindowSize);
+}
+
+void Editor::OnPostRenderUpdate() {
+	if (s_FullscreenEnabled) {
+		Renderer::PresentFrame();
+		return;
+	}
 	DrawEditor();
 }
 
@@ -58,8 +69,8 @@ void Editor::DrawEditor() {
 	ImGui::NewFrame();
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-	//ImGui::ShowDemoWindow();
-
+	// ImGui::ShowDemoWindow();
+	
 	DrawMenuBar();
 	DrawScene();
 	DrawWorld();
@@ -67,13 +78,6 @@ void Editor::DrawEditor() {
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-		GLFWwindow* backupCurrentContext = glfwGetCurrentContext();
-		ImGui::UpdatePlatformWindows();
-		ImGui::RenderPlatformWindowsDefault();
-		glfwMakeContextCurrent(backupCurrentContext);
-	}
 }
 
 void Editor::DrawMenuBar() {
@@ -95,16 +99,22 @@ void Editor::DrawScene() {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	
 	ImGui::Begin("Scene");
+
+	if (ImGui::Button("Fullscreen")) {
+		OnFullScreen();
+		return;
+	}
+	
 	ImGui::BeginChild("Scene Frame Buffer");
 
-	const ImVec2 windowSize = ImGui::GetWindowSize();
-	const glm::i32vec2 sceneWindowSize(windowSize.x, windowSize.y);
+	ImVec2 windowSize = ImGui::GetWindowSize();
+	s_CurWindowSize = s_SceneWindowSize = { windowSize.x, windowSize.y };
 
 	const glm::vec2 sceneWindowPos = glm::vec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y);
 	const ImVec2 mousePos = ImGui::GetMousePos();
 
 	const glm::vec2 minScreenPos(sceneWindowPos.x, sceneWindowPos.y);
-	const glm::vec2 maxScreenPos(sceneWindowPos.x + sceneWindowSize.x, sceneWindowPos.y + sceneWindowSize.y);
+	const glm::vec2 maxScreenPos(sceneWindowPos.x + s_SceneWindowSize.x, sceneWindowPos.y + s_SceneWindowSize.y);
 
 	const bool mouseXInsideScene = mousePos.x >= minScreenPos.x && mousePos.x <= maxScreenPos.x;
 	const bool mouseYInsideScene = mousePos.y >= minScreenPos.y && mousePos.y <= maxScreenPos.y;
@@ -118,15 +128,9 @@ void Editor::DrawScene() {
 	}
 
 	static Shader s_SelectionShader("src/shaders/Selection.vert", "src/shaders/Selection.frag");
-	static FrameBuffer s_SelectionBuffer(sceneWindowSize, FrameBuffer::RED_INTEGER);
 
 	if (mouseXInsideScene && mouseYInsideScene && leftMouseClicked) {
-
-		if (sceneWindowSize != s_SelectionBuffer.Size()) {
-			s_SelectionBuffer.Resize(sceneWindowSize);
-		}
-
-		s_SelectionBuffer.Bind();
+		s_SelectionBuffer.BeginDraw();
 		s_SelectionBuffer.RedIntegerFill(-1);
 
 		const auto view = View<LocalToWorld, MeshRenderer>();
@@ -144,10 +148,13 @@ void Editor::DrawScene() {
 			gizmoTrans.rotation = glm::quatLookAt(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
 
 			s_TransGizmos->NotifyStartDrag();
+
+			glDisable(GL_DEPTH_TEST);
 			s_TransGizmos->SelectionDraw(gizmoTrans.position, s_SelectionShader);
+			glEnable(GL_DEPTH_TEST);
 		}
 
-		const glm::vec2 pixelCoords(mousePos.x - sceneWindowPos.x, sceneWindowSize.y - (mousePos.y - sceneWindowPos.y));
+		const glm::vec2 pixelCoords(mousePos.x - sceneWindowPos.x, s_SceneWindowSize.y - (mousePos.y - sceneWindowPos.y));
 		const i32 possibleEntityId = s_SelectionBuffer.ReadPixel(pixelCoords);
 
 		if (possibleEntityId == -2 || possibleEntityId == -3 || possibleEntityId == -4) {
@@ -156,26 +163,12 @@ void Editor::DrawScene() {
 		}
 		else {
 			s_SelectedEntity = possibleEntityId >= 0 ? Registry::m_Entities[possibleEntityId] : Entity::Null();
+			s_ShowInspectorEnvironment = false;
 			gizmoId = 0;
 		}
 
-		s_SelectionBuffer.UnBind();
+		s_SelectionBuffer.EndDraw();
 	}
-
-	SceneCamera::Update(sceneWindowSize);
-	glViewport(0, 0, sceneWindowSize.x, sceneWindowSize.y);
-
-	if (sceneWindowSize != s_SceneFrameBuffer.Size()) {
-		s_SceneFrameBuffer.Resize(sceneWindowSize);
-	}
-		
-	Renderer::PerformShadowPass();
-	
-	Renderer::s_FrameBuffer = &s_SceneFrameBuffer;
-	s_SceneFrameBuffer.Bind();
-	
-	Renderer::PerformSkyboxPass();
-	Renderer::RenderScene();
 
 	static Mesh plane = Primatives::Plane();
 	static LocalToWorld planeLtw;
@@ -188,6 +181,9 @@ void Editor::DrawScene() {
 	// depthVisualizer.SetInt("depthMap", 0);
 	// Renderer::DrawMesh(plane, planeLtw, depthVisualizer);
 
+	Renderer::ResumeFrame();
+	glDisable(GL_DEPTH_TEST);
+
 	if (s_SelectedEntity != Entity::Null()) {
 		glm::vec3 gizmoPos = s_SelectedEntity.Get<LocalToWorld>().ToTransform().position;
 		s_TransGizmos->Draw(gizmoPos);
@@ -198,19 +194,32 @@ void Editor::DrawScene() {
 			s_SelectedEntity.Get<Transform>().position = invParentLTW * glm::vec4(movePos, 1.0f);
 		}
 	}
+	
+	glEnable(GL_DEPTH_TEST);
+	Renderer::EndFrame();
 
-	s_SceneFrameBuffer.UnBind();
-
-	auto frameBufferTexture = reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(s_SceneFrameBuffer.Texture()));
+	auto frameBufferTexture = reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(Renderer::FrameBufferTexture()));
 	ImGui::Image(frameBufferTexture, windowSize, ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::EndChild();
 	ImGui::End();
 
 	ImGui::PopStyleVar();
+
+	// if (s_SceneWindowSize != Renderer::GetFrameBufferSize()) {
+	// 	Renderer::ResizeFrameBuffer(s_SceneWindowSize);
+	// }
+	//
+	// if (s_SceneWindowSize != s_SelectionBuffer.Size()) {
+	// 	s_SelectionBuffer.Resize(s_SceneWindowSize);
+	// }
 }
 
 void Editor::DrawWorld() {
 	ImGui::Begin("World", 0, ImGuiWindowFlags_NoCollapse);
+
+	if (ImGui::Button("Environment")) {
+		s_ShowInspectorEnvironment = true;
+	}
 
 	auto rootView = View<LocalToWorld, Transform, Children>().Exclude<Parent>();
 	for (Entity& entity : rootView) {
@@ -236,6 +245,7 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 
 	if (ImGui::IsItemClicked()) {
 		s_SelectedEntity = entity;
+		s_ShowInspectorEnvironment = false;
 	}
 
 	if (open && !isLeaf) {
@@ -252,42 +262,47 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 void Editor::DrawInspector() {
 	ImGui::Begin("Inspector", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
-	static i32 shadowPcfWindowSize = Enviroment::Instance()->ShadowPcfWindowSize();
-	static i32 shadowPcfFilterSize = Enviroment::Instance()->ShadowPcfFilterSize();
-	static f32 shadowPcfFilterRadius = Enviroment::Instance()->ShadowPcfFilterRadius();
-	static f32 shadowStrength = Enviroment::Instance()->ShadowStrength();
-	
-	if (ImGui::SliderInt("Shadow PCF Window", &shadowPcfWindowSize, 0, 100)) {
-		Enviroment::Instance()->SetShadowPcf(shadowPcfWindowSize, shadowPcfFilterSize);
-	}
-	if (ImGui::SliderInt("Shadow PCF Filter", &shadowPcfFilterSize, 0, 100)) {
-		Enviroment::Instance()->SetShadowPcf(shadowPcfWindowSize, shadowPcfFilterSize);
-	}
-	if (ImGui::SliderFloat("Shadow PCF Radius", &shadowPcfFilterRadius, 0.00f, 10.00f, "%.01f")) {
-		Enviroment::Instance()->SetShadowPcfRadius(shadowPcfFilterRadius);
-	}
-	if (ImGui::SliderFloat("Shadow Strength", &shadowStrength, 0.0f, 1.0f, "%.01f")) {
-		Enviroment::Instance()->SetShadowStrength(shadowStrength);
-	}
-	
-	static float lightStrength;	
-	static float ambientStrength;	
-	ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 10.00f, "%.01f");
-	ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.00f, 10.00f, "%.01f");
+	if (s_ShowInspectorEnvironment) {
+		static i32 shadowPcfWindowSize = Enviroment::Instance()->ShadowPcfWindowSize();
+		static i32 shadowPcfFilterSize = Enviroment::Instance()->ShadowPcfFilterSize();
+		static f32 shadowPcfFilterRadius = Enviroment::Instance()->ShadowPcfFilterRadius();
+		static f32 shadowStrength = Enviroment::Instance()->ShadowStrength();
+		
+		if (ImGui::SliderInt("Shadow PCF Window", &shadowPcfWindowSize, 0, 100)) {
+			Enviroment::Instance()->SetShadowPcf(shadowPcfWindowSize, shadowPcfFilterSize);
+		}
+		if (ImGui::SliderInt("Shadow PCF Filter", &shadowPcfFilterSize, 0, 100)) {
+			Enviroment::Instance()->SetShadowPcf(shadowPcfWindowSize, shadowPcfFilterSize);
+		}
+		if (ImGui::SliderFloat("Shadow PCF Radius", &shadowPcfFilterRadius, 0.00f, 10.00f, "%.01f")) {
+			Enviroment::Instance()->SetShadowPcfRadius(shadowPcfFilterRadius);
+		}
+		if (ImGui::SliderFloat("Shadow Strength", &shadowStrength, 0.0f, 1.0f, "%.01f")) {
+			Enviroment::Instance()->SetShadowStrength(shadowStrength);
+		}
+		
+		static f32 lightStrength;	
+		static f32 ambientStrength;	
+		ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 10.00f, "%.01f");
+		ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.00f, 10.00f, "%.01f");
 
-	static f32 ambientColor[3];
-	ImGui::ColorPicker3("Ambient Color", ambientColor);
-	glm::vec3 ambient = glm::vec3(ambientColor[0], ambientColor[1], ambientColor[2]);
+		static f32 ambientColor[3];
+		ImGui::ColorPicker3("Ambient Color", ambientColor);
+		glm::vec3 ambient = glm::vec3(ambientColor[0], ambientColor[1], ambientColor[2]);
+		
+		static f32 lightColor[3];
+		ImGui::ColorPicker3("Light Color", lightColor);
+		glm::vec3 light = glm::vec3(lightColor[0], lightColor[1], lightColor[2]);
+
+		Enviroment::Instance()->SetLightStrength(lightStrength);
+		Enviroment::Instance()->SetAmbientStrength(ambientStrength);
+		Enviroment::Instance()->SetAmbientColor(ambient);
+		Enviroment::Instance()->SetLightColor(light);
+
+		ImGui::End();
+		return;
+	}
 	
-	static f32 lightColor[3];
-	ImGui::ColorPicker3("Light Color", lightColor);
-	glm::vec3 light = glm::vec3(lightColor[0], lightColor[1], lightColor[2]);
-
-	Enviroment::Instance()->SetLightStrength(lightStrength);
-	Enviroment::Instance()->SetAmbientStrength(ambientStrength);
-	Enviroment::Instance()->SetAmbientColor(ambient);
-	Enviroment::Instance()->SetLightColor(light);
-
 	if (s_SelectedEntity != Entity::Null()) {
 		std::string entityName = "Selected Entity ";
 		entityName.append(std::to_string(s_SelectedEntity.Id()));
@@ -311,9 +326,10 @@ void Editor::DrawInspector() {
 				ImGui::Separator();
 				ImGui::Text(material->GetFilePath().c_str());
 
-				float roughness = material->GetRoughness();
-				float specularity = material->GetSpecularity();
-				float metallicness = material->GetMetallicness();
+				f32 roughness = material->GetRoughness();
+				f32 specularity = material->GetSpecularity();
+				f32 metallicness = material->GetMetallicness();
+				f32 alphaCutoff = material->GetAlphaCutoff();
 
 				if (ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.00f, "%.01f")) {
 					material->SetRoughness(roughness);		
@@ -327,6 +343,24 @@ void Editor::DrawInspector() {
 					material->SetMetallicness(metallicness);
 					WriteMaterialToFile(*material);
 				}
+				if (ImGui::SliderFloat("Alpha Cutoff", &alphaCutoff, 0.0f, 1.0f, "%.01f")) {
+					material->SetAlphaCutoff(alphaCutoff);
+					WriteMaterialToFile(*material);
+				}
+
+				const char* renderOrders[] = { "Opaque", "Cutout", "Transparent" };
+				const i32 curOrderIndex = static_cast<i32>(material->GetRenderOrder());
+				const char* previewOrder = renderOrders[curOrderIndex];
+				
+				if (ImGui::BeginCombo("Render Order", previewOrder, ImGuiComboFlags_None)) {
+					for (i32 i = 0; i < IM_ARRAYSIZE(renderOrders); i++) {
+						if (ImGui::Selectable(renderOrders[i])) {
+							material->SetRenderOrder(static_cast<RenderOrder>(i));
+							WriteMaterialToFile(*material);
+						}
+					}
+					ImGui::EndCombo();
+				}
 			}
 		}
 	}
@@ -338,3 +372,84 @@ void Editor::WriteMaterialToFile(const Material& material) {
 	serializer.Serialize(material);
 	serializer.WriteToFile(material.GetFilePath());
 }
+
+void Editor::OnFullScreen() {
+	i32 width, height;
+	glfwGetWindowSize(s_Window, &width, &height);
+	s_CurWindowSize = { width, height };
+	s_FullscreenEnabled = true;
+}
+
+void Editor::ApplyEditorStyle() {
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+	io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/Arial.ttf", 19, nullptr, io.Fonts->GetGlyphRangesDefault());
+
+	ImGui::StyleColorsDark();
+	ImGui::GetStyle().WindowMenuButtonPosition = ImGuiDir_None;
+
+	ImGuiStyle& style = ImGui::GetStyle();
+	style.WindowBorderSize = 0.0f;
+	style.FramePadding = ImVec2(20.0f, 8.0f);
+	style.FrameBorderSize = 1.0f;
+
+	ImVec4* colors = style.Colors;
+	colors[ImGuiCol_Text]                   = ImVec4(0.78f, 0.78f, 0.81f, 1.00f);
+	colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+	colors[ImGuiCol_WindowBg]               = ImVec4(0.03f, 0.03f, 0.04f, 1.00f);
+	colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_PopupBg]                = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_Border]                 = ImVec4(0.00f, 0.00f, 0.00f, 0.50f);
+	colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_FrameBg]                = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_FrameBgActive]          = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_TitleBg]                = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
+	colors[ImGuiCol_TitleBgActive]          = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+	colors[ImGuiCol_MenuBarBg]              = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+	colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.26f, 0.26f, 0.26f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.33f, 0.33f, 0.33f, 1.00f);
+	colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.33f, 0.33f, 0.33f, 1.00f);
+	colors[ImGuiCol_CheckMark]              = ImVec4(0.00f, 0.19f, 0.75f, 1.00f);
+	colors[ImGuiCol_SliderGrab]             = ImVec4(0.00f, 0.19f, 0.75f, 1.00f);
+	colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.00f, 0.19f, 0.75f, 1.00f);
+	colors[ImGuiCol_Button]                 = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+	colors[ImGuiCol_ButtonHovered]          = ImVec4(0.16f, 0.17f, 0.20f, 1.00f);
+	colors[ImGuiCol_ButtonActive]           = ImVec4(0.11f, 0.11f, 0.12f, 1.00f);
+	colors[ImGuiCol_Header]                 = ImVec4(0.00f, 0.19f, 0.75f, 1.00f);
+	colors[ImGuiCol_HeaderHovered]          = ImVec4(0.16f, 0.17f, 0.20f, 1.00f);
+	colors[ImGuiCol_HeaderActive]           = ImVec4(0.00f, 0.19f, 0.75f, 1.00f);
+	colors[ImGuiCol_Separator]              = ImVec4(0.00f, 0.00f, 0.00f, 0.50f);
+	colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
+	colors[ImGuiCol_SeparatorActive]        = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+	colors[ImGuiCol_ResizeGrip]             = ImVec4(0.26f, 0.59f, 0.98f, 0.20f);
+	colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+	colors[ImGuiCol_Tab]                    = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_TabHovered]             = ImVec4(0.16f, 0.17f, 0.20f, 1.00f);
+	colors[ImGuiCol_TabActive]              = ImVec4(0.00f, 0.19f, 0.74f, 1.00f);
+	colors[ImGuiCol_TabUnfocused]           = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_TabUnfocusedActive]     = ImVec4(0.03f, 0.03f, 0.04f, 1.00f);
+	colors[ImGuiCol_DockingPreview]         = ImVec4(0.26f, 0.59f, 0.98f, 0.70f);
+	colors[ImGuiCol_DockingEmptyBg]         = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+	colors[ImGuiCol_PlotLines]              = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+	colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+	colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+	colors[ImGuiCol_TableBorderStrong]      = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);
+	colors[ImGuiCol_TableBorderLight]       = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);
+	colors[ImGuiCol_TableRowBg]             = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+	colors[ImGuiCol_TableRowBgAlt]          = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+	colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	colors[ImGuiCol_DragDropTarget]         = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+	colors[ImGuiCol_NavHighlight]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+	colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+	colors[ImGuiCol_ModalWindowDimBg]       = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+}
+

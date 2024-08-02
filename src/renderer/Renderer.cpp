@@ -5,7 +5,6 @@
 #include "ShadowMapper.h"
 #include "core/CameraSystem.h"
 #include "ecs/Registry.h"
-#include "editor/Editor.h"
 #include "ecs/View.h"
 #include "Renderer.h"
 
@@ -21,9 +20,13 @@ void Renderer::Init() {
 	for (i32 i = 0; i < hardwareTextureUnitCount; i++) {
 		glEnable(GL_TEXTURE0 + i);
 	}
+
+	s_FrameBuffer = FrameBuffer({960, 540}, FrameBuffer::SRGB);
 }
 
 void Renderer::RenderScene() {
+	DrawSkybox();
+	
 	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
 
     for (const auto entity : view) {
@@ -67,30 +70,33 @@ void Renderer::RenderScene() {
 	glDisable(GL_BLEND);
 }
 
-void Renderer::PerformAllPrePass() {
-	PerformShadowPass();
-	PerformSkyboxPass();
-}
-
-void Renderer::PerformShadowPass() {
+void Renderer::NewFrame() {
 	ShadowMapper::PerformShadowPass();
+	s_FrameBuffer.BeginDraw();
 }
 
-void Renderer::PerformSkyboxPass() {
-	static Mesh skyboxMesh = Primatives::Cube(true);
-	static Shader skyboxShader = Shader("src/shaders/Skybox.vert", "src/shaders/Skybox.frag");
+void Renderer::ResumeFrame() {
+	s_FrameBuffer.ResumeDraw();
+}
 
-	glDepthMask(GL_FALSE);
-	glDepthFunc(GL_LEQUAL);
+void Renderer::EndFrame() {
+	s_FrameBuffer.EndDraw();
+}
 
-	skyboxShader.Bind();
-	Enviroment::Instance()->BindSkybox(0);
+void Renderer::PresentFrame() {
+	s_FrameBuffer.BlitToScreen();
+}
 
-	glBindVertexArray(skyboxMesh.m_Vao);
-	glDrawElements(GL_TRIANGLES, skyboxMesh.m_NumIndices, GL_UNSIGNED_INT, nullptr);
+u32 Renderer::FrameBufferTexture() {
+	return s_FrameBuffer.Texture();
+}
 
-	glDepthFunc(GL_LESS);
-	glDepthMask(GL_TRUE);
+glm::i32vec2 Renderer::GetFrameBufferSize() {
+	return s_FrameBuffer.Size();
+}
+
+void Renderer::ResizeFrameBuffer(const glm::i32vec2& size) {
+	s_FrameBuffer.Resize(size);
 }
 
 void Renderer::DrawMesh(const MeshRenderer& meshRenderer, const LocalToWorld& toWorld, Shader& shader) {
@@ -136,4 +142,21 @@ void Renderer::DebugDrawPoint(const glm::vec3 point) {
 
 	glBindVertexArray(cube.m_Vao);
 	glDrawElements(GL_TRIANGLES, cube.m_NumIndices, GL_UNSIGNED_INT, nullptr);
+}
+
+void Renderer::DrawSkybox() {
+	static Mesh skyboxMesh = Primatives::Cube(true);
+	static Shader skyboxShader = Shader("src/shaders/Skybox.vert", "src/shaders/Skybox.frag");
+
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LEQUAL);
+
+	skyboxShader.Bind();
+	Enviroment::Instance()->BindSkybox(0);
+
+	glBindVertexArray(skyboxMesh.m_Vao);
+	glDrawElements(GL_TRIANGLES, skyboxMesh.m_NumIndices, GL_UNSIGNED_INT, nullptr);
+
+	glDepthFunc(GL_LESS);
+	glDepthMask(GL_TRUE);
 }

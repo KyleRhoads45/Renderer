@@ -33,9 +33,9 @@ public:
 	f32 GetMetallicness() const        { return m_Metallicness; }
 	f32 GetSpecularity() const         { return m_Specularity; }
 	
-	std::string GetAlbedoPath() const     { return m_AlbedoTexture->Path(); }
-	std::string GetNormalPath() const     { return m_NormalTexture->Path(); }
-	std::string GetMetalRoughPath() const { return m_MetalRoughTexture->Path(); }
+	std::string GetAlbedoPath() const     { return m_AlbedoTexture != nullptr ? m_AlbedoTexture->Path() : ""; }
+	std::string GetNormalPath() const     { return m_NormalTexture != nullptr ? m_NormalTexture->Path() : ""; }
+	std::string GetMetalRoughPath() const { return m_MetalRoughTexture != nullptr ? m_MetalRoughTexture->Path() : ""; }
 
 	void SetFilePath(const std::string& filePath) { m_FilePath = filePath; }
 	std::string GetFilePath() const { return m_FilePath; }

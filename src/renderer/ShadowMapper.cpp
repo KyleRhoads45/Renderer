@@ -66,12 +66,12 @@ void ShadowMapper::CalculateLightViewProjection() {
 	glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
 	glm::vec3 center = CameraSystem::ViewFrustrumCenter(m_ShadowDist);
 
-	// Make the light's view matrix move in texel size increments by snapping the frustrum center.
+	// Make the light's view matrix move in texel size increments by snapping the frustum center.
 	// This fixes the swimming effect when moving the camera around.
 	{
 		glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
 
-		// Convert camera frustrum center to light space so its as if we are viewing it from the lights perspective.
+		// Convert camera frustum center to light space so its as if we are viewing it from the lights perspective.
 		// Note: this is still in world space so its not always centered at origin. 
 		center = lightSpaceView * glm::vec4(center, 1.0f);
 
@@ -85,7 +85,7 @@ void ShadowMapper::CalculateLightViewProjection() {
 		center = glm::inverse(lightSpaceView) * glm::vec4(center, 1.0f);
 	}
 
-	// Create the light's view matrix with the view position being the center of the camera's frustrum.
+	// Create the light's view matrix with the view position being the center of the camera's frustum.
 	glm::mat4 view = glm::lookAt(center - lightDir, center, glm::vec3(0, 1, 0));
 
 	f32 halfProjSize = projSize / 2.0f;
@@ -93,7 +93,7 @@ void ShadowMapper::CalculateLightViewProjection() {
 	// When creating the light's projection matrix we extend the depth so that
 	// close, but out of view fragments of models don't get discarded by the 
 	// tight clip space and create holes in shadows that the camera can see.
-	// Note: Temporarly removed as a constant value of 5 can be too large for our current scale
+	// Note: Temporarily removed as a constant value of 5 can be too large for our current scale
 	glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, halfProjSize, -depth, depth);
 
 	m_LightViewProjection = projection * view;

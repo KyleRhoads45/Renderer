@@ -17,7 +17,7 @@ void Material::Bind(const LocalToWorld& toWorld) {
 	BindTextureIfExists("normalMap", m_NormalTexture, 1);
 	BindTextureIfExists("metallicRoughnessMap", m_MetalRoughTexture, 2);
 
-	bool alphaClippingEnabled = m_RenderOrder == RenderOrder::cutout;
+	bool alphaClippingEnabled = m_RenderOrder == RenderOrder::cutout || m_AlphaCutoff > 0.5f;
 	m_Shader.SetInt("alphaClippingEnabled", alphaClippingEnabled);
 	if (alphaClippingEnabled) {
 		m_Shader.SetFloat("alphaCutoff", m_AlphaCutoff);

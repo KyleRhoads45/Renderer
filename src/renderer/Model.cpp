@@ -1,5 +1,4 @@
 #include <filesystem>
-#include <iostream>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include "core/Base.h"

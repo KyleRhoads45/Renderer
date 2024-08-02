@@ -17,6 +17,7 @@
 #include "core/TransformSystem.h"
 #include "renderer/ShadowMapper.h"
 #include "ecs/Registry.h"
+#include "editor/SceneCamera.h"
 #include "editor/importers/ModelImporter.h"
 
 void SetupEnviroment();
@@ -52,15 +53,21 @@ int main() {
 	Renderer::Init();
 	Editor::Init(window);
 
-	//ModelImporter::Import("Assets/House/scene.gltf");
+	ModelImporter::Import("Assets/House/scene.gltf");
 	auto house = Model::Instantiate("Assets/House/scene.gltf.model");
 	house.Get<Transform>().scale = glm::vec3(0.01f);
+	// ModelImporter::Import("Assets/Demo/city.fbx");
+	// auto city = Model::Instantiate("Assets/Demo/city.fbx.model");
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
-		Editor::Update();
 		CameraSystem::Update();
 		TransformSystem::Update();
+		Editor::OnPreRenderUpdate();
+		Renderer::NewFrame();
+		Renderer::RenderScene();
+		Renderer::EndFrame();
+		Editor::OnPostRenderUpdate();
 		glfwSwapBuffers(window);
 	}
 
@@ -75,10 +82,13 @@ void SetupEnviroment() {
 	};
 	Enviroment::Instance()->SetSkyBox(CubeMap::Load(textures));
 
+	glm::vec3 lightColor(1.0f);
+
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
 	Enviroment::Instance()->SetLightDir(lightDir);
-	Enviroment::Instance()->SetLightStrength(0.01f);
+	Enviroment::Instance()->SetLightColor(lightColor);
+	Enviroment::Instance()->SetLightStrength(5.0f);
 	Enviroment::Instance()->SetAmbientStrength(0.0f);
 
-	ShadowMapper::Init(4096, 1.5f);
+	ShadowMapper::Init(4096, 2.0f);
 }

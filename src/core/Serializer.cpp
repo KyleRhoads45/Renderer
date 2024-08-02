@@ -100,7 +100,7 @@ void Serializer::Deserialize(const std::string& file, Material& material) {
 		Ref<Texture> normal = Texture::Load(normalTextureFile, Texture::Type::NormalMap);
 		material.SetNormalTexture(normal);
 	}
-
+	
 	if (!metalRoughTextureNode.IsNull()) {
 		const auto& metalRoughTextureFile = metalRoughTextureNode.as<std::string>();
 		Ref<Texture> metalRough = Texture::Load(metalRoughTextureFile, Texture::Type::Default);

@@ -179,7 +179,7 @@ void main() {
     float mappedMetallic = metallic;
     float mappedRoughness = roughness;
     if (metallicRoughnessMapEnabled) {
-        vec3 metalRoughness = texture(metallicRoughnessMap, textureCoord).rgb;
+        vec4 metalRoughness = texture(metallicRoughnessMap, textureCoord).rgba;
         mappedMetallic = metalRoughness.b;
         mappedRoughness = metalRoughness.g;
     }

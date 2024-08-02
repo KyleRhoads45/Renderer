@@ -12,7 +12,7 @@ FrameBuffer::FrameBuffer(glm::i32vec2 size, Format format)
 	glBindTexture(GL_TEXTURE_2D, m_Texture);
 
 	switch (m_Format) {
-		case RGB:
+		case SRGB:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, NULL);
 			break;
 		case RED_INTEGER:
@@ -32,7 +32,7 @@ FrameBuffer::FrameBuffer(glm::i32vec2 size, Format format)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBuffer::Bind() {
+void FrameBuffer::BeginDraw() {
 	i32 viewportDimensions[4];
 	glGetIntegerv(GL_VIEWPORT, viewportDimensions);
 	m_PrevViewportSize.x = viewportDimensions[2];
@@ -44,29 +44,51 @@ void FrameBuffer::Bind() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void FrameBuffer::UnBind() const {
+void FrameBuffer::ResumeDraw() {
+	i32 viewportDimensions[4];
+	glGetIntegerv(GL_VIEWPORT, viewportDimensions);
+	m_PrevViewportSize.x = viewportDimensions[2];
+	m_PrevViewportSize.y = viewportDimensions[3];
+
+	glViewport(0, 0, m_Size.x, m_Size.y);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_Fbo);
+}
+
+void FrameBuffer::EndDraw() const {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, m_PrevViewportSize.x, m_PrevViewportSize.y);
+}
+
+void FrameBuffer::BindTexture(const i32 textureUnit) const {
+	glActiveTexture(GL_TEXTURE0 + textureUnit);
+	glBindTexture(GL_TEXTURE_2D, m_Texture);
 }
 
 void FrameBuffer::RedIntegerFill(const i32 fillValue) const {
 	glClearTexImage(m_Texture, 0, GL_RED_INTEGER, GL_INT, &fillValue);
 }
 
-void FrameBuffer::Resize(const glm::i32vec2 size) {
+void FrameBuffer::Resize(const glm::i32vec2& size) {
 	m_Size = size;
 	m_DepthTexture.Resize(size);
 
 	glBindTexture(GL_TEXTURE_2D, m_Texture);
 	switch (m_Format) {
-		case RGB:
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, nullptr);
+		case SRGB:
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, nullptr);
 			break;
 		case RED_INTEGER:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, m_Size.x, m_Size.y, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, nullptr);
 			break;
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void FrameBuffer::BlitToScreen() const {
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_Fbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBlitFramebuffer(0, 0, m_Size.x, m_Size.y, 0, 0, m_Size.x, m_Size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 i32 FrameBuffer::ReadPixel(const glm::i32vec2& pixelCoord) const {
