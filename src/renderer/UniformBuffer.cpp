@@ -34,7 +34,7 @@ void UniformBuffer::FinishedRegistering() {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void UniformBuffer::SubBufferData(const std::string& variable, void* data) {
+void UniformBuffer::SubBufferData(const std::string& variable, const void* data) {
 	VariableData varData = m_StartOffsetLookUp[variable];
 
 	glBindBuffer(GL_UNIFORM_BUFFER, m_Id);

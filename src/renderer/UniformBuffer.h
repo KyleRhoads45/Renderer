@@ -21,7 +21,7 @@ public:
 	~UniformBuffer();
 	void Register(const std::string& variable, u32 sizeInBytes);
 	void FinishedRegistering();
-	void SubBufferData(const std::string& variable, void* data);
+	void SubBufferData(const std::string& variable, const void* data);
 private:
 	void MoveSizeToNextOpenChunk();
 

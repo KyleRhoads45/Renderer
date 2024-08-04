@@ -125,34 +125,50 @@ float GetShadowBias(float depth) {
     return slopeFactor * slope + bias;
 }
 
+// Applies randomized disc sampling and returns 0.0f if frag is in shadow, 1.0f otherwise.
+float GetShadowValue(ivec3 offsetCoord, vec3 clipPos, vec2 texelSize) {
+    vec2 offset = texelFetch(shadowPcfMap, offsetCoord, 0).rg * pcfFilterRadius;
+    vec2 shadowCoord = clipPos.xy + (offset * texelSize);
+    float shadowMapDepth = texture(shadowMap, shadowCoord).r;
+    float bias = GetShadowBias(shadowMapDepth);
+    return clipPos.z > shadowMapDepth + bias ? 0.0f : 1.0f;
+}
+
 float CalculateShadow() {
     // Perform perspective divide manually to get clip coords
     vec3 clipPos = (lightFragPos / lightFragPos.w).xyz;
     
-    // Convert the coordinate from clip space [-1, 1]
-    // to the shadow depth map range [0, 1]
+    // Convert the coordinate from clip space [-1, 1] to the shadow depth map range [0, 1]
     clipPos = clipPos * 0.5f + 0.5f;
     
+    // If the clip depth is beyond the shadow map depth, we don't want to shadow the fragment
     if (clipPos.z > 1.0f) {
         return 1.0f;
     }
     
     float shadow = 0.0f;
-    float bias = mix(0.005f, 0.0f, dot(modelNormal, -lightDir));
-    
     vec2 texelSize = 1.0f / textureSize(shadowMap, 0);
+    vec2 offsetCoordYZ = mod(gl_FragCoord.xy, vec2(pcfWindowSize));
+    ivec3 offsetCoord = ivec3(0, offsetCoordYZ);
     
-    vec2 yz = mod(gl_FragCoord.xy, vec2(pcfWindowSize));
-    ivec3 offsetCoord = ivec3(0, yz);
-    
-    int texelsPerFilter = pcfFilterSize * pcfFilterSize;
-    for (int i = 0; i < texelsPerFilter; i++) {
+    // Sum shadow values around the outermost points of the PCF disc
+    for (int i = 0; i < pcfFilterSize; i++) {
         offsetCoord.x = i;
-        vec2 offset = texelFetch(shadowPcfMap, offsetCoord, 0).rg * pcfFilterRadius;
-        vec2 shadowCoord = clipPos.xy + (offset * texelSize);
-        float shadowMapDepth = texture(shadowMap, shadowCoord).r;
-        float bias = GetShadowBias(shadowMapDepth);
-        shadow += clipPos.z > shadowMapDepth + bias ? 0.0f : 1.0f; 
+        shadow += GetShadowValue(offsetCoord, clipPos, texelSize);
+    }
+    
+    // Check to see if the outer ring is fully in shadow or fully out of shadow.
+    // If either is true, then we can stop processing
+    float outerShadowRing = shadow / pcfFilterSize;
+    if (outerShadowRing == 0.0f || outerShadowRing == 1.0f) {
+        return outerShadowRing;
+    }
+    
+    // Continue PCF'ing the remaining disc sample points 
+    int texelsPerFilter = pcfFilterSize * pcfFilterSize;
+    for (int i = pcfFilterSize; i < texelsPerFilter; i++) {
+        offsetCoord.x = i;
+        shadow += GetShadowValue(offsetCoord, clipPos, texelSize);
     }
 
     return shadow / texelsPerFilter;

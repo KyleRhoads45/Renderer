@@ -72,15 +72,15 @@ void Renderer::RenderScene() {
 
 void Renderer::NewFrame() {
 	ShadowMapper::PerformShadowPass();
-	s_FrameBuffer.BeginDraw();
+	s_FrameBuffer.BindAndClear();
 }
 
 void Renderer::ResumeFrame() {
-	s_FrameBuffer.ResumeDraw();
+	s_FrameBuffer.Bind();
 }
 
 void Renderer::EndFrame() {
-	s_FrameBuffer.EndDraw();
+	s_FrameBuffer.Unbind();
 }
 
 void Renderer::PresentFrame() {

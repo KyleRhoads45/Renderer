@@ -42,8 +42,9 @@ std::vector<glm::vec2> PcfShadowTexture::CreateTexels() const {
     i32 index = 0;
 
     for (i32 i = 0; i < windowSqr; i++) {
-        for (u32 y = 0; y < m_FilterSize; y++) {
-            for (u32 x = 0; x < m_FilterSize; x++) {
+        // Reverse Y so outermost samples of disc are first in the filter
+        for (i32 y = m_FilterSize - 1; y >= 0; y--) {
+            for (i32 x = 0; x < m_FilterSize; x++) {
                 offsets[index] = CalculateSamplingPosition(x, y);
                 index++;
             }

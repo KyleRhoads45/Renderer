@@ -19,21 +19,18 @@ Enviroment::Enviroment() {
 	m_UniformBuffer->Register("pcfFilterRadius", sizeof(f32));
 	m_UniformBuffer->Register("shadowStrength", sizeof(f32));
 	m_UniformBuffer->FinishedRegistering();
-
-	SetShadowPcf(16, 10);
-	SetShadowPcfRadius(5.0f);
 }
 
-void Enviroment::SetLightViewProjection(glm::mat4& lightViewProjection) {
+void Enviroment::SetLightViewProjection(const glm::mat4& lightViewProjection) {
 	m_UniformBuffer->SubBufferData("lightViewProjection", &lightViewProjection);
 }
 
-void Enviroment::SetLightColor(glm::vec3& color) {
+void Enviroment::SetLightColor(const glm::vec3& color) {
 	m_UniformBuffer->SubBufferData("lightColor", &color);
 	m_LightColor = color;
 }
 
-void Enviroment::SetLightDir(glm::vec3& lightDir) {
+void Enviroment::SetLightDir(const glm::vec3& lightDir) {
 	m_UniformBuffer->SubBufferData("lightDir", &lightDir);
 	m_LightDir = lightDir;
 }
@@ -43,7 +40,7 @@ void Enviroment::SetLightStrength(f32 lightStrength) {
 	m_LightStrength = lightStrength;
 }
 
-void Enviroment::SetAmbientColor(glm::vec3& color) {
+void Enviroment::SetAmbientColor(const glm::vec3& color) {
 	m_UniformBuffer->SubBufferData("ambientColor", &color);
 	m_AmbientColor = color;
 }

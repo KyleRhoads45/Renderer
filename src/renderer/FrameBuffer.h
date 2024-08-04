@@ -1,5 +1,4 @@
 #pragma once
-#include "Bounds.h"
 #include "core/Base.h"
 #include "DepthTexture.h"
 
@@ -10,9 +9,9 @@ public:
 	FrameBuffer() = default;
 	FrameBuffer(glm::i32vec2 size, Format format);
 	
-	void BeginDraw();
-	void ResumeDraw();
-	void EndDraw() const;
+	void BindAndClear();
+	void Bind();
+	void Unbind() const;
 	
 	void BindTexture(const i32 textureUnit) const;
 	void RedIntegerFill(i32 fillValue) const;

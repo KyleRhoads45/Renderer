@@ -130,7 +130,7 @@ void Editor::DrawScene() {
 	static Shader s_SelectionShader("src/shaders/Selection.vert", "src/shaders/Selection.frag");
 
 	if (mouseXInsideScene && mouseYInsideScene && leftMouseClicked) {
-		s_SelectionBuffer.BeginDraw();
+		s_SelectionBuffer.BindAndClear();
 		s_SelectionBuffer.RedIntegerFill(-1);
 
 		const auto view = View<LocalToWorld, MeshRenderer>();
@@ -167,7 +167,7 @@ void Editor::DrawScene() {
 			gizmoId = 0;
 		}
 
-		s_SelectionBuffer.EndDraw();
+		s_SelectionBuffer.Unbind();
 	}
 
 	static Mesh plane = Primatives::Plane();
@@ -281,16 +281,18 @@ void Editor::DrawInspector() {
 			Enviroment::Instance()->SetShadowStrength(shadowStrength);
 		}
 		
-		static f32 lightStrength;	
-		static f32 ambientStrength;	
+		static f32 lightStrength = Enviroment::Instance()->LightStrength();	
+		static f32 ambientStrength = Enviroment::Instance()->AmbientStrength();;	
 		ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 10.00f, "%.01f");
 		ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.00f, 10.00f, "%.01f");
 
-		static f32 ambientColor[3];
+		static glm::vec3 initAmbientColor = Enviroment::Instance()->AmbientColor();
+		static f32 ambientColor[3] = { initAmbientColor.x, initAmbientColor.y, initAmbientColor.z };
 		ImGui::ColorPicker3("Ambient Color", ambientColor);
 		glm::vec3 ambient = glm::vec3(ambientColor[0], ambientColor[1], ambientColor[2]);
 		
-		static f32 lightColor[3];
+		static glm::vec3 initLightColor = Enviroment::Instance()->LightColor();
+		static f32 lightColor[3] = { initLightColor.x, initLightColor.y, initLightColor.z };
 		ImGui::ColorPicker3("Light Color", lightColor);
 		glm::vec3 light = glm::vec3(lightColor[0], lightColor[1], lightColor[2]);
 

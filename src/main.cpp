@@ -82,13 +82,16 @@ void SetupEnviroment() {
 	};
 	Enviroment::Instance()->SetSkyBox(CubeMap::Load(textures));
 
-	glm::vec3 lightColor(1.0f);
-
 	glm::vec3 lightDir = glm::normalize(glm::vec3(0.33, -0.33, -0.33));
 	Enviroment::Instance()->SetLightDir(lightDir);
-	Enviroment::Instance()->SetLightColor(lightColor);
+	Enviroment::Instance()->SetLightColor({1.0f, 1.0f, 1.0f});
 	Enviroment::Instance()->SetLightStrength(5.0f);
-	Enviroment::Instance()->SetAmbientStrength(0.0f);
+	Enviroment::Instance()->SetAmbientColor({0.130f, 0.155f, 0.186f});
+	Enviroment::Instance()->SetAmbientStrength(5.5f);
 
+	Enviroment::Instance()->SetShadowPcf(16, 10);
+	Enviroment::Instance()->SetShadowPcfRadius(5.0f);
+	Enviroment::Instance()->SetShadowStrength(0.8f);
+	
 	ShadowMapper::Init(4096, 2.0f);
 }

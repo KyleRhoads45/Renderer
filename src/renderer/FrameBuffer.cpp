@@ -32,19 +32,12 @@ FrameBuffer::FrameBuffer(glm::i32vec2 size, Format format)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBuffer::BeginDraw() {
-	i32 viewportDimensions[4];
-	glGetIntegerv(GL_VIEWPORT, viewportDimensions);
-	m_PrevViewportSize.x = viewportDimensions[2];
-	m_PrevViewportSize.y = viewportDimensions[3];
-
-	glViewport(0, 0, m_Size.x, m_Size.y);
-	glBindFramebuffer(GL_FRAMEBUFFER, m_Fbo);
-
+void FrameBuffer::BindAndClear() {
+	Bind();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void FrameBuffer::ResumeDraw() {
+void FrameBuffer::Bind() {
 	i32 viewportDimensions[4];
 	glGetIntegerv(GL_VIEWPORT, viewportDimensions);
 	m_PrevViewportSize.x = viewportDimensions[2];
@@ -54,7 +47,7 @@ void FrameBuffer::ResumeDraw() {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_Fbo);
 }
 
-void FrameBuffer::EndDraw() const {
+void FrameBuffer::Unbind() const {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, m_PrevViewportSize.x, m_PrevViewportSize.y);
 }
