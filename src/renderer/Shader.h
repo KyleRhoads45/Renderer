@@ -11,6 +11,7 @@ public:
     void Bind() const;
     void SetInt(const std::string& name, i32 num);
     void SetFloat(const std::string& name, f32 num);
+    void SetVec2(const std::string& name, const glm::vec2& vec);
     void SetVec3(const std::string& name, const glm::vec3& vec);
     void SetVec4(const std::string& name, const glm::vec4& vec);
     void SetMat4(const std::string& name, const glm::mat4& mat4);

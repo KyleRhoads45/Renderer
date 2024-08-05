@@ -56,6 +56,7 @@ Entity Model::Instantiate(const char* importedModelFile) {
 
 		const auto& materialFiles = materialsNode.as<std::vector<std::string>>();
 		for (const std::string& materialFile : materialFiles) {
+			ASSERT(std::filesystem::exists(materialFile), materialFile);
 			Material* standardMaterial = Material::NewPbrMaterial();
 			Serializer::Deserialize(materialFile, *standardMaterial);
 			meshRenderer.materials.push_back(standardMaterial);

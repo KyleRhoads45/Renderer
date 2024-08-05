@@ -32,6 +32,7 @@ template<typename T1, typename T2>
 using Variant = std::variant<T1, T2>;
 
 #ifndef NDEBUG
+#include <iostream>
 #   define ASSERT(condition, message) \
     do { \
         if (! (condition)) { \

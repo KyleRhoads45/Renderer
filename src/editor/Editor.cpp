@@ -19,6 +19,7 @@
 
 #include "core/Input.h"
 #include "imgui/imgui_internal.h"
+#include "renderer/ShadowMapper.h"
 
 void Editor::Init(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
@@ -36,6 +37,7 @@ void Editor::Init(GLFWwindow* window) {
 	CameraSystem::SetActiveCamera(&SceneCamera::s_Camera, &SceneCamera::s_Transform);
 	s_TransGizmos = new TransformGizmos();
 	s_ArrowMesh = Mesh::FromFile("Assets/Model/ArrowGizmo.fbx");
+	s_ShowShadowMap = false;
 }
 
 void Editor::OnPreRenderUpdate() {
@@ -174,14 +176,20 @@ void Editor::DrawScene() {
 	static LocalToWorld planeLtw;
 	planeLtw.matrix = glm::mat4(1.0f);
 
-	static Shader depthVisualizer("src/shaders/DepthVisualizer.vert", "src/shaders/DepthVisualizer.frag");
-
-	// glActiveTexture(GL_TEXTURE0);
-	// ShadowMapper::m_ShadowMap.Bind();
-	// depthVisualizer.SetInt("depthMap", 0);
-	// Renderer::DrawMesh(plane, planeLtw, depthVisualizer);
-
 	Renderer::ResumeFrame();
+
+	if (Input::OnKeyPress(GLFW_KEY_M)) {
+		s_ShowShadowMap = !s_ShowShadowMap;		
+	}
+	
+	if (s_ShowShadowMap) {
+		static Shader depthVisualizer("src/shaders/DepthVisualizer.vert", "src/shaders/DepthVisualizer.frag");
+		glActiveTexture(GL_TEXTURE0);
+		ShadowMapper::m_ShadowMap.Bind(0);
+		depthVisualizer.SetInt("depthMap", 0);
+		Renderer::DrawMesh(plane, planeLtw, depthVisualizer);
+	}
+	
 	glDisable(GL_DEPTH_TEST);
 
 	if (s_SelectedEntity != Entity::Null()) {
@@ -204,14 +212,6 @@ void Editor::DrawScene() {
 	ImGui::End();
 
 	ImGui::PopStyleVar();
-
-	// if (s_SceneWindowSize != Renderer::GetFrameBufferSize()) {
-	// 	Renderer::ResizeFrameBuffer(s_SceneWindowSize);
-	// }
-	//
-	// if (s_SceneWindowSize != s_SelectionBuffer.Size()) {
-	// 	s_SelectionBuffer.Resize(s_SceneWindowSize);
-	// }
 }
 
 void Editor::DrawWorld() {
@@ -332,6 +332,7 @@ void Editor::DrawInspector() {
 				f32 specularity = material->GetSpecularity();
 				f32 metallicness = material->GetMetallicness();
 				f32 alphaCutoff = material->GetAlphaCutoff();
+				glm::vec2 tiling = material->GetTiling();
 
 				if (ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.00f, "%.01f")) {
 					material->SetRoughness(roughness);		
@@ -347,6 +348,17 @@ void Editor::DrawInspector() {
 				}
 				if (ImGui::SliderFloat("Alpha Cutoff", &alphaCutoff, 0.0f, 1.0f, "%.01f")) {
 					material->SetAlphaCutoff(alphaCutoff);
+					WriteMaterialToFile(*material);
+				}
+
+				ImGui::Text("Tiling");
+				if (ImGui::InputFloat("Tiling X", &tiling.x)) {
+					material->SetTiling(tiling);
+					WriteMaterialToFile(*material);
+				}
+				ImGui::SameLine();
+				if (ImGui::InputFloat("Tiling Y", &tiling.y)) {
+					material->SetTiling(tiling);
 					WriteMaterialToFile(*material);
 				}
 

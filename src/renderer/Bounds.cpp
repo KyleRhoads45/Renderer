@@ -28,3 +28,18 @@ Bounds::Bounds(const glm::vec3* points, const size_t size) {
 		}
 	}
 }
+
+f32 Bounds::MaxLength() const {
+	f32 max = XLength();
+	f32 ylen = YLength();
+	f32 zlen = ZLength();
+	
+	if (ylen > max) {
+		max = ylen;
+	}
+	if (zlen > max) {
+		max = zlen;
+	}
+
+	return max;
+}

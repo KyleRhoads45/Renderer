@@ -2,18 +2,6 @@
 #include "renderer/Material.h"
 #include "Serializer.h"
 
-YAML::Emitter& operator<<(YAML::Emitter& emitter, glm::vec3 vec3) {
-	emitter << YAML::Flow;
-	emitter << YAML::BeginSeq << vec3.x << vec3.y << vec3.z << YAML::EndSeq;
-	return emitter;
-}
-
-YAML::Emitter& operator<<(YAML::Emitter& emitter, glm::quat quat) {
-	emitter << YAML::Flow;
-	emitter << YAML::BeginSeq << quat.w << quat.x << quat.y << quat.z << YAML::EndSeq;
-	return emitter;
-}
-
 void Serializer::WriteToFile(const YAML::Emitter& emitter, const std::string& file) {
 	std::ofstream fout(file);
 	fout << emitter.c_str();
@@ -66,6 +54,7 @@ void Serializer::Serialize(const Material& material) {
 	m_Emitter << YAML::Key << "Metallicness" << YAML::Value << material.GetMetallicness();
 	m_Emitter << YAML::Key << "Roughness" << YAML::Value << material.GetRoughness();
 	m_Emitter << YAML::Key << "Specularity" << YAML::Value << material.GetSpecularity();
+	m_Emitter << YAML::Key << "Tiling" << YAML::Value << material.GetTiling();
 	m_Emitter << YAML::Key << "RenderOrder" << YAML::Value << static_cast<i32>(material.GetRenderOrder());
 	m_Emitter << YAML::EndMap;
 }
@@ -81,6 +70,7 @@ void Serializer::Deserialize(const std::string& file, Material& material) {
 	YAML::Node metallicnessNode = materialNode["Metallicness"];
 	YAML::Node roughnessNode = materialNode["Roughness"];
 	YAML::Node specularityNode = materialNode["Specularity"];
+	YAML::Node tilingNode = materialNode["Tiling"];
 	YAML::Node renderOrderNode = materialNode["RenderOrder"];
 
 	material.SetRenderOrder(static_cast<RenderOrder>(renderOrderNode.as<i32>()));
@@ -88,6 +78,7 @@ void Serializer::Deserialize(const std::string& file, Material& material) {
 	material.SetMetallicness(metallicnessNode.as<f32>());
 	material.SetRoughness(roughnessNode.as<f32>());
 	material.SetSpecularity(specularityNode.as<f32>());
+	material.SetTiling(tilingNode.as<glm::vec2>());
 
 	if (!albedoTextureNode.IsNull()) {
 		const auto& albedoTextureFile = albedoTextureNode.as<std::string>();

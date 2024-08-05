@@ -7,7 +7,7 @@
 
 Material::Material(Shader shader)
 	: m_Shader(std::move(shader)), m_RenderOrder(RenderOrder::opaque), m_AlphaCutoff(0.0f),
-	m_Metallicness(0.5f), m_Roughness(0.5f), m_Specularity(1.0f) { }
+	m_Metallicness(0.5f), m_Roughness(0.5f), m_Specularity(1.0f), m_Tiling(1.0f, 1.0f) { }
 
 void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.Bind();
@@ -26,6 +26,7 @@ void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.SetFloat("roughness", m_Roughness);
 	m_Shader.SetFloat("specularStrength", m_Specularity);
 	m_Shader.SetFloat("metallic", m_Metallicness);
+	m_Shader.SetVec2("tiling", m_Tiling);
 	
 	ShadowMapper::m_ShadowMap.Bind(3);
 	m_Shader.SetInt("shadowMap", 3);

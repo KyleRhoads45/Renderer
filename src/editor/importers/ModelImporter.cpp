@@ -55,6 +55,7 @@ std::vector<std::string> ModelImporter::CreateMaterialFiles(const aiScene* scene
 		serializer.WriteKeyValue("Metallicness", 0.5f);
 		serializer.WriteKeyValue("Roughness", 0.5f);
 		serializer.WriteKeyValue("Specularity", 1.0f);
+		serializer.WriteKeyValue("Tiling", glm::vec2(1.0f));
 		serializer.WriteKeyValue("RenderOrder", static_cast<i32>(RenderOrder::opaque));
 		serializer.EndMap();
 		serializer.WriteToFile(matFileName);

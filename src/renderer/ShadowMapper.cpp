@@ -7,6 +7,9 @@
 #include "ecs/View.h"
 #include "ShadowMapper.h"
 
+#include <iostream>
+#include <ostream>
+
 void ShadowMapper::Init(const u32 textureSize, const f32 shadowDist) {
 	m_ShadowMap = DepthTexture(textureSize, textureSize);
 	m_ShadowDist = shadowDist;
@@ -60,11 +63,10 @@ void ShadowMapper::PerformShadowPass() {
 }
 
 void ShadowMapper::CalculateLightViewProjection() {
-	f32 projSize = CameraSystem::ViewFrustrumDiagonal(m_ShadowDist);
-	f32 depth = projSize;
-	
+	f32 projSize = CameraSystem::ViewFrustumDiagonal(m_ShadowDist);
+
 	glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
-	glm::vec3 center = CameraSystem::ViewFrustrumCenter(m_ShadowDist);
+	glm::vec3 frustumCenter = CameraSystem::ActiveCamPos() + CameraSystem::ActiveCamForward() * (m_ShadowDist / 2.0f);
 
 	// Make the light's view matrix move in texel size increments by snapping the frustum center.
 	// This fixes the swimming effect when moving the camera around.
@@ -73,28 +75,28 @@ void ShadowMapper::CalculateLightViewProjection() {
 
 		// Convert camera frustum center to light space so its as if we are viewing it from the lights perspective.
 		// Note: this is still in world space so its not always centered at origin. 
-		center = lightSpaceView * glm::vec4(center, 1.0f);
+		frustumCenter = lightSpaceView * glm::vec4(frustumCenter, 1.0f);
 
 		// Snap the center to the shadow texel grid in world space
 		glm::vec3 worldUnitsPerTexel = glm::vec3(projSize / m_TextureSize, projSize / m_TextureSize, 1.0f);
-		center /= worldUnitsPerTexel;
-		center = glm::floor(center);
-		center *= worldUnitsPerTexel;
+		frustumCenter /= worldUnitsPerTexel;
+		frustumCenter = glm::floor(frustumCenter);
+		frustumCenter *= worldUnitsPerTexel;
 
 		// Transform it back into world space so its projected properly
-		center = glm::inverse(lightSpaceView) * glm::vec4(center, 1.0f);
+		frustumCenter = glm::inverse(lightSpaceView) * glm::vec4(frustumCenter, 1.0f);
 	}
 
 	// Create the light's view matrix with the view position being the center of the camera's frustum.
-	glm::mat4 view = glm::lookAt(center - lightDir, center, glm::vec3(0, 1, 0));
+	glm::mat4 view = glm::lookAt(frustumCenter - lightDir, frustumCenter, glm::vec3(0, 1, 0));
 
 	f32 halfProjSize = projSize / 2.0f;
 
 	// When creating the light's projection matrix we extend the depth so that
 	// close, but out of view fragments of models don't get discarded by the 
 	// tight clip space and create holes in shadows that the camera can see.
-	// Note: Temporarily removed as a constant value of 5 can be too large for our current scale
-	glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, halfProjSize, -depth, depth);
+	constexpr f32 depthScaler = 2.0f;
+	glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, halfProjSize, -projSize * depthScaler, projSize);
 
 	m_LightViewProjection = projection * view;
 }

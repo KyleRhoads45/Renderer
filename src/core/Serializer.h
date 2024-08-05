@@ -1,6 +1,5 @@
 #pragma once
 #include <yaml-cpp/yaml.h>
-#include "ecs/Registry.h"
 #include "Components.h"
 
 class Material;
@@ -31,6 +30,24 @@ private:
 	YAML::Emitter m_Emitter;
 };
 
+inline YAML::Emitter& operator<<(YAML::Emitter& emitter, glm::vec2 vec2) {
+	emitter << YAML::Flow;
+	emitter << YAML::BeginSeq << vec2.x << vec2.y << YAML::EndSeq;
+	return emitter;
+}
+
+inline YAML::Emitter& operator<<(YAML::Emitter& emitter, glm::vec3 vec3) {
+	emitter << YAML::Flow;
+	emitter << YAML::BeginSeq << vec3.x << vec3.y << vec3.z << YAML::EndSeq;
+	return emitter;
+}
+
+inline YAML::Emitter& operator<<(YAML::Emitter& emitter, glm::quat quat) {
+	emitter << YAML::Flow;
+	emitter << YAML::BeginSeq << quat.w << quat.x << quat.y << quat.z << YAML::EndSeq;
+	return emitter;
+}
+
 template<typename T> 
 void Serializer::WriteKeyValue(const std::string& key, T& value) {
 	m_Emitter << YAML::Key << key << YAML::Value << value;
@@ -42,10 +59,25 @@ void Serializer::WriteKeyValue(const std::string& key, T&& value) {
 }
 
 namespace YAML {
+
+	template<>
+	struct convert<glm::vec2> {
+		static Node encode(const glm::vec2 rhs) {
+			Node node;
+			node.push_back(rhs.x);
+			node.push_back(rhs.y);
+			return node;
+		}
+
+		static bool decode(const Node& node, glm::vec2& rhs) {
+			rhs.x = node[0].as<f32>();
+			rhs.y = node[1].as<f32>();
+			return true;
+		}
+	};
 	
 	template<>
 	struct convert<glm::vec3> {
-		
 		static Node encode(const glm::vec3& rhs) {
 			Node node;
 			node.push_back(rhs.x);
@@ -64,7 +96,6 @@ namespace YAML {
 	
 	template<>
 	struct convert<glm::quat> {
-		
 		static Node encode(const glm::quat& rhs) {
 			Node node;
 			node.push_back(rhs.w);

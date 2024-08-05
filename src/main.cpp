@@ -53,11 +53,9 @@ int main() {
 	Renderer::Init();
 	Editor::Init(window);
 
-	ModelImporter::Import("Assets/House/scene.gltf");
-	auto house = Model::Instantiate("Assets/House/scene.gltf.model");
-	house.Get<Transform>().scale = glm::vec3(0.01f);
-	// ModelImporter::Import("Assets/Demo/city.fbx");
-	// auto city = Model::Instantiate("Assets/Demo/city.fbx.model");
+	// ModelImporter::Import("Assets/MedievalVillage/MedievalVillage.fbx");
+	auto house = Model::Instantiate("Assets/MedievalVillage/MedievalVillage.fbx.model");
+	house.Get<Transform>().scale = glm::vec3(0.001f);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
@@ -93,5 +91,5 @@ void SetupEnviroment() {
 	Enviroment::Instance()->SetShadowPcfRadius(5.0f);
 	Enviroment::Instance()->SetShadowStrength(0.8f);
 	
-	ShadowMapper::Init(4096, 2.0f);
+	ShadowMapper::Init(8192, 3.5f);
 }

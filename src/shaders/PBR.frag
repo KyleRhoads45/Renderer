@@ -22,7 +22,7 @@ uniform float alphaCutoff;
 uniform float roughness;
 uniform float specularStrength;
 uniform float metallic;
-
+uniform vec2 tiling;
 
 layout (std140, binding = 0) uniform camera {
 	vec3 camPos;
@@ -177,9 +177,10 @@ float CalculateShadow() {
 void main() {
     vec4 albedoColorWithAlpha = vec4(1.0f);
     vec3 albedoColor = vec3(1.0f);
+    vec2 tiledTexCoord = textureCoord * tiling;
     
     if (albedoMapEnabled) {
-        albedoColorWithAlpha = texture(albedoMap, textureCoord);
+        albedoColorWithAlpha = texture(albedoMap, tiledTexCoord);
         albedoColor = albedoColorWithAlpha.rgb;
         if (alphaClippingEnabled && albedoColorWithAlpha.a < alphaCutoff) {
             discard;
@@ -188,14 +189,14 @@ void main() {
 
     vec3 normal = modelNormal;
     if (normalMapEnabled) {
-        normal = normalize(texture(normalMap, textureCoord).rgb * 2.0f - 1.0f);
+        normal = normalize(texture(normalMap, tiledTexCoord).rgb * 2.0f - 1.0f);
         normal = normalize(tbn * normal);
     }
     
     float mappedMetallic = metallic;
     float mappedRoughness = roughness;
     if (metallicRoughnessMapEnabled) {
-        vec4 metalRoughness = texture(metallicRoughnessMap, textureCoord).rgba;
+        vec4 metalRoughness = texture(metallicRoughnessMap, tiledTexCoord).rgba;
         mappedMetallic = metalRoughness.b;
         mappedRoughness = metalRoughness.g;
     }

@@ -26,12 +26,14 @@ public:
 	void SetRoughness(const f32 roughness)             { m_Roughness = roughness; }
 	void SetSpecularity(const f32 specularity)         { m_Specularity = specularity; }
 	void SetMetallicness(const f32 metallicness)       { m_Metallicness = metallicness; }
+	void SetTiling(const glm::vec2& tiling)            { m_Tiling = tiling; }
 
 	RenderOrder GetRenderOrder() const { return m_RenderOrder; }
 	f32 GetAlphaCutoff() const         { return m_AlphaCutoff; } 
 	f32 GetRoughness() const           { return m_Roughness; }
 	f32 GetMetallicness() const        { return m_Metallicness; }
 	f32 GetSpecularity() const         { return m_Specularity; }
+	glm::vec2 GetTiling() const        { return m_Tiling; }
 	
 	std::string GetAlbedoPath() const     { return m_AlbedoTexture != nullptr ? m_AlbedoTexture->Path() : ""; }
 	std::string GetNormalPath() const     { return m_NormalTexture != nullptr ? m_NormalTexture->Path() : ""; }
@@ -58,4 +60,5 @@ private:
 	f32 m_Roughness;
 	f32 m_Specularity;
 	f32 m_Metallicness;
+	glm::vec2 m_Tiling;
 };

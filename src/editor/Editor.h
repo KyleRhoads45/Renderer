@@ -29,5 +29,6 @@ private:
 	inline static glm::i32vec2 s_SceneWindowSize;
 	inline static bool s_ShowInspectorEnvironment;
 	inline static bool s_FullscreenEnabled;
+	inline static bool s_ShowShadowMap;
 };
 
