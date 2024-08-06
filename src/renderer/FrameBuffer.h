@@ -4,10 +4,10 @@
 
 class FrameBuffer {
 public:
-	enum Format { SRGB, RED_INTEGER };
+	enum Format { HDR, SRGB, RED_INTEGER };
 	
 	FrameBuffer() = default;
-	FrameBuffer(glm::i32vec2 size, Format format);
+	FrameBuffer(const glm::i32vec2& size, const Format format);
 	
 	void BindAndClear();
 	void Bind();

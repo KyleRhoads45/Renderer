@@ -21,7 +21,9 @@ void Renderer::Init() {
 		glEnable(GL_TEXTURE0 + i);
 	}
 
-	s_FrameBuffer = FrameBuffer({960, 540}, FrameBuffer::SRGB);
+	m_HdrFrameBuffer = FrameBuffer({960, 540}, FrameBuffer::HDR);
+	m_SrgbFrameBuffer = FrameBuffer({960, 540}, FrameBuffer::SRGB);
+	m_PostProcessingParams = { 0.07f, 0.1f, 0.0f };
 }
 
 void Renderer::RenderScene() {
@@ -40,9 +42,7 @@ void Renderer::RenderScene() {
 			if (mat->GetRenderOrder() == RenderOrder::transparent) continue;
 
 			mat->Bind(toWorld);
-
-			glBindVertexArray(meshRenderer.meshes[i].m_Vao);
-			glDrawElements(GL_TRIANGLES, meshRenderer.meshes[i].m_NumIndices, GL_UNSIGNED_INT, nullptr);
+			DrawMesh(meshRenderer.meshes[i]);
 		}
     }
 
@@ -61,9 +61,7 @@ void Renderer::RenderScene() {
 			if (mat->GetRenderOrder() == RenderOrder::opaque) continue;
 
 			mat->Bind(toWorld);
-
-			glBindVertexArray(meshRenderer.meshes[i].m_Vao);
-			glDrawElements(GL_TRIANGLES, meshRenderer.meshes[i].m_NumIndices, GL_UNSIGNED_INT, nullptr);
+			DrawMesh(meshRenderer.meshes[i]);
 		}
     }
 
@@ -72,37 +70,67 @@ void Renderer::RenderScene() {
 
 void Renderer::NewFrame() {
 	ShadowMapper::PerformShadowPass();
-	s_FrameBuffer.BindAndClear();
-}
-
-void Renderer::ResumeFrame() {
-	s_FrameBuffer.Bind();
+	m_HdrFrameBuffer.BindAndClear();
 }
 
 void Renderer::EndFrame() {
-	s_FrameBuffer.Unbind();
+	m_HdrFrameBuffer.Unbind();
+	m_SrgbFrameBuffer.BindAndClear();
+	
+	static Shader postProcessingShader("src/shaders/PostProcessing.vert", "src/shaders/PostProcessing.frag");
+
+	postProcessingShader.Bind();
+	postProcessingShader.SetInt("hdrTexture", 0);
+	postProcessingShader.SetFloat("contrast", m_PostProcessingParams.contrast);
+	postProcessingShader.SetFloat("saturation", m_PostProcessingParams.saturation);
+	postProcessingShader.SetFloat("exposure", m_PostProcessingParams.exposure);
+	
+	m_HdrFrameBuffer.BindTexture(0);
+	DrawFullScreenQuad(postProcessingShader);
+	m_SrgbFrameBuffer.Unbind();
 }
 
 void Renderer::PresentFrame() {
-	s_FrameBuffer.BlitToScreen();
+	m_SrgbFrameBuffer.BlitToScreen();
+}
+
+void Renderer::NewGizmosFrame() {
+	m_SrgbFrameBuffer.Bind();
+}
+
+void Renderer::EndGizmosFrame() {
+	m_SrgbFrameBuffer.Unbind();
 }
 
 u32 Renderer::FrameBufferTexture() {
-	return s_FrameBuffer.Texture();
+	return m_SrgbFrameBuffer.Texture();
 }
 
 glm::i32vec2 Renderer::GetFrameBufferSize() {
-	return s_FrameBuffer.Size();
+	return m_SrgbFrameBuffer.Size();
 }
 
 void Renderer::ResizeFrameBuffer(const glm::i32vec2& size) {
-	s_FrameBuffer.Resize(size);
+	m_HdrFrameBuffer.Resize(size);
+	m_SrgbFrameBuffer.Resize(size);
+}
+
+void Renderer::DrawMesh(const Mesh& mesh) {
+	glBindVertexArray(mesh.m_Vao);
+	glDrawElements(GL_TRIANGLES, mesh.m_NumIndices, GL_UNSIGNED_INT, nullptr);
 }
 
 void Renderer::DrawMesh(const MeshRenderer& meshRenderer, const LocalToWorld& toWorld, Shader& shader) {
 	for (const auto& mesh : meshRenderer.meshes) {
 		DrawMesh(mesh, toWorld, shader);
 	}
+}
+
+void Renderer::DrawFullScreenQuad(const Shader& shader) {
+	static Mesh presentPlane = Primatives::Plane();
+	shader.Bind();
+	glBindVertexArray(presentPlane.m_Vao);
+	glDrawElements(GL_TRIANGLES, presentPlane.m_NumIndices, GL_UNSIGNED_INT, nullptr);
 }
 
 void Renderer::DrawMesh(const Mesh& mesh, const LocalToWorld& toWorld, Shader& shader) {

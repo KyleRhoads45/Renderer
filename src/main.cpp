@@ -1,24 +1,17 @@
 #include <iostream>
-#include <filesystem>
-#include <array>
-#include <vector>
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include "core/Base.h"
 #include "core/Input.h"
 #include "editor/Editor.h"
 #include "renderer/Renderer.h"
 #include "renderer/Model.h"
 #include "renderer/CubeMap.h"
-#include "renderer/Material.h"
 #include "core/CameraSystem.h"
 #include "core/TransformSystem.h"
 #include "renderer/ShadowMapper.h"
 #include "ecs/Registry.h"
-#include "editor/SceneCamera.h"
-#include "editor/importers/ModelImporter.h"
 
 void SetupEnviroment();
 
@@ -54,8 +47,8 @@ int main() {
 	Editor::Init(window);
 
 	// ModelImporter::Import("Assets/MedievalVillage/MedievalVillage.fbx");
-	auto house = Model::Instantiate("Assets/MedievalVillage/MedievalVillage.fbx.model");
-	house.Get<Transform>().scale = glm::vec3(0.001f);
+	auto village = Model::Instantiate("Assets/MedievalVillage/MedievalVillage.fbx.model");
+	village.Get<Transform>().scale = glm::vec3(0.001f);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
@@ -91,5 +84,5 @@ void SetupEnviroment() {
 	Enviroment::Instance()->SetShadowPcfRadius(5.0f);
 	Enviroment::Instance()->SetShadowStrength(0.8f);
 	
-	ShadowMapper::Init(8192, 3.5f);
+	ShadowMapper::Init(8192, 2.8f);
 }

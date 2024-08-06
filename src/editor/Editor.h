@@ -27,8 +27,9 @@ private:
 	inline static GLFWwindow* s_Window;
 	inline static glm::i32vec2 s_CurWindowSize;
 	inline static glm::i32vec2 s_SceneWindowSize;
-	inline static bool s_ShowInspectorEnvironment;
-	inline static bool s_FullscreenEnabled;
-	inline static bool s_ShowShadowMap;
+	inline static bool s_ShowInspectorEnvironment = false;
+	inline static bool s_ShowInspectorPostProcessing = false;
+	inline static bool s_FullscreenEnabled = false;
+	inline static bool s_ShowShadowMap = false;
 };
 

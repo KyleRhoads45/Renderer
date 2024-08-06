@@ -2,8 +2,11 @@
 #include "editor/Editor.h"
 #include "FrameBuffer.h"
 
-FrameBuffer::FrameBuffer(glm::i32vec2 size, Format format) 
-	: m_Size(size), m_Format(format)
+#include <iostream>
+
+// Format::HDR requires the shader to to gamma correct color back to SRGB from linear 
+FrameBuffer::FrameBuffer(const glm::i32vec2& size, const Format format) 
+	: m_Format(format), m_Size(size)
 {
 	glGenFramebuffers(1, &m_Fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_Fbo);
@@ -12,6 +15,9 @@ FrameBuffer::FrameBuffer(glm::i32vec2 size, Format format)
 	glBindTexture(GL_TEXTURE_2D, m_Texture);
 
 	switch (m_Format) {
+		case HDR:
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_Size.x, m_Size.y, 0, GL_RGB, GL_FLOAT, NULL);
+			break;
 		case SRGB:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, NULL);
 			break;
@@ -67,6 +73,9 @@ void FrameBuffer::Resize(const glm::i32vec2& size) {
 
 	glBindTexture(GL_TEXTURE_2D, m_Texture);
 	switch (m_Format) {
+		case HDR:
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_Size.x, m_Size.y, 0, GL_RGB, GL_FLOAT, NULL);
+			break;
 		case SRGB:
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB, m_Size.x, m_Size.y, 0, GL_RGB, GL_UNSIGNED_INT, nullptr);
 			break;

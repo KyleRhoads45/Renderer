@@ -28,7 +28,7 @@ void Material::Bind(const LocalToWorld& toWorld) {
 	m_Shader.SetFloat("metallic", m_Metallicness);
 	m_Shader.SetVec2("tiling", m_Tiling);
 	
-	ShadowMapper::m_ShadowMap.Bind(3);
+	ShadowMapper::BindShadowMap(3);
 	m_Shader.SetInt("shadowMap", 3);
 
 	Enviroment::Instance()->BindSkybox(4);

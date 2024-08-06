@@ -22,7 +22,7 @@ void SceneCamera::Update(const glm::vec2 sceneWindowSize) {
 
     trans.rotation = yawRot * pitchRot;
 
-    float speed = Input::OnKeyHold(GLFW_KEY_LEFT_SHIFT) ? 0.0001f : 0.003f;
+    float speed = Input::OnKeyHold(GLFW_KEY_LEFT_SHIFT) ? 0.006f : 0.003f;
     if (Input::OnKeyHold(GLFW_KEY_W)) {
         trans.position = (trans.position + trans.Forward() * speed);
     }

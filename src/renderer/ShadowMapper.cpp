@@ -7,9 +7,6 @@
 #include "ecs/View.h"
 #include "ShadowMapper.h"
 
-#include <iostream>
-#include <ostream>
-
 void ShadowMapper::Init(const u32 textureSize, const f32 shadowDist) {
 	m_ShadowMap = DepthTexture(textureSize, textureSize);
 	m_ShadowDist = shadowDist;
@@ -60,6 +57,10 @@ void ShadowMapper::PerformShadowPass() {
 	glViewport(0, 0, viewportWidth, viewportHeight);
 
 	Enviroment::Instance()->SetLightViewProjection(m_LightViewProjection);
+}
+
+void ShadowMapper::BindShadowMap(const i32 textureUnit) {
+	m_ShadowMap.Bind(textureUnit);
 }
 
 void ShadowMapper::CalculateLightViewProjection() {

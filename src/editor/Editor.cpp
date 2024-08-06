@@ -37,7 +37,6 @@ void Editor::Init(GLFWwindow* window) {
 	CameraSystem::SetActiveCamera(&SceneCamera::s_Camera, &SceneCamera::s_Transform);
 	s_TransGizmos = new TransformGizmos();
 	s_ArrowMesh = Mesh::FromFile("Assets/Model/ArrowGizmo.fbx");
-	s_ShowShadowMap = false;
 }
 
 void Editor::OnPreRenderUpdate() {
@@ -172,30 +171,25 @@ void Editor::DrawScene() {
 		s_SelectionBuffer.Unbind();
 	}
 
-	static Mesh plane = Primatives::Plane();
-	static LocalToWorld planeLtw;
-	planeLtw.matrix = glm::mat4(1.0f);
-
-	Renderer::ResumeFrame();
-
+	Renderer::NewGizmosFrame();
+	glDisable(GL_DEPTH_TEST);
+	
 	if (Input::OnKeyPress(GLFW_KEY_M)) {
 		s_ShowShadowMap = !s_ShowShadowMap;		
 	}
 	
 	if (s_ShowShadowMap) {
 		static Shader depthVisualizer("src/shaders/DepthVisualizer.vert", "src/shaders/DepthVisualizer.frag");
-		glActiveTexture(GL_TEXTURE0);
-		ShadowMapper::m_ShadowMap.Bind(0);
+		depthVisualizer.Bind();
+		ShadowMapper::BindShadowMap(0);
 		depthVisualizer.SetInt("depthMap", 0);
-		Renderer::DrawMesh(plane, planeLtw, depthVisualizer);
+		Renderer::DrawFullScreenQuad(depthVisualizer);
 	}
 	
-	glDisable(GL_DEPTH_TEST);
-
 	if (s_SelectedEntity != Entity::Null()) {
 		glm::vec3 gizmoPos = s_SelectedEntity.Get<LocalToWorld>().ToTransform().position;
 		s_TransGizmos->Draw(gizmoPos);
-
+	
 		if (selectedGizmo) {
 			glm::vec3 movePos = s_TransGizmos->TransformArrow(gizmoId, gizmoPos, sceneWindowPos);
 			glm::mat4 invParentLTW = glm::inverse(s_SelectedEntity.Get<Parent>().entity.Get<LocalToWorld>().matrix);
@@ -204,7 +198,7 @@ void Editor::DrawScene() {
 	}
 	
 	glEnable(GL_DEPTH_TEST);
-	Renderer::EndFrame();
+	Renderer::EndGizmosFrame();
 
 	auto frameBufferTexture = reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(Renderer::FrameBufferTexture()));
 	ImGui::Image(frameBufferTexture, windowSize, ImVec2(0, 1), ImVec2(1, 0));
@@ -219,6 +213,12 @@ void Editor::DrawWorld() {
 
 	if (ImGui::Button("Environment")) {
 		s_ShowInspectorEnvironment = true;
+		s_ShowInspectorPostProcessing = false;
+	}
+	
+	if (ImGui::Button("PostProcessing")) {
+		s_ShowInspectorPostProcessing = true;
+		s_ShowInspectorEnvironment = false;
 	}
 
 	auto rootView = View<LocalToWorld, Transform, Children>().Exclude<Parent>();
@@ -246,6 +246,7 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 	if (ImGui::IsItemClicked()) {
 		s_SelectedEntity = entity;
 		s_ShowInspectorEnvironment = false;
+		s_ShowInspectorPostProcessing = false;
 	}
 
 	if (open && !isLeaf) {
@@ -283,8 +284,8 @@ void Editor::DrawInspector() {
 		
 		static f32 lightStrength = Enviroment::Instance()->LightStrength();	
 		static f32 ambientStrength = Enviroment::Instance()->AmbientStrength();;	
-		ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 10.00f, "%.01f");
-		ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.00f, 10.00f, "%.01f");
+		ImGui::SliderFloat("Light Strength", &lightStrength, 0.00f, 100.00f, "%.01f");
+		ImGui::SliderFloat("Ambient Strength", &ambientStrength, 0.00f, 100.00f, "%.01f");
 
 		static glm::vec3 initAmbientColor = Enviroment::Instance()->AmbientColor();
 		static f32 ambientColor[3] = { initAmbientColor.x, initAmbientColor.y, initAmbientColor.z };
@@ -301,6 +302,16 @@ void Editor::DrawInspector() {
 		Enviroment::Instance()->SetAmbientColor(ambient);
 		Enviroment::Instance()->SetLightColor(light);
 
+		ImGui::End();
+		return;
+	}
+
+	if (s_ShowInspectorPostProcessing) {
+		Renderer::PostProcessingParams params = Renderer::GetPostProcessingParams();
+		ImGui::SliderFloat("Contrast", &params.contrast, 0.00f, 10.00f, "%.01f");
+		ImGui::SliderFloat("Saturation", &params.saturation, 0.00f, 10.00f, "%.01f");
+		ImGui::SliderFloat("Exposure", &params.exposure, 0.00f, 10.00f, "%.01f");
+		Renderer::SetPostProcessingParams(params);
 		ImGui::End();
 		return;
 	}
@@ -324,8 +335,10 @@ void Editor::DrawInspector() {
 		if (s_SelectedEntity.Has<MeshRenderer>()) {
 			auto& materials = s_SelectedEntity.Get<MeshRenderer>().materials;
 
-			for (auto& material : materials) {
-				ImGui::Separator();
+			for (size_t i = 0; i < materials.size(); i++) {
+				Material* material = materials[i];
+
+				ImGui::Dummy({0, 20});
 				ImGui::Text(material->GetFilePath().c_str());
 
 				f32 roughness = material->GetRoughness();
@@ -334,6 +347,8 @@ void Editor::DrawInspector() {
 				f32 alphaCutoff = material->GetAlphaCutoff();
 				glm::vec2 tiling = material->GetTiling();
 
+				ImGui::PushID(static_cast<i32>(i));
+				
 				if (ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.00f, "%.01f")) {
 					material->SetRoughness(roughness);		
 					WriteMaterialToFile(*material);
@@ -375,6 +390,8 @@ void Editor::DrawInspector() {
 					}
 					ImGui::EndCombo();
 				}
+
+				ImGui::PopID();
 			}
 		}
 	}
@@ -421,7 +438,7 @@ void Editor::ApplyEditorStyle() {
 	colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
 	colors[ImGuiCol_FrameBgActive]          = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
 	colors[ImGuiCol_TitleBg]                = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
-	colors[ImGuiCol_TitleBgActive]          = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
+	colors[ImGuiCol_TitleBgActive]          = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
 	colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
 	colors[ImGuiCol_MenuBarBg]              = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
 	colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 1.00f);
