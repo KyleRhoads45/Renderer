@@ -1,7 +1,8 @@
 # Renderer
 A 3D OpenGL Physically Based Renderer written in C++.
 
-![Demo Scene](https://user-images.githubusercontent.com/52022661/225071513-5783470a-4a70-453e-94af-40b710fdfee6.png) ![Demo Scene](https://user-images.githubusercontent.com/52022661/225071513-5783470a-4a70-453e-94af-40b710fdfee6.png)
+![Village](https://github.com/user-attachments/assets/45f6fb97-62dc-4435-b2b2-9320fac69945)
+![House](https://github.com/user-attachments/assets/01192669-82f7-42df-ab93-0a3f002496c0)
 
 ### Features
 * Physically Based Rendering Shader
