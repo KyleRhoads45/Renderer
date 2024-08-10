@@ -35,3 +35,8 @@ While not necessarly physicaly accurate, I find it to look nicer without comprom
 Since microfacets are too small for computers to work with, we use a distribution function that represents the probability that incoming light hits a microfacet whose normal aligns with the halfway vector, resulting in a perfect reflection. For this function I chose GGX as it is widely adopted and I prefer the look of the longer tail it offers as oppossed to something like Beckmann. 
 
 $$GGX = \frac{\alpha^2}{\pi((\alpha^2 - 1)cos^2\theta_h + 1)^2} \text{ where } \alpha = roughness^2 \text{, } cos\theta_h = n \cdot h$$
+
+##### Geometric Attenuation Function
+For this function I chose to use the Smith method paired with the Schlick-GGX geometry function. The Smith method accounts for both geometric obstruction and shadowing by calculating the geometry function separately for the light and view directions.
+
+$$G = G_lightG_view G(cos\theta) = \frac{cos\theta}{(cose\theta)(1 - k) + k}$$
