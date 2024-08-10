@@ -5,6 +5,7 @@ A 3D OpenGL Physically Based Renderer written in C++.
 ![House](https://github.com/user-attachments/assets/01192669-82f7-42df-ab93-0a3f002496c0)
 
 ### Features
+---
 * Physically Based Rendering Shader
 * Directional Light Shadow Mapping
 * Parent-Child Hierarchy
@@ -14,6 +15,7 @@ A 3D OpenGL Physically Based Renderer written in C++.
 * FPS Style Camera for Viewing the Scene
 
 ### Physically Based Shader
+---
 The PBR shader derives from microfacet theory and models dielectric and metallic materials isotropically.
 The rendering equation implemented in general form is
 
