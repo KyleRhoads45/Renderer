@@ -39,4 +39,4 @@ $$GGX = \frac{\alpha^2}{\pi((\alpha^2 - 1)cos^2\theta_h + 1)^2} \text{ where } \
 ##### Geometric Attenuation Function
 For this function I chose to use the Smith method paired with the Schlick-GGX geometry function. The Smith method accounts for both geometric obstruction and shadowing by calculating the geometry function separately for the light and view directions.
 
-$$G = G(\theta_l)G(\theta_v) \text{ where } G(\theta) = \frac{\theta}{(\theta)(1 - k) + k}$$
+$$G = G(\theta_l)G(\theta_v) \text{ where } G(\theta) = \frac{\theta}{\theta(1 - k) + k}$$
