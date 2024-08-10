@@ -37,6 +37,6 @@ Since microfacets are too small for computers to work with, we use a distributio
 $$GGX = \frac{\alpha^2}{\pi((\alpha^2 - 1)cos^2\theta_h + 1)^2} \text{ where } \alpha = roughness^2 \text{, } cos\theta_h = n \cdot h$$
 
 ##### Geometric Attenuation Function
-For this function I chose to use the Smith method paired with the Schlick-GGX geometry function. The Smith method accounts for both geometric obstruction and shadowing by calculating the geometry function separately for the light and view directions.
+For this function I chose to use the Smith method paired with the Schlick-GGX geometry function as it is complimentary to the GGX distribution function. The Smith method accounts for both geometric obstruction and shadowing by calculating the geometry function separately for the light and view directions.
 
 $$G = G(\theta_l)G(\theta_v) \text{ where } G(\theta) = \frac{\theta}{\theta(1 - k) + k}$$
