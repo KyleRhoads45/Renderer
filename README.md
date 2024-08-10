@@ -33,9 +33,7 @@ While not necessarly physicaly accurate, I find it to look nicer without comprom
 
 ##### Normal Distribution Function
 Since microfacets are too small for computers to work with, we use a distribution function that represents the probability that incoming light hits a microfacet whose normal aligns with the halfway vector, resulting in a perfect reflection. For this function I chose GGX as it is widely adopted and I prefer the look of the longer tail it offers as oppossed to something like Beckmann. 
-$$
-GGX = \frac{\alpha^2}{\pi((\alpha^2)cos^2\theta_h + 1)^2}
-$$
+$$GGX = \frac{\alpha^2}{\pi((\alpha^2)cos^2\theta_h + 1)^2}$$
 where
 * $\alpha = roughness^2$
 * $cos\theta_h = n \cdot h$
