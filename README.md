@@ -25,9 +25,9 @@ where
 * $G(\theta_l) =$ Geometric Attenuation Function
 
 ##### Diffuse
-For diffuse reflections where light hits a surface and scatters evenly in all directions, the Lambertion diffuse is a simple and common model. 
-$$Diffuse = color * cos\theta_l$$ 
-$$\text{where } cos\theta_l=\omega_l \cdot N$$
+For diffuse reflections where light hits a surface and scatters evenly in all directions, the Lambertion diffuse is a simple and common model.
+
+$$Diffuse = color * cos\theta_l \text{ where } cos\theta_l=\omega_l \cdot N$$
 
 This produces nice results but due to the nature of the dot product the edges appear a bit too dark for my liking. I decided to use the Disney diffuse which builds ontop of the labertion diffuse but introduces a Fresnel factor that makes the edges of rough surfaces appear brighter.
 
