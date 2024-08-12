@@ -51,3 +51,10 @@ $$G = G(\theta_l)G(\theta_v) \text{\;where} G(\theta) = \frac{\theta}{\theta(1 -
 This function describes the phenomenon that surfaces demonstrate greater reflectivity when viewed at grazing angles. The Fresnel-Schlick approximation is used as it is computationally efficient for real-time rendering while giving realistic results.
 
 $$F = F_0 + (1 - F_0)(1 - cos\theta_d)^5 \text{where } cos\theta_d = h \cdot v$$
+
+### Shadows
+---
+The renderer implements a soft shadow technique called [Efficient Soft-Edged Shadows](https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-17-efficient-soft-edged-shadows-using) and has corrections for shadow "swimming" artifacts while the camera is translating or rotating around the scene.
+
+#### Soft Shadows
+The directional light shadows are rendered in a typical fassion, where the scene is first rendered from the light's perspective with a specific shader that writes the depth values into a framebuffer called the shadow map (depth map). Then when rendering the scene normally, in the fragment shader we compare the depth values of the current fragment's position in light space, with its corresponding depth value from the shadow map. If the current fragment's depth is greater than the depth found in the shadow map, then the fragment is considered to be in shadow. This produces shadows with harsh, jagged edges due to multiple fragments sharing the same pixel in the shadow map. 
