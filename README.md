@@ -58,5 +58,9 @@ The renderer implements a soft shadow technique called [Efficient Soft-Edged Sha
 
 #### Soft Shadows
 The directional light shadows are rendered in a typical fassion, where the scene is first rendered from the light's perspective with a specific shader that writes the depth values into a framebuffer called the shadow map (depth map). Then when rendering the scene normally, in the fragment shader we compare the depth values of the current fragment's position in light space, with its corresponding depth value from the shadow map. If the current fragment's depth is greater than the depth found in the shadow map, then the fragment is considered to be in shadow. This produces shadows with harsh, jagged edges due to multiple fragments sharing the same pixel in the shadow map.
+
 ![JaggedShadowsSmall](https://github.com/user-attachments/assets/8d7ef0b9-85c7-428e-8064-6e0f504d5ae9)
 
+To achieve soft shadows, the fragment shader takes multiple shadow map samples around the current fragment and averages the shadow values together which produces a gradient along the edges. However, the way we sample nearby texels matters considerably as a uniform kernal will still produce jagged edges, albeit less harsh than before, but still bad. To fix this, we introduce noise by sampling random texels close to the fragment. We can't use the same randomness pattern for each fragment though, since that will produce similar jagged results, so we need many different random sampling patterns to break up repetition.
+
+For this we have an N x N grid with each cell containing a unique M x M texture of randomized sampling offsets to apply to the fragment's light position when sampling the shadow map. 
