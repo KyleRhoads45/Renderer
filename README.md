@@ -50,4 +50,4 @@ $$G = G(\theta_l)G(\theta_v) \text{\;where} G(\theta) = \frac{\theta}{\theta(1 -
 #### Fresnel Function
 This function describes the phenomenon that surfaces demonstrate greater reflectivity when viewed at grazing angles. The Fresnel-Schlick approximation is used as it is computationally efficient for real-time rendering while giving realistic results.
 
-$$F = F_0 + (1 - F_0)(1 - cos\theta_d)^5 \text{\;where} cos\theta_d = h \cdot v$$
+$$F = F_0 + (1 - F_0)(1 - cos\theta_d)^5            where cos\theta_d = h \cdot v$$
