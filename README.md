@@ -45,9 +45,9 @@ $$GGX = \frac{\alpha^2}{\pi((\alpha^2 - 1)cos^2\theta_h + 1)^2} \text{  where } 
 #### Geometric Attenuation Function
 For this function I chose to use the Smith method paired with the Schlick-GGX geometry function as it is complimentary to the GGX distribution function. The Smith method accounts for both geometric obstruction and shadowing by calculating the geometry function separately for the light and view directions.
 
-$$G = G(\theta_l)G(\theta_v) \text{    where } G(\theta) = \frac{\theta}{\theta(1 - k) + k}$$
+$$G = G(\theta_l)G(\theta_v) \text{\\\\where } G(\theta) = \frac{\theta}{\theta(1 - k) + k}$$
 
 #### Fresnel Function
 This function describes the phenomenon that surfaces demonstrate greater reflectivity when viewed at grazing angles. The Fresnel-Schlick approximation is used as it is computationally efficient for real-time rendering while giving realistic results.
 
-$$F = F_0 + (1 - F_0)(1 - cos\theta_d)^5 \text{  where } cos\theta_d = h \cdot v$$
+$$F = F_0 + (1 - F_0)(1 - cos\theta_d)^5 \text{\\\\where } cos\theta_d = h \cdot v$$
