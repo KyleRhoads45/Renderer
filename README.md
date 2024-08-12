@@ -52,4 +52,4 @@ This function describes the phenomenon that surfaces demonstrate greater reflect
 
 $$F = F_0 + (1 - F_0)(1 - cos\theta_d)^5$$ 
 
-$$ \text{where} cos\theta_d = h \cdot v$$
+$$ \text{where    } cos\theta_d = h \cdot v$$
