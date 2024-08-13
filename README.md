@@ -84,7 +84,6 @@ glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
 glm::vec3 frustumCenter = CameraSystem::ActiveCamPos() + CameraSystem::ActiveCamForward() * (m_ShadowDist / 2.0f);
 
 // Make the light's view matrix move in texel size increments by snapping the frustum center.
-// This fixes the swimming effect when moving the camera around.
 {
   glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
 
