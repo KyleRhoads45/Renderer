@@ -111,6 +111,10 @@ f32 halfProjSize = projSize / 2.0f;
 glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, halfProjSize, -projSize, projSize);
 ```
 
+### Model Importing
+---
+For importing 3D models I chose to use the [assimp](https://github.com/assimp/assimp) library as its capable of parsing many different file formats into generic data structures that the renderer can use easily. The importing process is as follows, assimp imports and parses the model file, then a YAML file for each material is created that contains all texture paths and parameters needed for the renderer's PBR material.
+
 
 
 
