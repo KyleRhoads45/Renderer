@@ -78,20 +78,34 @@ A common problem with shadow mapping is the edges of shadows shimmering as the c
 
 To fix the camera rotation aspect we find the sphere centered in the camera's frustrum that encompases its entirety and use its diamter as the shadow projection size. This ensures that as the camera rotates, its frustrum will always be inside the sphere and the projection map will remain a constant size. Then to fix the translation aspect, the sphere's center is translated into light space, snapped to the closest texel size increment, then translated back into world space. The code for this is as follows.
 ```cpp
-glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
+f32 projSize = CameraSystem::ViewFrustumDiagonal(m_ShadowDist);
 
-// Convert camera frustum center to light space so its as if we are viewing it from the lights perspective.
-// Note: this is still in world space so its not always centered at origin. 
-frustumCenter = lightSpaceView * glm::vec4(frustumCenter, 1.0f);
+glm::vec3 lightDir = Enviroment::Instance()->GetLightDir();
+glm::vec3 frustumCenter = CameraSystem::ActiveCamPos() + CameraSystem::ActiveCamForward() * (m_ShadowDist / 2.0f);
 
-// Snap the center to the shadow texel grid in world space
-glm::vec3 worldUnitsPerTexel = glm::vec3(projSize / m_TextureSize, projSize / m_TextureSize, 1.0f);
-frustumCenter /= worldUnitsPerTexel;
-frustumCenter = glm::floor(frustumCenter);
-frustumCenter *= worldUnitsPerTexel;
+// Make the light's view matrix move in texel size increments by snapping the frustum center.
+// This fixes the swimming effect when moving the camera around.
+{
+  glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
 
-// Transform it back into world space so its projected properly
-frustumCenter = glm::inverse(lightSpaceView) * glm::vec4(frustumCenter, 1.0f);
+  // Convert camera frustum center to light space so its as if we are viewing it from the lights perspective.
+  frustumCenter = lightSpaceView * glm::vec4(frustumCenter, 1.0f);
+
+  // Snap the center to the shadow texel grid in world space
+  glm::vec3 worldUnitsPerTexel = glm::vec3(projSize / m_TextureSize, projSize / m_TextureSize, 1.0f);
+  frustumCenter /= worldUnitsPerTexel;
+  frustumCenter = glm::floor(frustumCenter);
+  frustumCenter *= worldUnitsPerTexel;
+
+  // Transform it back into world space so its projected properly
+  frustumCenter = glm::inverse(lightSpaceView) * glm::vec4(frustumCenter, 1.0f);
+}
+
+// Create the light's view matrix with the view position being the center of the camera's frustum.
+glm::mat4 view = glm::lookAt(frustumCenter - lightDir, frustumCenter, glm::vec3(0, 1, 0));
+
+f32 halfProjSize = projSize / 2.0f;
+glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, halfProjSize, -projSize, projSize);
 ```
 
 
