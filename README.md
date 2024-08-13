@@ -72,3 +72,40 @@ Now for the efficent part of Efficient Soft-Edged Shadows. Most fragments don't 
 The results with a grid size of 16 x 16 and a filter size of 10 x 10. Notice how there is no longer jagged edges or gradient stepping like in the previous image with no PCF filtering.
 
 ![SoftShadowsSmall](https://github.com/user-attachments/assets/a663fe3e-77fb-41f2-a34c-5546dd71e936)
+
+#### Correcting Shadow Artifacts
+A common problem with shadow mapping is the edges of shadows shimmering as the camera translates and rotates through the scene. The two reasons for shadow shimmering are the shadow map's projection chaniging size during camera rotation and the shadow map not snapping to texel size increments during camera translation.
+
+To fix the camera rotation aspect we find the sphere centered in the camera's frustrum that encompases its entirety and use its diamter as the shadow projection size. This ensures that as the camera rotates, its frustrum will always be inside the sphere and the projection map will remain a constant size. Then to fix the translation aspect, the sphere's center is translated into light space, snapped to the closest texel size increment, then translated back into world space. The code for this is as follows.
+```cpp
+glm::mat4 lightSpaceView = glm::lookAt(glm::vec3(0, 0, 0), lightDir, glm::vec3(0, 1, 0));
+
+// Convert camera frustum center to light space so its as if we are viewing it from the lights perspective.
+// Note: this is still in world space so its not always centered at origin. 
+frustumCenter = lightSpaceView * glm::vec4(frustumCenter, 1.0f);
+
+// Snap the center to the shadow texel grid in world space
+glm::vec3 worldUnitsPerTexel = glm::vec3(projSize / m_TextureSize, projSize / m_TextureSize, 1.0f);
+frustumCenter /= worldUnitsPerTexel;
+frustumCenter = glm::floor(frustumCenter);
+frustumCenter *= worldUnitsPerTexel;
+
+// Transform it back into world space so its projected properly
+frustumCenter = glm::inverse(lightSpaceView) * glm::vec4(frustumCenter, 1.0f);
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
