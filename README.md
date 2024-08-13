@@ -8,9 +8,13 @@ A 3D OpenGL Physically Based Renderer written in C++.
 ---
 * [Physically Based Rendering Shader](#phsically-based-shader)
 * [Soft Shadows](#shadows)
-* Parent-Child Hierarchy
+* Model Importing
 * Custom Entity Component System
-* Model Importing via [assimp](https://github.com/assimp/assimp)
+* IMGUI Editor
+* Scene Picking
+* HDR with Tonemapping
+* Post Processing
+* Parent-Child Hierarchy
 * Support for Skyboxes using Cubemaps
 * FPS Style Camera for Viewing the Scene
 
