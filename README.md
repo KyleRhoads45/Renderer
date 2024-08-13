@@ -113,7 +113,7 @@ glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, ha
 
 ### Model Importing
 ---
-For importing 3D models I chose to use the [assimp](https://github.com/assimp/assimp) library as its capable of parsing many different file formats into generic data structures that the renderer can use easily. When importing, the necessarry model data for the renderer is parsed into YAML files using the [yaml-cpp](https://github.com/jbeder/yaml-cpp) library. The import process works as follows: assimp first imports and parses the model file. Then, for each material, a YAML file is generated containing all necessary texture paths and parameters required for the renderer's PBR material. Finally, a single YAML file is created for the model containing parent, transform, mesh, and material data for each node within the model. 
+For importing 3D models I chose to use the [assimp](https://github.com/assimp/assimp) library as its capable of parsing many different file formats into generic data structures that the renderer can use easily. During the import process, necessarry model data gets exported into YAML files using the [yaml-cpp](https://github.com/jbeder/yaml-cpp) library, allowing for easy modification. The import process works as follows: assimp first imports and parses the model file. Then, for each material, a YAML file is generated containing all necessary texture paths and parameters required for the renderer's PBR material. Finally, a single YAML file is created for the model containing parent, transform, and mesh data, as well as paths to the YAML material files for each node within the model. This approach allows for customizing the way meshes are rendered by making modifications to their YAML material files.
 
 
 
