@@ -7,7 +7,7 @@ A 3D OpenGL Physically Based Renderer written in C++.
 ### Features
 ---
 * [Physically Based Rendering Shader](#phsically-based-shader)
-* Directional Light Shadow Mapping
+* [Soft Shadows](#shadows)
 * Parent-Child Hierarchy
 * Custom Entity Component System
 * Model Importing via [assimp](https://github.com/assimp/assimp)
