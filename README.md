@@ -90,7 +90,7 @@ glm::vec3 frustumCenter = CameraSystem::ActiveCamPos() + CameraSystem::ActiveCam
   // Convert camera frustum center to light space so its as if we are viewing it from the lights perspective.
   frustumCenter = lightSpaceView * glm::vec4(frustumCenter, 1.0f);
 
-  // Snap the center to the shadow texel grid in world space
+  // Snap the center to the shadow texel grid
   glm::vec3 worldUnitsPerTexel = glm::vec3(projSize / m_TextureSize, projSize / m_TextureSize, 1.0f);
   frustumCenter /= worldUnitsPerTexel;
   frustumCenter = glm::floor(frustumCenter);
