@@ -70,4 +70,5 @@ Now for the efficent part of Efficient Soft-Edged Shadows. Most fragments don't 
 ![JitterColored](https://github.com/user-attachments/assets/4c0a20d0-49c5-4016-903d-6f5f112bed77)
 
 I found good results with a grid size of 16 x 16 and a filter size of 10 x 10.
+
 ![SoftShadowsSmall](https://github.com/user-attachments/assets/a663fe3e-77fb-41f2-a34c-5546dd71e936)
