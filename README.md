@@ -6,7 +6,7 @@ A 3D OpenGL Physically Based Renderer written in C++.
 
 ### Features
 ---
-* Physically Based Rendering Shader
+* [Physically Based Rendering Shader](#phsically-based-shader)
 * Directional Light Shadow Mapping
 * Parent-Child Hierarchy
 * Custom Entity Component System
