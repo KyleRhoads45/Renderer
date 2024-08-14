@@ -129,25 +129,25 @@ The renderer features a custom written ECS (Entity Component System) to maximize
 // Iterate all entities that have a LocalToWorld & Transform component
 auto transformView = View<LocalToWorld, Transform>();
 for (const Entity entity : transformView) {
-  auto localToWorld = entity.Get<LocalToWorld>();
-  auto transform = entity.Get<Transform>();
-  ... // Do stuff
+    auto localToWorld = entity.Get<LocalToWorld>();
+    auto transform = entity.Get<Transform>();
+    ...
 }
 
 // Iterate all entities that have a LocalToWorld & Transform component but no Parent component
 auto rootView = View<LocalToWorld, Transform>().Exclude<Parent>();
 for (const Entity entity : rootView) {
-  auto localToWorld = entity.Get<LocalToWorld>();
-  auto transform = entity.Get<Transform>();
-  ... // Do stuff
+    auto localToWorld = entity.Get<LocalToWorld>();
+    auto transform = entity.Get<Transform>();
+    ...
 }
 
 // Iterate all entities that ONLY have a LocalToWorld & Transform component, no other component
 auto onlyView = View<LocalToWorld, Transform>().Only();
 for (const Entity entity : onlyView) {
-  auto localToWorld = entity.Get<LocalToWorld>();
-  auto transform = entity.Get<Transform>();
-  ... // Do stuff
+    auto localToWorld = entity.Get<LocalToWorld>();
+    auto transform = entity.Get<Transform>();
+    ...
 }
 ```
 
