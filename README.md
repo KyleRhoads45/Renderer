@@ -8,7 +8,7 @@ A 3D OpenGL Physically Based Renderer written in C++.
 ---
 * [Physically Based Rendering Shader](#phsically-based-shader)
 * [Soft Shadows](#shadows)
-* Model Importing
+* [Model Importing](#model-importing)
 * Custom Entity Component System
 * IMGUI Editor
 * Scene Picking
@@ -115,7 +115,43 @@ glm::mat4 projection = glm::ortho(-halfProjSize, halfProjSize, -halfProjSize, ha
 ---
 For importing 3D models I chose to use the [assimp](https://github.com/assimp/assimp) library as its capable of parsing many different file formats into generic data structures that the renderer can use easily. During the import process, necessarry model data gets exported into YAML files using the [yaml-cpp](https://github.com/jbeder/yaml-cpp) library, allowing for easy modification. The import process works as follows: assimp first imports and parses the model file. Then, for each material, a YAML file is generated containing all necessary texture paths and parameters required for the renderer's PBR material. Finally, a single YAML file is created for the model containing parent, transform, and mesh data, as well as paths to the YAML material files for each node within the model. This approach allows for customizing the way meshes are rendered by making modifications to their YAML material files.
 
+### Entity Component System
+---
+The renderer features a custom written ECS (Entity Component System) to maximize performance through memory locality while using composition over inheritence to provide flexibility for defining entities.
 
+#### Features
+* Components do not need to be registered before use
+* Custom iterators (Views) with filter options
+* O(N) lookup time for components
+
+#### Iterator Examples
+```cpp
+// Iterate all entities that have a LocalToWorld & Transform component
+auto transformView = View<LocalToWorld, Transform>();
+for (const Entity entity : transformView) {
+  auto localToWorld = entity.Get<LocalToWorld>();
+  auto transform = entity.Get<Transform>();
+  ... // Do stuff
+}
+
+// Iterate all entities that have a LocalToWorld & Transform component but no Parent component
+auto rootView = View<LocalToWorld, Transform>().Exclude<Parent>();
+for (const Entity entity : rootView) {
+  auto localToWorld = entity.Get<LocalToWorld>();
+  auto transform = entity.Get<Transform>();
+  ... // Do stuff
+}
+
+// Iterate all entities that ONLY have a LocalToWorld & Transform component, no other component
+auto onlyView = View<LocalToWorld, Transform>().Only();
+for (const Entity entity : onlyView) {
+  auto localToWorld = entity.Get<LocalToWorld>();
+  auto transform = entity.Get<Transform>();
+  ... // Do stuff
+}
+```
+
+#### How it Works
 
 
 
