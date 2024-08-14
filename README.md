@@ -154,10 +154,10 @@ for (const Entity entity : onlyView) {
 #### How it Works
 The registry class is the root for handling entities and components. It contains three dynamic arrays for storing the entities, component pools, and entity component masks.
 
-##### Entity
+###### Entity
 An entity is a class whose only field is an ID, which is needed to fetch its components from certain component pools. The reason for it being a class and not just a typedef is for the added helper functions that wrap around the resitry api.
 
-##### Component Pool
+###### Component Pool
 A component pool is a class that stores all components of a single type for all entities and uses a sparse set to map entity IDs to their stored component.  
 
 
