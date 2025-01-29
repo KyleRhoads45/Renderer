@@ -21,4 +21,3 @@ public:
 	Ref<Vertex[]> m_Verts;
 	Ref<u32[]> m_Indices;
 };
-

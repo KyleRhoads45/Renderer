@@ -26,14 +26,14 @@ void Renderer::Init() {
 	m_PostProcessingParams = { 0.07f, 0.1f, 0.0f };
 }
 
-void Renderer::RenderScene() {
+void Renderer::RenderScene(Registry& registry) {
 	DrawSkybox();
 	
-	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
+	const auto view = View<LocalToWorld, Transform, MeshRenderer>(registry);
 
     for (const auto entity : view) {
-        auto& toWorld = Registry::Get<LocalToWorld>(entity);
-        const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
+        auto& toWorld = registry.Get<LocalToWorld>(entity);
+        const auto& meshRenderer = registry.Get<MeshRenderer>(entity);
 
 		for (u32 i = 0; i < meshRenderer.meshes.size(); i++) {
 			assert(meshRenderer.materials[i]);
@@ -51,8 +51,8 @@ void Renderer::RenderScene() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     for (const auto entity : view) {
-        auto& toWorld = Registry::Get<LocalToWorld>(entity);
-        const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
+        auto& toWorld = registry.Get<LocalToWorld>(entity);
+        const auto& meshRenderer = registry.Get<MeshRenderer>(entity);
 
 		for (u32 i = 0; i < meshRenderer.meshes.size(); i++) {
 			assert(meshRenderer.materials[i]);
@@ -68,8 +68,8 @@ void Renderer::RenderScene() {
 	glDisable(GL_BLEND);
 }
 
-void Renderer::NewFrame() {
-	ShadowMapper::PerformShadowPass();
+void Renderer::NewFrame(Registry& registry) {
+	ShadowMapper::PerformShadowPass(registry);
 	m_HdrFrameBuffer.BindAndClear();
 }
 

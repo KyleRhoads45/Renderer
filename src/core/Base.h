@@ -1,7 +1,6 @@
 #pragma once
 #include <memory>
 #include <optional>
-#include <variant>
 
 using u8   = char;
 using i32  = int;
@@ -27,9 +26,6 @@ constexpr Scope<T> MakeScope(Args&&... args) {
 
 template<typename T>
 using Option = std::optional<T>;
-
-template<typename T1, typename T2>
-using Variant = std::variant<T1, T2>;
 
 #ifndef NDEBUG
 #include <iostream>

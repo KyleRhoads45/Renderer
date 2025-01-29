@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 #include <bitset>
+#include <filesystem>
+#include <iostream>
+
 #include "core/Base.h"
 #include "ComponentPool.h"
 
@@ -11,58 +14,49 @@ class EntityCompMask;
 
 class Registry {
 public:
-	static Entity Create();
+	Entity Create();
+	void FreeAll();
 
 	template<typename Component>
-	static Component& Add(Entity entity);
+	Component& Add(Entity entity);
 
 	template<typename Component>
-	static Component& Get(Entity entity);
+	Component& Get(Entity entity);
 
 	template<typename Component>
-	static bool Has(const Entity entity);
+	bool Has(const Entity entity);
+	
+	template<typename Component>
+	Component& GetAdd(Entity entity);
 
 	template<typename Component>
-	static u32 GetComponentId();
+	u32 GetComponentId();
 
-	static size_t GetEntityCount();
+	size_t GetEntityCount();
 private:
-	static inline u32 m_ComponentCounter = 0;
-	static inline std::vector<Entity> m_Entities;
-	static inline std::vector<ComponentPool> m_Pools;
-	static inline std::vector<EntityCompMask> m_EntityCompMasks;
+	inline static u32 m_ComponentCounter = 0;
+	
+	std::vector<Entity> m_Entities;
+	std::vector<ComponentPool> m_Pools;
+	std::vector<EntityCompMask> m_EntityCompMasks;
 
 	template<typename... T>
 	friend class View;
 	friend class ViewIterator;
 	friend class Editor;
 	friend class Serializer;
+	friend class Selection;
 };
 
 class Entity {
 public:
 	Entity() = default;
 	Entity(const size_t id);
-
 	bool operator==(const Entity& other) const;
-
 	size_t Id() const;
-
-	template<typename Component>
-	Component& Get();
-
-	template<typename Component>
-	Component& Add();
-
-	template<typename Component>
-	Component& GetAdd();
-
-	template<typename Component>
-	bool Has();
-
 	static Entity Null();
 private:
-	size_t m_Id;
+	size_t m_Id = -1;
 };
 
 class EntityCompMask {
@@ -70,7 +64,7 @@ public:
 	EntityCompMask() = default;
 
 	template<typename... Components>
-	static EntityCompMask From();
+	static EntityCompMask From(Registry& registry);
 
 	bool operator==(const EntityCompMask& otherMask) const;
 
@@ -86,8 +80,8 @@ public:
 template<typename Component>
 Component& Registry::Add(const Entity entity) {
 	const u32 compId = GetComponentId<Component>();
-	
-	if (m_Pools.size() == compId) {
+
+	for (int i = m_Pools.capacity(); i <= compId; i++) {
 		m_Pools.push_back(ComponentPool(sizeof(Component)));
 	}
 
@@ -108,41 +102,25 @@ bool Registry::Has(const Entity entity) {
 }
 
 template<typename Component>
+Component& Registry::GetAdd(const Entity entity) {
+	if (Has<Component>(entity)) {
+		return Get<Component>(entity);
+	}
+	return Add<Component>(entity);
+}
+
+template<typename Component>
 u32 Registry::GetComponentId() {
 	static u32 compId = m_ComponentCounter++;
 	return compId;
 }
 
-template<typename Component>
-Component& Entity::Get() {
-	return Registry::Get<Component>(m_Id);
-}
-
-template<typename Component>
-Component& Entity::Add() {
-	return Registry::Add<Component>(m_Id);
-}
-
-template<typename Component>
-Component& Entity::GetAdd() {
-	if (Has<Component>()) {
-		return Get<Component>();
-	}
-	return Add<Component>();
-}
-
-template<typename Component>
-bool Entity::Has() {
-	return Registry::Has<Component>(m_Id);
-}
-
 template<typename... Components>
-EntityCompMask EntityCompMask::From() {
+EntityCompMask EntityCompMask::From(Registry& registry) {
 	EntityCompMask mask;
-	u32 componentIds[] = { Registry::GetComponentId<Components>()... };
+	u32 componentIds[] = { registry.GetComponentId<Components>()... };
 	for (int i = 0; i < sizeof...(Components); i++) {
 		mask.Set(componentIds[i]);
 	}
 	return mask;
 }
-

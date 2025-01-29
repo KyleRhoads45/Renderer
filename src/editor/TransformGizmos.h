@@ -1,21 +1,26 @@
 #pragma once
-#include "ecs/Registry.h"
-#include "core/Components.h"
+#include <glm/glm.hpp>
 #include "renderer/Mesh.h"
 #include "renderer/Shader.h"
+#include "ecs/Registry.h"
+
+struct EditorWindowRect;
 
 class TransformGizmos {
 public:
-	enum GizmoUsage { Selection, Translation};
-
 	TransformGizmos();
-	void Draw(const glm::vec3& pos);
-	void SelectionDraw(const glm::vec3& pos, Shader& selectionShader);
+	void TransformHandle(Registry& registry, glm::vec3* pos);
+	void Draw(Registry& registry, const glm::vec3& pos);
 	void NotifyStartDrag();
-	glm::vec3 TransformArrow(i32 gizmoId, glm::vec3 pos, glm::vec2 sceneWindowPos);
+	glm::vec3 TransformArrow(Entity gizmoEntity, const glm::vec3& pos);
 
+	// Temporary until events are implemented, same goes for it being static
+	inline static glm::vec3 m_InitialOffset;
+private:
+	Entity CreateArrowEntity(Registry& registry);	
 private:
 	Mesh m_ArrowMesh;
-	glm::vec3 m_initialOffset;
+	Entity m_RightEntity;
+	Entity m_UpEntity;
+	Entity m_ForwardEntity;
 };
-

@@ -7,12 +7,17 @@ Entity Registry::Create() {
     return newEntity;
 }
 
+void Registry::FreeAll() {
+	m_Entities.clear();
+	m_Pools.clear();
+	m_EntityCompMasks.clear();
+}
+
 size_t Registry::GetEntityCount() {
     return m_Entities.size();
 }
 
-Entity::Entity(const size_t id) 
-    : m_Id(id) { }
+Entity::Entity(const size_t id) : m_Id(id) { }
 
 size_t Entity::Id() const {
     return m_Id;

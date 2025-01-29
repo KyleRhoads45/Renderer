@@ -8,6 +8,7 @@
 struct ModelImporter::ProcessData {
 	Serializer m_Serializer;
 	const aiScene* m_Scene;
+	Registry m_TempRegistry;
 	std::vector<std::string> m_MaterialPaths;
 	std::string m_DirectoryPath;
 };
@@ -65,8 +66,8 @@ std::vector<std::string> ModelImporter::CreateMaterialFiles(const aiScene* scene
 }
 
 void ModelImporter::ProcessNode(ProcessData& data, const aiNode* node, const i32 parentId) {
-	Entity entity = Registry::Create();
-	entity.Add<LocalToWorld>();
+	Entity entity =  data.m_TempRegistry.Create();
+	data.m_TempRegistry.Add<LocalToWorld>(entity);
 
 	i32 entityId = BeginEntity(data.m_Serializer, parentId);
 

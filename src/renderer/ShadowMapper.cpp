@@ -25,7 +25,7 @@ void ShadowMapper::Init(const u32 textureSize, const f32 shadowDist) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void ShadowMapper::PerformShadowPass() {
+void ShadowMapper::PerformShadowPass(Registry& registry) {
 	CalculateLightViewProjection();
 
 	i32 viewportDimensions[4];
@@ -40,10 +40,10 @@ void ShadowMapper::PerformShadowPass() {
 	m_DepthShader.Bind();
 	m_DepthShader.SetMat4("viewProjection", m_LightViewProjection);
 
-	const auto view = View<LocalToWorld, Transform, MeshRenderer>();
+	const auto view = View<LocalToWorld, Transform, MeshRenderer>(registry);
 	for (const auto entity : view) {
-		auto& toWorld = Registry::Get<LocalToWorld>(entity);
-		const auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
+		auto& toWorld = registry.Get<LocalToWorld>(entity);
+		const auto& meshRenderer = registry.Get<MeshRenderer>(entity);
 		
 		m_DepthShader.SetMat4("model", toWorld.matrix);
 

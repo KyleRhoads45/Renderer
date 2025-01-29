@@ -5,7 +5,7 @@
 #include "core/Serializer.h"
 #include "Model.h"
 
-Entity Model::Instantiate(const char* importedModelFile) {
+Entity Model::Instantiate(const char* importedModelFile, Registry& registry) {
 	std::vector<YAML::Node> nodes = YAML::LoadAllFromFile(importedModelFile);
 
 	YAML::Node& header = nodes.front();
@@ -23,22 +23,22 @@ Entity Model::Instantiate(const char* importedModelFile) {
 	for (size_t i = 1; i < nodes.size(); i++) {
 		YAML::Node node = nodes[i];
 
-		Entity entity = Registry::Create();
+		Entity entity = registry.Create();
 		entityLookUp.push_back(entity);
-		entity.Add<LocalToWorld>();
+		registry.Add<LocalToWorld>(entity);
 
 		YAML::Node components = node["Components"];
 		YAML::Node transNode = components["Transform"];
 
-		auto& trans = entity.Add<Transform>();
+		auto& trans = registry.Add<Transform>(entity);
 		Serializer::Deserialize(transNode, trans);
 
 		if (YAML::Node parentNode = node["ParentId"]; !parentNode.IsNull()) {
 			i32 parentIndex = parentNode.as<i32>();
 			Entity parentEntity = entityLookUp[parentIndex];
 
-			entity.Add<Parent>().entity = parentEntity;
-			parentEntity.GetAdd<Children>().entities.push_back(entity);
+			registry.Add<Parent>(entity).entity = parentEntity;
+			registry.GetAdd<Children>(parentEntity).entities.push_back(entity);
 		}
 
 		YAML::Node meshRendrNode = components["MeshRenderer"];
@@ -47,7 +47,7 @@ Entity Model::Instantiate(const char* importedModelFile) {
 
 		if (meshIndicesNode.IsNull() || materialsNode.IsNull()) continue;
 
-		auto& meshRenderer = entity.Add<MeshRenderer>();
+		auto& meshRenderer = registry.Add<MeshRenderer>(entity);
 
 		const auto& meshIndicies = meshIndicesNode.as<std::vector<i32>>();
 		for (const i32 meshIndex : meshIndicies) {

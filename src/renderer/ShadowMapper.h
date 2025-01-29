@@ -4,10 +4,12 @@
 #include "Shader.h"
 #include <glm/glm.hpp>
 
+class Registry;
+
 class ShadowMapper {
 public:
 	static void Init(const u32 textureSize, const f32 shadowDist);
-	static void PerformShadowPass();
+	static void PerformShadowPass(Registry& registry);
 	static void BindShadowMap(const i32 textureUnit);
 private:
 	static void CalculateLightViewProjection();

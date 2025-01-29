@@ -8,8 +8,8 @@
 class Renderer {
 public:
     static void Init();
-    static void RenderScene();
-    static void NewFrame();
+    static void RenderScene(Registry& registry);
+    static void NewFrame(Registry& registry);
     static void EndFrame();
     static void PresentFrame();
 

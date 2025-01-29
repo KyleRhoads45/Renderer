@@ -11,8 +11,8 @@
 /Renderer.vcxproj.filters
 /Renderer.vcxproj
 /Renderer.sln
+/.idea
 /JSON/Schemas/Catalog
-/Assets/Skybox
-/Assets/PolygonCity
-/Assets/Demo
+/Assets
+/Renderer
 /SampleScene.yaml

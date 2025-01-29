@@ -1,18 +1,19 @@
 #include "View.h"
 
-ViewIterator::ViewIterator(const EntityCompMask mask, const EntityCompMask excludeMask, ViewFilter filter) 
-	: m_Index(0), m_Mask(mask), m_ExcludeMask(excludeMask), m_Filter(filter) { }
+ViewIterator::ViewIterator(Registry& registry, const EntityCompMask mask, const EntityCompMask excludeMask, ViewFilter filter) 
+	: m_Registry(registry), m_Index(0), m_Mask(mask),
+      m_ExcludeMask(excludeMask), m_Filter(filter) { }
 
 void ViewIterator::SeekBegin() {
 	FindNextIndex(0);
 }
 
 void ViewIterator::SeekEnd() {
-	m_Index = Registry::GetEntityCount();
+	m_Index = m_Registry.GetEntityCount();
 }
 
 Entity& ViewIterator::operator*() const {
-	return Registry::m_Entities[m_Index];
+	return m_Registry.m_Entities[m_Index];
 }
 
 ViewIterator& ViewIterator::operator++() {
@@ -30,8 +31,8 @@ bool ViewIterator::operator!=(const ViewIterator& other) const {
 }
 
 void ViewIterator::FindNextIndex(const size_t startIndex) {
-	for (size_t i = startIndex; i < Registry::GetEntityCount(); i++) {
-		const EntityCompMask& entityMask = Registry::m_EntityCompMasks[i];
+	for (size_t i = startIndex; i < m_Registry.GetEntityCount(); i++) {
+		const EntityCompMask& entityMask = m_Registry.m_EntityCompMasks[i];
 
 		switch (m_Filter) 
 		{
@@ -59,5 +60,5 @@ void ViewIterator::FindNextIndex(const size_t startIndex) {
 
 	}
 
-	m_Index = Registry::GetEntityCount();
+	m_Index = m_Registry.GetEntityCount();
 }

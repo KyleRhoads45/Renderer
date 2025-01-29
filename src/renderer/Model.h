@@ -6,5 +6,5 @@
 
 class Model {
 public:
-	static Entity Instantiate(const char* importedModelFile);
+	static Entity Instantiate(const char* importedModelFile, Registry& registry);
 };

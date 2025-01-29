@@ -13,6 +13,8 @@
 #include "renderer/ShadowMapper.h"
 #include "ecs/Registry.h"
 
+Registry mainRegistry;
+
 void SetupEnviroment();
 
 int main() {
@@ -45,20 +47,23 @@ int main() {
 	Input::Init(window);
 	Renderer::Init();
 	Editor::Init(window);
-
+	
 	// ModelImporter::Import("Assets/MedievalVillage/MedievalVillage.fbx");
-	auto village = Model::Instantiate("Assets/MedievalVillage/MedievalVillage.fbx.model");
-	village.Get<Transform>().scale = glm::vec3(0.001f);
+	auto village = Model::Instantiate("Assets/MedievalVillage/MedievalVillage.fbx.model", mainRegistry);
+	mainRegistry.Get<Transform>(village).scale = glm::vec3(0.001f);
+	
+	// auto house = Model::Instantiate("Assets/House/scene.gltf.model");
+	// house.Get<Transform>().scale = glm::vec3(0.01f);
 
 	while (!glfwWindowShouldClose(window)) {
 		Input::Update(window);
 		CameraSystem::Update();
-		TransformSystem::Update();
+		TransformSystem::Update(mainRegistry);
 		Editor::OnPreRenderUpdate();
-		Renderer::NewFrame();
-		Renderer::RenderScene();
+		Renderer::NewFrame(mainRegistry);
+		Renderer::RenderScene(mainRegistry);
 		Renderer::EndFrame();
-		Editor::OnPostRenderUpdate();
+		Editor::OnPostRenderUpdate(mainRegistry);
 		glfwSwapBuffers(window);
 	}
 

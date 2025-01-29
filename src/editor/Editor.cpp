@@ -15,11 +15,12 @@
 #include "renderer/Renderer.h"
 #include "SceneCamera.h"
 #include "core/Primatives.h"
-#include "Editor.h"
-
 #include "core/Input.h"
 #include "imgui/imgui_internal.h"
 #include "renderer/ShadowMapper.h"
+#include "Selection.h"
+#include "GuiUtils.h"
+#include "Editor.h"
 
 void Editor::Init(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
@@ -30,10 +31,12 @@ void Editor::Init(GLFWwindow* window) {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init((char*)glGetString(GL_VERSION_4_6));
 
+	Selection::Init();
+
 	s_Window = window;
-	s_CurWindowSize = s_SceneWindowSize = { 0, 0 };
-	s_SelectionBuffer = FrameBuffer({0, 0}, FrameBuffer::RED_INTEGER);
-	s_SelectedEntity = Entity::Null();
+	s_CurRenderingWinSize = { 0, 0 };
+	s_SceneWindowSize = { 0, 0 };
+	
 	CameraSystem::SetActiveCamera(&SceneCamera::s_Camera, &SceneCamera::s_Transform);
 	s_TransGizmos = new TransformGizmos();
 	s_ArrowMesh = Mesh::FromFile("Assets/Model/ArrowGizmo.fbx");
@@ -42,28 +45,26 @@ void Editor::Init(GLFWwindow* window) {
 void Editor::OnPreRenderUpdate() {
 	if (Input::OnKeyPress(GLFW_KEY_ESCAPE) && s_FullscreenEnabled) {
 		s_FullscreenEnabled = false;
-		s_CurWindowSize = s_SceneWindowSize;
+		s_CurRenderingWinSize = s_SceneWindowSize;
 	}
 
-	if (s_CurWindowSize != Renderer::GetFrameBufferSize()) {
-		Renderer::ResizeFrameBuffer(s_CurWindowSize);
+	if (s_CurRenderingWinSize != Renderer::GetFrameBufferSize()) {
+		Renderer::ResizeFrameBuffer(s_CurRenderingWinSize);
 	}
-	if (s_CurWindowSize != s_SelectionBuffer.Size()) {
-		s_SelectionBuffer.Resize(s_CurWindowSize);
-	}
-	
-	SceneCamera::Update(s_CurWindowSize);
+
+	Selection::PreRenderUpdate(s_CurRenderingWinSize);
+	SceneCamera::Update(s_CurRenderingWinSize);
 }
 
-void Editor::OnPostRenderUpdate() {
+void Editor::OnPostRenderUpdate(Registry& registry) {
 	if (s_FullscreenEnabled) {
 		Renderer::PresentFrame();
 		return;
 	}
-	DrawEditor();
+	DrawEditor(registry);
 }
 
-void Editor::DrawEditor() {
+void Editor::DrawEditor(Registry& registry) {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 
@@ -73,9 +74,9 @@ void Editor::DrawEditor() {
 	// ImGui::ShowDemoWindow();
 	
 	DrawMenuBar();
-	DrawScene();
-	DrawWorld();
-	DrawInspector();
+	DrawScene(registry);
+	DrawWorld(registry);
+	DrawInspector(registry);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -96,7 +97,7 @@ void Editor::DrawMenuBar() {
 	ImGui::EndMainMenuBar();
 }
 
-void Editor::DrawScene() {
+void Editor::DrawScene(Registry& registry) {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	
 	ImGui::Begin("Scene");
@@ -108,68 +109,9 @@ void Editor::DrawScene() {
 	
 	ImGui::BeginChild("Scene Frame Buffer");
 
-	ImVec2 windowSize = ImGui::GetWindowSize();
-	s_CurWindowSize = s_SceneWindowSize = { windowSize.x, windowSize.y };
-
-	const glm::vec2 sceneWindowPos = glm::vec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y);
-	const ImVec2 mousePos = ImGui::GetMousePos();
-
-	const glm::vec2 minScreenPos(sceneWindowPos.x, sceneWindowPos.y);
-	const glm::vec2 maxScreenPos(sceneWindowPos.x + s_SceneWindowSize.x, sceneWindowPos.y + s_SceneWindowSize.y);
-
-	const bool mouseXInsideScene = mousePos.x >= minScreenPos.x && mousePos.x <= maxScreenPos.x;
-	const bool mouseYInsideScene = mousePos.y >= minScreenPos.y && mousePos.y <= maxScreenPos.y;
-	const bool leftMouseClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
-	const bool leftMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
-
-	static bool selectedGizmo = false;
-	static i32 gizmoId = 0;
-	if (selectedGizmo && !leftMouseDown) {
-		selectedGizmo = false;
-	}
-
-	static Shader s_SelectionShader("src/shaders/Selection.vert", "src/shaders/Selection.frag");
-
-	if (mouseXInsideScene && mouseYInsideScene && leftMouseClicked) {
-		s_SelectionBuffer.BindAndClear();
-		s_SelectionBuffer.RedIntegerFill(-1);
-
-		const auto view = View<LocalToWorld, MeshRenderer>();
-		for (const auto entity : view) {
-			auto& toWorld = Registry::Get<LocalToWorld>(entity);
-			auto& meshRenderer = Registry::Get<MeshRenderer>(entity);
-			s_SelectionShader.SetInt("entityId", static_cast<i32>(entity.Id()));
-			Renderer::DrawMesh(meshRenderer, toWorld, s_SelectionShader);
-		}
-
-		if (s_SelectedEntity != Entity::Null()) {
-			auto& ltw = s_SelectedEntity.Get<LocalToWorld>();
-			auto gizmoTrans = ltw.ToTransform();
-
-			gizmoTrans.rotation = glm::quatLookAt(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
-
-			s_TransGizmos->NotifyStartDrag();
-
-			glDisable(GL_DEPTH_TEST);
-			s_TransGizmos->SelectionDraw(gizmoTrans.position, s_SelectionShader);
-			glEnable(GL_DEPTH_TEST);
-		}
-
-		const glm::vec2 pixelCoords(mousePos.x - sceneWindowPos.x, s_SceneWindowSize.y - (mousePos.y - sceneWindowPos.y));
-		const i32 possibleEntityId = s_SelectionBuffer.ReadPixel(pixelCoords);
-
-		if (possibleEntityId == -2 || possibleEntityId == -3 || possibleEntityId == -4) {
-			selectedGizmo = true;
-			gizmoId = possibleEntityId;
-		}
-		else {
-			s_SelectedEntity = possibleEntityId >= 0 ? Registry::m_Entities[possibleEntityId] : Entity::Null();
-			s_ShowInspectorEnvironment = false;
-			gizmoId = 0;
-		}
-
-		s_SelectionBuffer.Unbind();
-	}
+	const glm::vec2 windowSize = GuiUtils::CurrentWindowSize();
+	s_SceneWindowSize = windowSize;
+	s_CurRenderingWinSize = windowSize;
 
 	Renderer::NewGizmosFrame();
 	glDisable(GL_DEPTH_TEST);
@@ -186,29 +128,32 @@ void Editor::DrawScene() {
 		Renderer::DrawFullScreenQuad(depthVisualizer);
 	}
 	
-	if (s_SelectedEntity != Entity::Null()) {
-		glm::vec3 gizmoPos = s_SelectedEntity.Get<LocalToWorld>().ToTransform().position;
-		s_TransGizmos->Draw(gizmoPos);
-	
-		if (selectedGizmo) {
-			glm::vec3 movePos = s_TransGizmos->TransformArrow(gizmoId, gizmoPos, sceneWindowPos);
-			glm::mat4 invParentLTW = glm::inverse(s_SelectedEntity.Get<Parent>().entity.Get<LocalToWorld>().matrix);
-			s_SelectedEntity.Get<Transform>().position = invParentLTW * glm::vec4(movePos, 1.0f);
-		}
+	Entity selectedEntity = Selection::SelectedEntity();
+
+	if (selectedEntity != Entity::Null()) {
+		glm::vec3 gizmoPos = registry.Get<LocalToWorld>(selectedEntity).ToTransform().position;
+		s_TransGizmos->TransformHandle(s_EditorRegistry, &gizmoPos);
+		Entity parent = registry.Get<Parent>(selectedEntity).entity;
+		glm::mat4 invParentLTW = glm::inverse(registry.Get<LocalToWorld>(parent).matrix);
+		registry.Get<Transform>(selectedEntity).position = invParentLTW * glm::vec4(gizmoPos, 1.0f);
 	}
-	
+
 	glEnable(GL_DEPTH_TEST);
 	Renderer::EndGizmosFrame();
 
+	Selection::Update(registry, s_EditorRegistry);
+
 	auto frameBufferTexture = reinterpret_cast<ImTextureID>(static_cast<uintptr_t>(Renderer::FrameBufferTexture()));
-	ImGui::Image(frameBufferTexture, windowSize, ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image(frameBufferTexture, { windowSize.x, windowSize.y }, ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::EndChild();
 	ImGui::End();
 
 	ImGui::PopStyleVar();
+
+	s_EditorRegistry.FreeAll();
 }
 
-void Editor::DrawWorld() {
+void Editor::DrawWorld(Registry& registry) {
 	ImGui::Begin("World", 0, ImGuiWindowFlags_NoCollapse);
 
 	if (ImGui::Button("Environment")) {
@@ -221,37 +166,38 @@ void Editor::DrawWorld() {
 		s_ShowInspectorEnvironment = false;
 	}
 
-	auto rootView = View<LocalToWorld, Transform, Children>().Exclude<Parent>();
+	auto rootView = View<LocalToWorld, Transform, Children>(registry).Exclude<Parent>();
 	for (Entity& entity : rootView) {
-		DrawEntityHierarchy(entity);
+		DrawEntityHierarchy(registry, entity);
 	}
 
 	ImGui::End();
 }
 
-void Editor::DrawEntityHierarchy(Entity entity) {
+void Editor::DrawEntityHierarchy(Registry& registry, Entity entity) {
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-	bool isLeaf = !Registry::Has<Children>(entity);
+	bool isLeaf = !registry.Has<Children>(entity);
 	if (isLeaf) {
 		flags |= ImGuiTreeNodeFlags_Leaf;
 	}
 
-	if (s_SelectedEntity != Entity::Null() && s_SelectedEntity == entity) {
+	Entity selectedEntity = Selection::SelectedEntity();
+	if (selectedEntity != Entity::Null() && selectedEntity == entity) {
 		flags |= ImGuiTreeNodeFlags_Selected;
 	}
 
 	bool open = ImGui::TreeNodeEx(reinterpret_cast<void*>(entity.Id()), flags, "Entity %d", entity.Id());
 
 	if (ImGui::IsItemClicked()) {
-		s_SelectedEntity = entity;
+		selectedEntity = entity;
 		s_ShowInspectorEnvironment = false;
 		s_ShowInspectorPostProcessing = false;
 	}
 
 	if (open && !isLeaf) {
-		for (Entity& child : Registry::Get<Children>(entity).entities) {
-			DrawEntityHierarchy(child);
+		for (Entity& child : registry.Get<Children>(entity).entities) {
+			DrawEntityHierarchy(registry, child);
 		}
 	}
 
@@ -260,7 +206,7 @@ void Editor::DrawEntityHierarchy(Entity entity) {
 	}
 }
 
-void Editor::DrawInspector() {
+void Editor::DrawInspector(Registry& registry) {
 	ImGui::Begin("Inspector", 0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
 	if (s_ShowInspectorEnvironment) {
@@ -315,14 +261,16 @@ void Editor::DrawInspector() {
 		ImGui::End();
 		return;
 	}
-	
-	if (s_SelectedEntity != Entity::Null()) {
+
+	Entity selectedEntity = Selection::SelectedEntity();
+
+	if (selectedEntity != Entity::Null()) {
 		std::string entityName = "Selected Entity ";
-		entityName.append(std::to_string(s_SelectedEntity.Id()));
+		entityName.append(std::to_string(selectedEntity.Id()));
 		ImGui::Text(entityName.c_str());
 
-		if (Registry::Has<Transform>(s_SelectedEntity)) {
-			auto* trans = &Registry::Get<Transform>(s_SelectedEntity);
+		if (registry.Has<Transform>(selectedEntity)) {
+			auto* trans = &registry.Get<Transform>(selectedEntity);
 			ImGui::PushItemWidth(60);
 			ImGui::DragFloat("x", &trans->position.x, 0.1f);
 			ImGui::SameLine();
@@ -332,8 +280,8 @@ void Editor::DrawInspector() {
 			ImGui::PopItemWidth();
 		}
 
-		if (s_SelectedEntity.Has<MeshRenderer>()) {
-			auto& materials = s_SelectedEntity.Get<MeshRenderer>().materials;
+		if (registry.Has<MeshRenderer>(selectedEntity)) {
+			auto& materials = registry.Get<MeshRenderer>(selectedEntity).materials;
 
 			for (size_t i = 0; i < materials.size(); i++) {
 				Material* material = materials[i];
@@ -407,7 +355,7 @@ void Editor::WriteMaterialToFile(const Material& material) {
 void Editor::OnFullScreen() {
 	i32 width, height;
 	glfwGetWindowSize(s_Window, &width, &height);
-	s_CurWindowSize = { width, height };
+	s_CurRenderingWinSize = { width, height };
 	s_FullscreenEnabled = true;
 }
 
